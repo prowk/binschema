@@ -1,0 +1,104 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "prowk/binschema/formats"
+
+import {
+  "moonbitlang/core/debug",
+  "prowk/binschema",
+}
+
+// Values
+pub fn detect_format(Bytes) -> Result[Format, @binschema.BinError]
+
+pub fn inspect(Bytes, format? : Format) -> Result[Inspection, @binschema.BinError]
+
+pub fn pcap_codec() -> @binschema.Codec[PcapFile]
+
+pub fn png_codec() -> @binschema.Codec[PngFile]
+
+pub fn sample_pcap() -> Bytes
+
+pub fn sample_png() -> Bytes
+
+pub fn sample_wav() -> Bytes
+
+pub fn wav_codec() -> @binschema.Codec[WavFile]
+
+// Errors
+
+// Types and methods
+pub(all) enum Format {
+  Auto
+  Png
+  Wav
+  Pcap
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Format::name(Self) -> String
+pub fn Format::parse(String) -> Result[Self, String]
+
+pub(all) struct Inspection {
+  format : String
+  size : Int
+  roundtrip_equal : Bool
+  summary : Array[SummaryItem]
+  trace : Array[@binschema.TraceEntry]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn Inspection::to_json_string(Self, pretty? : Bool) -> String
+
+pub(all) struct PcapFile {
+  endian : @binschema.Endian
+  nanosecond_timestamps : Bool
+  version_major : UInt
+  version_minor : UInt
+  timezone_offset : Int
+  timestamp_accuracy : UInt
+  snapshot_length : UInt
+  link_type : UInt
+  packets : Array[PcapPacket]
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct PcapPacket {
+  timestamp_seconds : UInt
+  timestamp_fraction : UInt
+  original_length : UInt
+  data : Bytes
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct PngChunk {
+  kind : String
+  data : Bytes
+  crc : UInt
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct PngFile {
+  chunks : Array[PngChunk]
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct SummaryItem {
+  key : String
+  value : String
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct WavChunk {
+  id : String
+  data : Bytes
+  padding : Byte?
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct WavFile {
+  riff_size : UInt
+  chunks : Array[WavChunk]
+  format : WavFormat?
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) struct WavFormat {
+  audio_format : UInt
+  channels : UInt
+  sample_rate : UInt
+  byte_rate : UInt
+  block_align : UInt
+  bits_per_sample : UInt
+} derive(Eq, ToJson, @debug.Debug)
+
+// Type aliases
+
+// Traits

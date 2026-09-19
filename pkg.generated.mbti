@@ -1,0 +1,188 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "prowk/binschema"
+
+import {
+  "moonbitlang/core/buffer",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub const VERSION : String = "0.1.0"
+
+pub fn bits_msb(Int) -> Codec[UInt]
+
+pub fn bool8() -> Codec[Bool]
+
+pub fn[T] bounded(Int, Codec[T], require_eof? : Bool) -> Codec[T]
+
+pub fn bytes_fixed(Int) -> Codec[Bytes]
+
+pub fn bytes_to_hex(Bytes) -> String
+
+pub fn bytes_to_hex_preview(Bytes, Int) -> String
+
+pub fn[T] checksum_suffix(Codec[T], Codec[UInt], (Bytes) -> UInt) -> Codec[T]
+
+pub fn[T] decode(Codec[T], Bytes) -> Result[Decoded[T], BinError]
+
+pub fn[T] decode_with_options(Codec[T], Bytes, DecodeOptions) -> Result[Decoded[T], BinError]
+
+pub fn[T] encode(Codec[T], T) -> Result[Bytes, BinError]
+
+pub fn[T] encode_with_options(Codec[T], T, EncodeOptions) -> Result[Bytes, BinError]
+
+pub fn i16_be() -> Codec[Int]
+
+pub fn i16_le() -> Codec[Int]
+
+pub fn i32_be() -> Codec[Int]
+
+pub fn i32_le() -> Codec[Int]
+
+pub fn i64_be() -> Codec[Int64]
+
+pub fn i64_le() -> Codec[Int64]
+
+pub fn i8() -> Codec[Int]
+
+pub fn[T] length_prefixed(Codec[UInt], Codec[T], max_length? : Int) -> Codec[T]
+
+pub fn magic(Bytes) -> Codec[Unit]
+
+pub fn[T] optional_if(Codec[Bool], Codec[T]) -> Codec[T?]
+
+pub fn[A, B] pair(Codec[A], Codec[B]) -> Codec[(A, B)]
+
+pub fn[T] repeat(Int, Codec[T]) -> Codec[Array[T]]
+
+pub fn u16_be() -> Codec[UInt]
+
+pub fn u16_le() -> Codec[UInt]
+
+pub fn u32_be() -> Codec[UInt]
+
+pub fn u32_le() -> Codec[UInt]
+
+pub fn u64_be() -> Codec[UInt64]
+
+pub fn u64_le() -> Codec[UInt64]
+
+pub fn u8() -> Codec[UInt]
+
+// Errors
+
+// Types and methods
+pub(all) struct BinError {
+  kind : ErrorKind
+  offset : Int
+  path : String
+  message : String
+} derive(Eq, ToJson, @debug.Debug)
+pub fn BinError::new(ErrorKind, Int, String, String) -> Self
+pub fn BinError::render(Self) -> String
+
+pub(all) struct Codec[T] {
+  decode_impl : (Decoder) -> Result[T, BinError]
+  encode_impl : (Encoder, T) -> Result[Unit, BinError]
+  kind : String
+  render : (T) -> String
+}
+pub fn[T] Codec::decode_from(Self[T], Decoder) -> Result[T, BinError]
+pub fn[T] Codec::encode_into(Self[T], Encoder, T) -> Result[Unit, BinError]
+pub fn[T] Codec::make((Decoder) -> Result[T, BinError], (Encoder, T) -> Result[Unit, BinError], kind~ : String, render~ : (T) -> String) -> Self[T]
+pub fn[T] Codec::named(Self[T], String) -> Self[T]
+pub fn[T] Codec::validate(Self[T], (T) -> Bool, String) -> Self[T]
+pub fn[A, B] Codec::xmap(Self[A], (A) -> Result[B, String], (B) -> Result[A, String], render~ : (B) -> String) -> Self[B]
+
+pub(all) struct DecodeOptions {
+  limits : Limits
+  require_eof : Bool
+} derive(Eq, @debug.Debug)
+pub fn DecodeOptions::default() -> Self
+
+pub(all) struct Decoded[T] {
+  value : T
+  consumed : Int
+  trace : Array[TraceEntry]
+} derive(@debug.Debug)
+
+pub(all) struct Decoder {
+  input : Bytes
+  base_offset : Int
+  mut offset : Int
+  mut bit_offset : Int
+  mut field_path : String
+  mut depth : Int
+  limits : Limits
+  trace_entries : Array[TraceEntry]
+}
+pub fn Decoder::absolute_offset(Self) -> Int
+pub fn Decoder::align_byte(Self) -> Unit
+pub fn Decoder::depth(Self) -> Int
+pub fn Decoder::max_collection_length(Self) -> Int
+pub fn Decoder::new(Bytes, Limits) -> Self
+pub fn Decoder::offset(Self) -> Int
+pub fn Decoder::path(Self) -> String
+pub fn Decoder::read_bits_msb(Self, Int) -> Result[UInt, BinError]
+pub fn Decoder::read_uint(Self, Int, Endian) -> Result[UInt, BinError]
+pub fn Decoder::read_uint64(Self, Endian) -> Result[UInt64, BinError]
+pub fn Decoder::remaining(Self) -> Int
+pub fn Decoder::take_bytes(Self, Int) -> Result[Bytes, BinError]
+pub fn Decoder::total_length(Self) -> Int
+pub fn Decoder::trace(Self) -> Array[TraceEntry]
+
+pub(all) struct EncodeOptions {
+  limits : Limits
+} derive(Eq, @debug.Debug)
+pub fn EncodeOptions::default() -> Self
+
+pub(all) struct Encoder {
+  buffer : @buffer.Buffer
+  mut bit_buffer : UInt
+  mut bit_count : Int
+  limits : Limits
+}
+pub fn Encoder::align_byte(Self, fill_bit? : Bool) -> Result[Unit, BinError]
+pub fn Encoder::finish(Self) -> Result[Bytes, BinError]
+pub fn Encoder::length(Self) -> Int
+pub fn Encoder::new(Limits) -> Self
+pub fn Encoder::write_bits_msb(Self, UInt, Int) -> Result[Unit, BinError]
+pub fn Encoder::write_bytes(Self, BytesView) -> Result[Unit, BinError]
+pub fn Encoder::write_uint(Self, UInt, Int, Endian) -> Result[Unit, BinError]
+pub fn Encoder::write_uint64(Self, UInt64, Endian) -> Result[Unit, BinError]
+
+pub(all) enum Endian {
+  Big
+  Little
+} derive(Eq, ToJson, @debug.Debug)
+
+pub(all) enum ErrorKind {
+  UnexpectedEof
+  Misaligned
+  InvalidValue
+  LimitExceeded
+  ChecksumMismatch
+  TrailingBytes
+  Unsupported
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ErrorKind::name(Self) -> String
+
+pub(all) struct Limits {
+  max_input_bytes : Int
+  max_collection_length : Int
+  max_depth : Int
+  max_output_bytes : Int
+} derive(Eq, @debug.Debug)
+pub fn Limits::default() -> Self
+
+pub(all) struct TraceEntry {
+  path : String
+  kind : String
+  start : Int
+  end : Int
+  value : String
+} derive(Eq, ToJson, @debug.Debug)
+
+// Type aliases
+
+// Traits
