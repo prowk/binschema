@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="BinSchema — 运行于浏览器的安全二进制协议检查器">
+  <title>BinSchema · Binary structure, made visible</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#">BIN<span>SCHEMA</span></a>
+    <div class="runtime"><i></i> MOONBIT · WASM-GC</div>
+    <a class="source" href="https://github.com/prowk/binschema">GitHub ↗</a>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">SAFE BINARY PROTOCOL TOOLKIT</p>
+      <h1>看见每一个<br><em>字节的意义。</em></h1>
+      <p class="lede">在浏览器本地解析 PNG、WAVE 与 PCAP。无上传、无服务器，字段边界、校验结果和错误偏移一目了然。</p>
+    </section>
+
+    <section class="workspace">
+      <div class="controls">
+        <label class="format-label" for="format">格式</label>
+        <select id="format">
+          <option value="auto">自动识别</option>
+          <option value="png">PNG</option>
+          <option value="wav">WAVE</option>
+          <option value="pcap">PCAP</option>
+        </select>
+        <span class="spacer"></span>
+        <span class="samples-label">示例</span>
+        <button class="sample" data-format="png">PNG</button>
+        <button class="sample" data-format="wav">WAVE</button>
+        <button class="sample" data-format="pcap">PCAP</button>
+      </div>
+
+      <label id="dropzone" class="dropzone" for="file">
+        <input id="file" type="file" hidden>
+        <span class="drop-icon">↧</span>
+        <strong>拖入二进制文件</strong>
+        <small>或点击选择 · 文件只在本机处理</small>
+      </label>
+
+      <div id="error" class="error" hidden></div>
+
+      <section id="result" class="result" hidden>
+        <div class="overview">
+          <div><small>FORMAT</small><strong id="result-format">—</strong></div>
+          <div><small>SIZE</small><strong id="result-size">—</strong></div>
+          <div><small>ROUNDTRIP</small><strong id="result-roundtrip">—</strong></div>
+          <div><small>FIELDS</small><strong id="result-fields">—</strong></div>
+        </div>
+
+        <div class="panels">
+          <article class="panel hex-panel">
+            <header><h2>HEX MAP</h2><span id="file-name">sample.bin</span></header>
+            <div id="hex" class="hex" aria-label="十六进制内容"></div>
+          </article>
+          <article class="panel trace-panel">
+            <header><h2>STRUCTURE</h2><span>OFFSET / VALUE</span></header>
+            <div id="summary" class="summary"></div>
+            <div id="trace" class="trace"></div>
+          </article>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <footer><span>BINSCHEMA 0.1.0</span><span>BUILT WITH MOONBIT</span><span>APACHE-2.0</span></footer>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

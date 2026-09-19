@@ -1,0 +1,16 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "prowk/binschema/web/bridge"
+
+// Values
+pub fn inspect_hex(String, String) -> String
+
+pub fn sample_hex(String) -> String
+
+// Errors
+
+// Types and methods
+type BridgeError derive(ToJson)
+
+// Type aliases
+
+// Traits
