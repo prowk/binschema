@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install MoonBit
+        uses: moonbitlang/setup-moonbit@v1
+      - name: Restore dependencies
+        run: moon update
+      - name: Check all backends
+        run: moon check --target all --deny-warn
+      - name: Test all backends
+        run: moon test --target all --deny-warn
+      - name: Verify formatting
+        run: moon fmt --check
+      - name: Build native CLI
+        run: moon build --target native cmd/main --release
+      - name: Build Wasm-GC bridge
+        run: moon build --target wasm-gc web/bridge --release
