@@ -91,3 +91,23 @@ test "PCAP decoder rejects timestamp fractions outside resolution" {
     is Err({ kind: @bin.InvalidValue, .. }),
   )
 }
+
+///|
+test "PCAP byte payloads are independent from collection count limits" {
+  let limits = @bin.Limits::{
+    max_input_bytes: 1024 * 1024,
+    max_collection_length: 2,
+    max_depth: 16,
+    max_output_bytes: 1024 * 1024,
+  }
+  let options = @bin.DecodeOptions::{ limits, require_eof: true, }
+  match
+    @bin.decode_with_options(
+      @formats.pcap_codec(),
+      @formats.sample_pcap(),
+      options,
+    ) {
+    Err(error) => fail(error.render())
+    Ok(_) => ()
+  }
+}
