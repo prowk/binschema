@@ -142,16 +142,6 @@ pub fn png_codec() -> @bin.Codec[PngFile] {
           )
         }
         let byte_length = length.reinterpret_as_int()
-        if byte_length > decoder.max_collection_length() {
-          return Err(
-            @bin.BinError::new(
-              @bin.LimitExceeded,
-              decoder.absolute_offset(),
-              prefix,
-              "PNG chunk exceeds configured collection limit",
-            ),
-          )
-        }
         let type_bytes = match
           @bin.bytes_fixed(4).named(prefix + ".type").decode_from(decoder) {
           Err(error) => return Err(error)
