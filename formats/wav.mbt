@@ -5,6 +5,10 @@ pub(all) struct WavChunk {
   padding : Byte?
 } derive(Eq, Debug, ToJson)
 
+pub extend WavChunk with Eq::{not_equal, equal}
+pub extend WavChunk with @moonbitlang/core/debug.Debug::{to_repr}
+pub extend WavChunk with ToJson::{to_json}
+
 ///|
 pub(all) struct WavFormat {
   audio_format : UInt
@@ -15,12 +19,20 @@ pub(all) struct WavFormat {
   bits_per_sample : UInt
 } derive(Eq, Debug, ToJson)
 
+pub extend WavFormat with Eq::{not_equal, equal}
+pub extend WavFormat with @moonbitlang/core/debug.Debug::{to_repr}
+pub extend WavFormat with ToJson::{to_json}
+
 ///|
 pub(all) struct WavFile {
   riff_size : UInt
   chunks : Array[WavChunk]
   format : WavFormat?
 } derive(Eq, Debug, ToJson)
+
+pub extend WavFile with Eq::{not_equal, equal}
+pub extend WavFile with @moonbitlang/core/debug.Debug::{to_repr}
+pub extend WavFile with ToJson::{to_json}
 
 ///|
 fn ascii_id(

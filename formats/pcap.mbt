@@ -6,6 +6,10 @@ pub(all) struct PcapPacket {
   data : Bytes
 } derive(Eq, Debug, ToJson)
 
+pub extend PcapPacket with Eq::{not_equal, equal}
+pub extend PcapPacket with @moonbitlang/core/debug.Debug::{to_repr}
+pub extend PcapPacket with ToJson::{to_json}
+
 ///|
 pub(all) struct PcapFile {
   endian : @bin.Endian
@@ -18,6 +22,10 @@ pub(all) struct PcapFile {
   link_type : UInt
   packets : Array[PcapPacket]
 } derive(Eq, Debug, ToJson)
+
+pub extend PcapFile with Eq::{not_equal, equal}
+pub extend PcapFile with @moonbitlang/core/debug.Debug::{to_repr}
+pub extend PcapFile with ToJson::{to_json}
 
 ///|
 fn pcap_uint16(endian : @bin.Endian) -> @bin.Codec[UInt] {
