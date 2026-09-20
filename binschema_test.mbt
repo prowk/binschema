@@ -164,3 +164,143 @@ test "checksum suffix rejects corrupted payloads" {
     Err(error) => assert_eq(error.kind, @binschema.ChecksumMismatch)
   }
 }
+
+///|
+test "primitive integer boundaries are stable" {
+  assert_eq(
+    @binschema.encode(@binschema.u64_le(), 0xffffffffffffffffUL),
+    Ok(b"\xff\xff\xff\xff\xff\xff\xff\xff"),
+  )
+  assert_eq(@binschema.encode(@binschema.i8(), -128), Ok(b"\x80"))
+  assert_eq(@binschema.encode(@binschema.i8(), 127), Ok(b"\x7f"))
+  assert_true(
+    @binschema.encode(@binschema.i8(), -129)
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  assert_true(
+    @binschema.encode(@binschema.i16_be(), 32768)
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  assert_true(
+    @binschema.decode(@binschema.bool8(), b"\x02")
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+}
+
+///|
+test "repeat rejects invalid declarations and value lengths" {
+  assert_true(
+    @binschema.decode(@binschema.repeat(-1, @binschema.u8()), b"")
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  assert_true(
+    @binschema.encode(@binschema.repeat(2, @binschema.u8()), [1U])
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  let limits = @binschema.Limits::{
+    max_input_bytes: 16,
+    max_collection_length: 1,
+    max_depth: 4,
+    max_output_bytes: 16,
+  }
+  assert_true(
+    @binschema.decode_with_options(
+      @binschema.repeat(2, @binschema.u8()),
+      b"\x01\x02",
+      @binschema.DecodeOptions::{ limits, require_eof: true, },
+    )
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
+}
+
+///|
+test "validation applies during encoding" {
+  let positive = @binschema.i8().validate(
+    fn(value) { value >= 0 },
+    "must be positive",
+  )
+  assert_eq(@binschema.encode(positive, 7), Ok(b"\x07"))
+  assert_true(
+    @binschema.encode(positive, -1)
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+}
+
+///|
+test "bounded codecs enforce size eof and nesting depth" {
+  assert_true(
+    @binschema.decode(@binschema.bounded(2, @binschema.u8()), b"\x01\x02")
+    is Err({ kind: @binschema.TrailingBytes, .. }),
+  )
+  assert_true(
+    @binschema.encode(@binschema.bounded(2, @binschema.u8()), 1U)
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  let nested = @binschema.bounded(1, @binschema.bounded(1, @binschema.u8()))
+  let limits = @binschema.Limits::{
+    max_input_bytes: 16,
+    max_collection_length: 16,
+    max_depth: 1,
+    max_output_bytes: 16,
+  }
+  assert_true(
+    @binschema.decode_with_options(nested, b"\x01", @binschema.DecodeOptions::{
+      limits,
+      require_eof: true,
+    })
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
+}
+
+///|
+test "length-prefixed codec rejects oversized regions" {
+  let codec = @binschema.length_prefixed(
+    @binschema.u16_be(),
+    @binschema.bytes_fixed(3),
+    max_length=2,
+  )
+  assert_true(
+    @binschema.decode(codec, b"\x00\x03abc")
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
+  assert_true(
+    @binschema.encode(codec, b"abc")
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
+}
+
+///|
+test "output budgets stop encoding before allocation grows" {
+  let limits = @binschema.Limits::{
+    max_input_bytes: 16,
+    max_collection_length: 16,
+    max_depth: 4,
+    max_output_bytes: 2,
+  }
+  assert_true(
+    @binschema.encode_with_options(@binschema.bytes_fixed(3), b"abc", @binschema.EncodeOptions::{
+      limits,
+    })
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
+}
+
+///|
+test "valid checksum suffix round-trips" {
+  let sum = fn(bytes : Bytes) {
+    let mut value = 0U
+    for byte in bytes {
+      value = (value + byte.to_uint()) & 0xffU
+    }
+    value
+  }
+  let codec = @binschema.checksum_suffix(
+    @binschema.bytes_fixed(2),
+    @binschema.u8(),
+    sum,
+  )
+  match @binschema.decode(codec, b"\x02\x03\x05") {
+    Ok(decoded) => assert_eq(decoded.value, b"\x02\x03")
+    Err(error) => fail(error.render())
+  }
+}
