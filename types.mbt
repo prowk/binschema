@@ -7,8 +7,10 @@ pub(all) enum Endian {
 
 ///|
 pub extend Endian with Eq::{not_equal, equal}
+
 ///|
 pub extend Endian with @moonbitlang/core/debug.Debug::{to_repr}
+
 ///|
 pub extend Endian with ToJson::{to_json}
 
@@ -26,8 +28,10 @@ pub(all) enum ErrorKind {
 
 ///|
 pub extend ErrorKind with Eq::{not_equal, equal}
+
 ///|
 pub extend ErrorKind with @moonbitlang/core/debug.Debug::{to_repr}
+
 ///|
 pub extend ErrorKind with ToJson::{to_json}
 
@@ -42,8 +46,10 @@ pub(all) struct BinError {
 
 ///|
 pub extend BinError with Eq::{not_equal, equal}
+
 ///|
 pub extend BinError with @moonbitlang/core/debug.Debug::{to_repr}
+
 ///|
 pub extend BinError with ToJson::{to_json}
 
@@ -93,8 +99,10 @@ pub(all) struct TraceEntry {
 
 ///|
 pub extend TraceEntry with Eq::{not_equal, equal}
+
 ///|
 pub extend TraceEntry with @moonbitlang/core/debug.Debug::{to_repr}
+
 ///|
 pub extend TraceEntry with ToJson::{to_json}
 
@@ -109,6 +117,7 @@ pub(all) struct Limits {
 
 ///|
 pub extend Limits with Eq::{not_equal, equal}
+
 ///|
 pub extend Limits with @moonbitlang/core/debug.Debug::{to_repr}
 
@@ -130,6 +139,7 @@ pub(all) struct DecodeOptions {
 
 ///|
 pub extend DecodeOptions with Eq::{not_equal, equal}
+
 ///|
 pub extend DecodeOptions with @moonbitlang/core/debug.Debug::{to_repr}
 
@@ -145,6 +155,7 @@ pub(all) struct EncodeOptions {
 
 ///|
 pub extend EncodeOptions with Eq::{not_equal, equal}
+
 ///|
 pub extend EncodeOptions with @moonbitlang/core/debug.Debug::{to_repr}
 
