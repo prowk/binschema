@@ -35,7 +35,8 @@ test "WAVE requires a valid fmt chunk before data" {
     format: None,
   }
   assert_true(
-    @bin.encode(@formats.wav_codec(), data_first) is Err({ kind: @bin.InvalidValue, .. }),
+    @bin.encode(@formats.wav_codec(), data_first)
+    is Err({ kind: @bin.InvalidValue, .. }),
   )
   let invalid_fmt = b"\x01\x00\x00\x00\x40\x1f\x00\x00\x40\x1f\x00\x00\x01\x00\x08\x00"
   let invalid = @formats.WavFile::{
@@ -47,6 +48,7 @@ test "WAVE requires a valid fmt chunk before data" {
     format: None,
   }
   assert_true(
-    @bin.encode(@formats.wav_codec(), invalid) is Err({ kind: @bin.InvalidValue, .. }),
+    @bin.encode(@formats.wav_codec(), invalid)
+    is Err({ kind: @bin.InvalidValue, .. }),
   )
 }
