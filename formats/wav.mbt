@@ -7,8 +7,10 @@ pub(all) struct WavChunk {
 
 ///|
 pub extend WavChunk with Eq::{not_equal, equal}
+
 ///|
 pub extend WavChunk with @moonbitlang/core/debug.Debug::{to_repr}
+
 ///|
 pub extend WavChunk with ToJson::{to_json}
 
@@ -24,8 +26,10 @@ pub(all) struct WavFormat {
 
 ///|
 pub extend WavFormat with Eq::{not_equal, equal}
+
 ///|
 pub extend WavFormat with @moonbitlang/core/debug.Debug::{to_repr}
+
 ///|
 pub extend WavFormat with ToJson::{to_json}
 
@@ -38,8 +42,10 @@ pub(all) struct WavFile {
 
 ///|
 pub extend WavFile with Eq::{not_equal, equal}
+
 ///|
 pub extend WavFile with @moonbitlang/core/debug.Debug::{to_repr}
+
 ///|
 pub extend WavFile with ToJson::{to_json}
 
