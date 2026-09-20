@@ -53,3 +53,23 @@ test "PNG encoder enforces IHDR and IEND structure" {
     is Err({ kind: @bin.InvalidValue, .. }),
   )
 }
+
+///|
+test "PNG byte payloads are independent from collection count limits" {
+  let limits = @bin.Limits::{
+    max_input_bytes: 1024 * 1024,
+    max_collection_length: 4,
+    max_depth: 16,
+    max_output_bytes: 1024 * 1024,
+  }
+  let options = @bin.DecodeOptions::{ limits, require_eof: true, }
+  match
+    @bin.decode_with_options(
+      @formats.png_codec(),
+      @formats.sample_png(),
+      options,
+    ) {
+    Err(error) => fail(error.render())
+    Ok(_) => ()
+  }
+}
