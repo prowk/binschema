@@ -330,6 +330,16 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
       Ok({ riff_size, chunks, format, })
     },
     fn(encoder, value) {
+      if value.chunks.length() > encoder.max_collection_length() {
+        return Err(
+          @bin.BinError::new(
+            @bin.LimitExceeded,
+            encoder.length(),
+            "chunks",
+            "WAVE chunk count exceeds configured limit",
+          ),
+        )
+      }
       let body = @bin.Encoder::new(encoder.limits)
       match @bin.magic(b"WAVE").encode_into(body, ()) {
         Err(error) => return Err(error)
