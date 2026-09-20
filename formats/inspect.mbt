@@ -7,8 +7,11 @@ pub(all) enum Format {
   Pcap
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend Format with Eq::{not_equal, equal}
+///|
 pub extend Format with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend Format with ToJson::{to_json}
 
 ///|
@@ -17,8 +20,11 @@ pub(all) struct SummaryItem {
   value : String
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend SummaryItem with Eq::{not_equal, equal}
+///|
 pub extend SummaryItem with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend SummaryItem with ToJson::{to_json}
 
 ///|
@@ -31,8 +37,11 @@ pub(all) struct Inspection {
   trace : Array[@bin.TraceEntry]
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend Inspection with Eq::{not_equal, equal}
+///|
 pub extend Inspection with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend Inspection with ToJson::{to_json}
 
 ///|
