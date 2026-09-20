@@ -36,3 +36,29 @@ test "error rendering covers rooted and named locations" {
     "UnexpectedEof (header.id at offset 2): short",
   )
 }
+
+///|
+test "named codecs preserve field paths during encoding" {
+  let codec = bytes_fixed(2).named("payload")
+  match encode(codec, b"x") {
+    Ok(_) => fail("invalid fixed-length payload must fail")
+    Err(error) => {
+      assert_eq(error.kind, InvalidValue)
+      assert_eq(error.path, "payload")
+    }
+  }
+}
+
+///|
+test "repeat trace previews do not contain terminal control sequences" {
+  let codec = repeat(1, u8()).named("items")
+  match decode(codec, b"\x01") {
+    Err(error) => fail(error.render())
+    Ok(decoded) => {
+      assert_eq(decoded.trace.length(), 2)
+      for entry in decoded.trace {
+        assert_true(!entry.value.contains("\u001b"))
+      }
+    }
+  }
+}
