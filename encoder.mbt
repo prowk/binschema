@@ -30,6 +30,11 @@ pub fn Encoder::max_collection_length(self : Encoder) -> Int {
 }
 
 ///|
+pub fn Encoder::max_collection_length(self : Encoder) -> Int {
+  self.limits.max_collection_length
+}
+
+///|
 fn[T] Encoder::with_path(
   self : Encoder,
   name : String,
