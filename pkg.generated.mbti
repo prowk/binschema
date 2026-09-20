@@ -55,6 +55,8 @@ pub fn[A, B] pair(Codec[A], Codec[B]) -> Codec[(A, B)]
 
 pub fn[T] repeat(Int, Codec[T]) -> Codec[Array[T]]
 
+pub fn sleb128() -> Codec[Int64]
+
 pub fn u16_be() -> Codec[UInt]
 
 pub fn u16_le() -> Codec[UInt]
@@ -68,6 +70,8 @@ pub fn u64_be() -> Codec[UInt64]
 pub fn u64_le() -> Codec[UInt64]
 
 pub fn u8() -> Codec[UInt]
+
+pub fn uleb128() -> Codec[UInt64]
 
 // Errors
 
