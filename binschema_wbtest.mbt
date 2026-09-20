@@ -62,3 +62,18 @@ test "repeat trace previews do not contain terminal control sequences" {
     }
   }
 }
+
+///|
+test "byte fields are not constrained by collection item limits" {
+  let limits = Limits::{
+    max_input_bytes: 16,
+    max_collection_length: 1,
+    max_depth: 8,
+    max_output_bytes: 16,
+  }
+  let options = DecodeOptions::{ limits, require_eof: true, }
+  match decode_with_options(bytes_fixed(4), b"abcd", options) {
+    Err(error) => fail(error.render())
+    Ok(decoded) => assert_eq(decoded.value, b"abcd")
+  }
+}
