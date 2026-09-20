@@ -69,6 +69,41 @@ fn classify_pcap_magic(bytes : Bytes) -> Result[(@bin.Endian, Bool), String] {
 }
 
 ///|
+fn validate_pcap_header(
+  major : UInt,
+  minor : UInt,
+  snapshot : UInt,
+) -> Result[Unit, String] {
+  if major != 2U || minor != 4U {
+    return Err("only PCAP version 2.4 is supported")
+  }
+  if snapshot == 0U {
+    return Err("PCAP snapshot length must be non-zero")
+  }
+  Ok(())
+}
+
+///|
+fn validate_pcap_packet(
+  packet : PcapPacket,
+  snapshot : UInt,
+  nano : Bool,
+) -> Result[Unit, String] {
+  let included = packet.data.length().reinterpret_as_uint()
+  if included > snapshot {
+    return Err("PCAP packet exceeds the declared snapshot length")
+  }
+  if included > packet.original_length {
+    return Err("PCAP included length exceeds original packet length")
+  }
+  let fraction_limit = if nano { 1_000_000_000U } else { 1_000_000U }
+  if packet.timestamp_fraction >= fraction_limit {
+    return Err("PCAP timestamp fraction exceeds its declared resolution")
+  }
+  Ok(())
+}
+
+///|
 pub fn pcap_codec() -> @bin.Codec[PcapFile] {
   @bin.Codec::make(
     fn(decoder) {
@@ -113,6 +148,14 @@ pub fn pcap_codec() -> @bin.Codec[PcapFile] {
       let link_type = match u32.named("link_type").decode_from(decoder) {
         Err(error) => return Err(error)
         Ok(value) => value
+      }
+      match
+        validate_pcap_header(version_major, version_minor, snapshot_length) {
+        Err(message) =>
+          return Err(
+            @bin.BinError::new(@bin.InvalidValue, 4, "header", message),
+          )
+        Ok(_) => ()
       }
       let packets : Array[PcapPacket] = []
       while decoder.remaining() > 0 {
@@ -169,6 +212,27 @@ pub fn pcap_codec() -> @bin.Codec[PcapFile] {
             ),
           )
         }
+        if included_length > original_length {
+          return Err(
+            @bin.BinError::new(
+              @bin.InvalidValue,
+              decoder.absolute_offset(),
+              prefix,
+              "PCAP included length exceeds original packet length",
+            ),
+          )
+        }
+        let fraction_limit = if nano { 1_000_000_000U } else { 1_000_000U }
+        if timestamp_fraction >= fraction_limit {
+          return Err(
+            @bin.BinError::new(
+              @bin.InvalidValue,
+              decoder.absolute_offset(),
+              prefix + ".timestamp_fraction",
+              "PCAP timestamp fraction exceeds its declared resolution",
+            ),
+          )
+        }
         let data = match
           @bin.bytes_fixed(length).named(prefix + ".data").decode_from(decoder) {
           Err(error) => return Err(error)
@@ -194,6 +258,42 @@ pub fn pcap_codec() -> @bin.Codec[PcapFile] {
       })
     },
     fn(encoder, value) {
+      match
+        validate_pcap_header(
+          value.version_major,
+          value.version_minor,
+          value.snapshot_length,
+        ) {
+        Err(message) =>
+          return Err(
+            @bin.BinError::new(
+              @bin.InvalidValue,
+              encoder.length(),
+              "header",
+              message,
+            ),
+          )
+        Ok(_) => ()
+      }
+      for index, packet in value.packets {
+        match
+          validate_pcap_packet(
+            packet,
+            value.snapshot_length,
+            value.nanosecond_timestamps,
+          ) {
+          Err(message) =>
+            return Err(
+              @bin.BinError::new(
+                @bin.InvalidValue,
+                encoder.length(),
+                "packets.\{index}",
+                message,
+              ),
+            )
+          Ok(_) => ()
+        }
+      }
       match
         @bin.bytes_fixed(4).encode_into(
           encoder,

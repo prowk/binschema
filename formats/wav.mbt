@@ -122,6 +122,39 @@ fn parse_wav_format(data : Bytes) -> Result[WavFormat, @bin.BinError] {
 }
 
 ///|
+fn validate_wav_format(format : WavFormat) -> Result[Unit, String] {
+  if format.channels == 0U || format.sample_rate == 0U {
+    return Err("WAVE channels and sample rate must be non-zero")
+  }
+  if format.block_align == 0U ||
+    format.byte_rate == 0U ||
+    format.bits_per_sample == 0U {
+    return Err(
+      "WAVE block alignment, byte rate, and bit depth must be non-zero",
+    )
+  }
+  if format.audio_format == 1U || format.audio_format == 3U {
+    if format.bits_per_sample % 8U != 0U {
+      return Err("PCM/IEEE-float bit depth must be byte-aligned")
+    }
+    let expected_block = format.channels.to_uint64() *
+      (format.bits_per_sample / 8U).to_uint64()
+    if format.block_align.to_uint64() != expected_block {
+      return Err(
+        "WAVE block alignment is inconsistent with channels and bit depth",
+      )
+    }
+    let expected_rate = format.sample_rate.to_uint64() * expected_block
+    if format.byte_rate.to_uint64() != expected_rate {
+      return Err(
+        "WAVE byte rate is inconsistent with sample rate and block alignment",
+      )
+    }
+  }
+  Ok(())
+}
+
+///|
 pub fn wav_codec() -> @bin.Codec[WavFile] {
   @bin.Codec::make(
     fn(decoder) {
@@ -151,6 +184,7 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
       }
       let chunks : Array[WavChunk] = []
       let mut format : WavFormat? = None
+      let mut saw_data = false
       while decoder.remaining() > 0 {
         if chunks.length() >= decoder.max_collection_length() {
           return Err(
@@ -215,12 +249,66 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
           None
         }
         if id == "fmt " {
-          match parse_wav_format(data) {
-            Err(error) => return Err(error)
-            Ok(value) => format = Some(value)
+          if format is Some(_) {
+            return Err(
+              @bin.BinError::new(
+                @bin.InvalidValue,
+                id_offset,
+                prefix,
+                "WAVE must contain exactly one fmt chunk",
+              ),
+            )
           }
+          if saw_data {
+            return Err(
+              @bin.BinError::new(
+                @bin.InvalidValue,
+                id_offset,
+                prefix,
+                "fmt chunk must appear before data",
+              ),
+            )
+          }
+          let parsed = match parse_wav_format(data) {
+            Err(error) => return Err(error)
+            Ok(value) => value
+          }
+          match validate_wav_format(parsed) {
+            Err(message) =>
+              return Err(
+                @bin.BinError::new(
+                  @bin.InvalidValue,
+                  id_offset,
+                  prefix,
+                  message,
+                ),
+              )
+            Ok(_) => format = Some(parsed)
+          }
+        } else if id == "data" {
+          if format is None {
+            return Err(
+              @bin.BinError::new(
+                @bin.InvalidValue,
+                id_offset,
+                prefix,
+                "data chunk must appear after fmt",
+              ),
+            )
+          }
+          saw_data = true
         }
         chunks.push({ id, data, padding, })
+      }
+      if format is None || !saw_data {
+        return Err(
+          @bin.BinError::new(
+            @bin.InvalidValue,
+            decoder.absolute_offset(),
+            "chunks",
+            "WAVE requires one fmt chunk and at least one data chunk",
+          ),
+        )
       }
       Ok({ riff_size, chunks, format, })
     },
@@ -230,7 +318,49 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
         Err(error) => return Err(error)
         Ok(_) => ()
       }
-      for chunk in value.chunks {
+      let mut saw_format = false
+      let mut saw_data = false
+      for index, chunk in value.chunks {
+        if chunk.id == "fmt " {
+          if saw_format || saw_data {
+            return Err(
+              @bin.BinError::new(
+                @bin.InvalidValue,
+                encoder.length(),
+                "chunks.\{index}",
+                "WAVE fmt chunk must be unique and appear before data",
+              ),
+            )
+          }
+          let parsed = match parse_wav_format(chunk.data) {
+            Err(error) => return Err(error)
+            Ok(format) => format
+          }
+          match validate_wav_format(parsed) {
+            Err(message) =>
+              return Err(
+                @bin.BinError::new(
+                  @bin.InvalidValue,
+                  encoder.length(),
+                  "chunks.\{index}",
+                  message,
+                ),
+              )
+            Ok(_) => saw_format = true
+          }
+        } else if chunk.id == "data" {
+          if !saw_format {
+            return Err(
+              @bin.BinError::new(
+                @bin.InvalidValue,
+                encoder.length(),
+                "chunks.\{index}",
+                "WAVE data chunk must appear after fmt",
+              ),
+            )
+          }
+          saw_data = true
+        }
         let id_bytes = @utf8.encode(chunk.id[:])
         if id_bytes.length() != 4 {
           return Err(
@@ -270,6 +400,16 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
             Ok(_) => ()
           }
         }
+      }
+      if !saw_format || !saw_data {
+        return Err(
+          @bin.BinError::new(
+            @bin.InvalidValue,
+            encoder.length(),
+            "chunks",
+            "WAVE requires one fmt chunk and at least one data chunk",
+          ),
+        )
       }
       let body_bytes = match body.finish() {
         Err(error) => return Err(error)

@@ -25,6 +25,64 @@ fn ascii_chunk_type(bytes : Bytes) -> Result[String, String] {
 }
 
 ///|
+fn png_uint32_at(bytes : Bytes, offset : Int) -> UInt {
+  (bytes[offset].to_uint() << 24) |
+  (bytes[offset + 1].to_uint() << 16) |
+  (bytes[offset + 2].to_uint() << 8) |
+  bytes[offset + 3].to_uint()
+}
+
+///|
+fn validate_png_chunk(
+  index : Int,
+  kind : String,
+  data : Bytes,
+) -> Result[Unit, String] {
+  if index == 0 && kind != "IHDR" {
+    return Err("IHDR must be the first PNG chunk")
+  }
+  if index > 0 && kind == "IHDR" {
+    return Err("IHDR must appear exactly once")
+  }
+  let reserved = kind.code_unit_at(2).to_int()
+  if reserved < 65 || reserved > 90 {
+    return Err("PNG chunk reserved bit must be zero (uppercase third letter)")
+  }
+  if kind == "IHDR" {
+    if data.length() != 13 {
+      return Err("IHDR data must contain exactly 13 bytes")
+    }
+    if png_uint32_at(data, 0) == 0U || png_uint32_at(data, 4) == 0U {
+      return Err("PNG width and height must be non-zero")
+    }
+  }
+  if kind == "IEND" && data.length() != 0 {
+    return Err("IEND data must be empty")
+  }
+  Ok(())
+}
+
+///|
+fn validate_png_file(value : PngFile) -> Result[Unit, String] {
+  if value.chunks.length() < 2 {
+    return Err("PNG must contain IHDR and IEND chunks")
+  }
+  for index, chunk in value.chunks {
+    match validate_png_chunk(index, chunk.kind, chunk.data) {
+      Err(message) => return Err(message)
+      Ok(_) => ()
+    }
+    if chunk.kind == "IEND" && index != value.chunks.length() - 1 {
+      return Err("IEND must be the final PNG chunk")
+    }
+  }
+  if value.chunks[value.chunks.length() - 1].kind != "IEND" {
+    return Err("PNG must end with IEND")
+  }
+  Ok(())
+}
+
+///|
 pub fn png_codec() -> @bin.Codec[PngFile] {
   @bin.Codec::make(
     fn(decoder) {
@@ -100,6 +158,18 @@ pub fn png_codec() -> @bin.Codec[PngFile] {
           Err(error) => return Err(error)
           Ok(value) => value
         }
+        match validate_png_chunk(index, kind, data) {
+          Err(message) =>
+            return Err(
+              @bin.BinError::new(
+                @bin.InvalidValue,
+                decoder.absolute_offset() - data.length(),
+                prefix,
+                message,
+              ),
+            )
+          Ok(_) => ()
+        }
         let crc_offset = decoder.absolute_offset()
         let expected = match
           @bin.u32_be().named(prefix + ".crc").decode_from(decoder) {
@@ -125,6 +195,18 @@ pub fn png_codec() -> @bin.Codec[PngFile] {
       Ok({ chunks, })
     },
     fn(encoder, value) {
+      match validate_png_file(value) {
+        Err(message) =>
+          return Err(
+            @bin.BinError::new(
+              @bin.InvalidValue,
+              encoder.length(),
+              "png",
+              message,
+            ),
+          )
+        Ok(_) => ()
+      }
       match @bin.magic(b"\x89PNG\x0d\x0a\x1a\x0a").encode_into(encoder, ()) {
         Err(error) => return Err(error)
         Ok(_) => ()

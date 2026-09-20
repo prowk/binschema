@@ -26,3 +26,27 @@ test "WAVE rejects inconsistent RIFF sizes" {
     Err(error) => assert_eq(error.kind, @bin.InvalidValue)
   }
 }
+
+///|
+test "WAVE requires a valid fmt chunk before data" {
+  let data_first = WavFile::{
+    riff_size: 0U,
+    chunks: [WavChunk::{ id: "data", data: b"\x00", padding: None, }],
+    format: None,
+  }
+  assert_true(
+    @bin.encode(wav_codec(), data_first) is Err({ kind: @bin.InvalidValue, .. }),
+  )
+  let invalid_fmt = b"\x01\x00\x00\x00\x40\x1f\x00\x00\x40\x1f\x00\x00\x01\x00\x08\x00"
+  let invalid = WavFile::{
+    riff_size: 0U,
+    chunks: [
+      WavChunk::{ id: "fmt ", data: invalid_fmt, padding: None, },
+      WavChunk::{ id: "data", data: b"\x00", padding: None, },
+    ],
+    format: None,
+  }
+  assert_true(
+    @bin.encode(wav_codec(), invalid) is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}

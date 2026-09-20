@@ -38,3 +38,56 @@ test "PCAP auto-endian parsing supports big-endian files" {
       }
   }
 }
+
+///|
+test "PCAP validates header and packet invariants" {
+  let invalid_version = PcapFile::{
+    endian: @bin.Little,
+    nanosecond_timestamps: false,
+    version_major: 1U,
+    version_minor: 0U,
+    timezone_offset: 0,
+    timestamp_accuracy: 0U,
+    snapshot_length: 64U,
+    link_type: 1U,
+    packets: [],
+  }
+  assert_true(
+    @bin.encode(pcap_codec(), invalid_version)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+  let invalid_packet = PcapPacket::{
+    timestamp_seconds: 0U,
+    timestamp_fraction: 1_000_000U,
+    original_length: 1U,
+    data: b"\x00\x01",
+  }
+  let invalid_file = PcapFile::{
+    endian: @bin.Little,
+    nanosecond_timestamps: false,
+    version_major: 2U,
+    version_minor: 4U,
+    timezone_offset: 0,
+    timestamp_accuracy: 0U,
+    snapshot_length: 1U,
+    link_type: 1U,
+    packets: [invalid_packet],
+  }
+  assert_true(
+    @bin.encode(pcap_codec(), invalid_file)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}
+
+///|
+test "PCAP decoder rejects timestamp fractions outside resolution" {
+  let source = sample_pcap().to_array()
+  source[28] = b'\x40'
+  source[29] = b'\x42'
+  source[30] = b'\x0f'
+  source[31] = b'\x00'
+  assert_true(
+    @bin.decode(pcap_codec(), Bytes::from_array(source))
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}
