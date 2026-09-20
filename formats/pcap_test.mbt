@@ -114,7 +114,8 @@ test "PCAP byte payloads are independent from collection count limits" {
 
 ///|
 test "PCAP encoding enforces collection item limits" {
-  let decoded = match @bin.decode(@formats.pcap_codec(), @formats.sample_pcap()) {
+  let decoded = match
+    @bin.decode(@formats.pcap_codec(), @formats.sample_pcap()) {
     Err(error) => fail(error.render())
     Ok(value) => value
   }
