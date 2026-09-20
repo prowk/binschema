@@ -108,9 +108,15 @@ fn render_report(report : @formats.Inspection) -> String {
 ///|
 fn verify_report(report : @formats.Inspection) -> Result[String, CliError] {
   if report.roundtrip_equal {
-    Ok("验证通过：\{report.format}，\{report.size} 字节，往返一致=true")
+    Ok(
+      "验证通过：\{report.format}，\{report.size} 字节，往返一致=true",
+    )
   } else {
-    Err(Data("验证失败：\{report.format} 解码后重新编码的字节与原始输入不一致"))
+    Err(
+      Data(
+        "验证失败：\{report.format} 解码后重新编码的字节与原始输入不一致",
+      ),
+    )
   }
 }
 
