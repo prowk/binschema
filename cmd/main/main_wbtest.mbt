@@ -1,27 +1,17 @@
 ///|
-fn assert_ok_text(result : Result[String, CliError], expected : String) -> Unit {
-  match result {
-    Ok(value) => assert_eq(value, expected)
-    Err(error) => fail(error.message())
-  }
-}
-
-///|
-fn assert_ok_bytes(result : Result[Bytes, CliError], expected : Bytes) -> Unit {
-  match result {
-    Ok(value) => assert_eq(value, expected)
-    Err(error) => fail(error.message())
-  }
-}
-
-///|
 test "CLI metadata commands are pure and stable" {
   assert_true(
     run(["binschema"]) is Ok(text) &&
     text.contains("安全的二进制协议检查器"),
   )
-  assert_ok_text(run(["binschema", "formats"]), "支持格式: PNG, WAVE, PCAP")
-  assert_ok_text(run(["binschema", "--version"]), "binschema " + @bin.VERSION)
+  match run(["binschema", "formats"]) {
+    Ok(value) => assert_eq(value, "支持格式: PNG, WAVE, PCAP")
+    Err(error) => fail(error.message())
+  }
+  match run(["binschema", "--version"]) {
+    Ok(value) => assert_eq(value, "binschema " + @bin.VERSION)
+    Err(error) => fail(error.message())
+  }
   assert_true(run(["binschema", "unknown"]) is Err(Usage(_)))
 }
 
@@ -66,11 +56,23 @@ test "CLI inspection renders text JSON and verification" {
 
 ///|
 test "CLI input budgets and sample selection are enforced" {
-  assert_ok_bytes(enforce_input_limit(b"ab", 2), b"ab")
+  match enforce_input_limit(b"ab", 2) {
+    Ok(value) => assert_eq(value, b"ab")
+    Err(error) => fail(error.message())
+  }
   assert_true(enforce_input_limit(b"abc", 2) is Err(Data(_)))
-  assert_ok_bytes(sample_bytes("png"), @formats.sample_png())
-  assert_ok_bytes(sample_bytes("wav"), @formats.sample_wav())
-  assert_ok_bytes(sample_bytes("pcap"), @formats.sample_pcap())
+  match sample_bytes("png") {
+    Ok(value) => assert_eq(value, @formats.sample_png())
+    Err(error) => fail(error.message())
+  }
+  match sample_bytes("wav") {
+    Ok(value) => assert_eq(value, @formats.sample_wav())
+    Err(error) => fail(error.message())
+  }
+  match sample_bytes("pcap") {
+    Ok(value) => assert_eq(value, @formats.sample_pcap())
+    Err(error) => fail(error.message())
+  }
   assert_true(sample_bytes("auto") is Err(Usage(_)))
 }
 
