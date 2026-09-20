@@ -5,8 +5,11 @@ pub(all) enum Endian {
   Little
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend Endian with Eq::{not_equal, equal}
+///|
 pub extend Endian with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend Endian with ToJson::{to_json}
 
 ///|
@@ -21,8 +24,11 @@ pub(all) enum ErrorKind {
   Unsupported
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend ErrorKind with Eq::{not_equal, equal}
+///|
 pub extend ErrorKind with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend ErrorKind with ToJson::{to_json}
 
 ///|
@@ -34,8 +40,11 @@ pub(all) struct BinError {
   message : String
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend BinError with Eq::{not_equal, equal}
+///|
 pub extend BinError with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend BinError with ToJson::{to_json}
 
 ///|
@@ -82,8 +91,11 @@ pub(all) struct TraceEntry {
   value : String
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend TraceEntry with Eq::{not_equal, equal}
+///|
 pub extend TraceEntry with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend TraceEntry with ToJson::{to_json}
 
 ///|
@@ -95,7 +107,9 @@ pub(all) struct Limits {
   max_output_bytes : Int
 } derive(Eq, Debug)
 
+///|
 pub extend Limits with Eq::{not_equal, equal}
+///|
 pub extend Limits with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
@@ -114,7 +128,9 @@ pub(all) struct DecodeOptions {
   require_eof : Bool
 } derive(Eq, Debug)
 
+///|
 pub extend DecodeOptions with Eq::{not_equal, equal}
+///|
 pub extend DecodeOptions with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
@@ -127,7 +143,9 @@ pub(all) struct EncodeOptions {
   limits : Limits
 } derive(Eq, Debug)
 
+///|
 pub extend EncodeOptions with Eq::{not_equal, equal}
+///|
 pub extend EncodeOptions with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
@@ -143,4 +161,5 @@ pub(all) struct Decoded[T] {
   trace : Array[TraceEntry]
 } derive(Debug)
 
+///|
 pub extend Decoded with @moonbitlang/core/debug.Debug::{to_repr}
