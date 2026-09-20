@@ -77,3 +77,18 @@ test "byte fields are not constrained by collection item limits" {
     Ok(decoded) => assert_eq(decoded.value, b"abcd")
   }
 }
+
+///|
+test "repeat encoding enforces collection item limits" {
+  let limits = Limits::{
+    max_input_bytes: 16,
+    max_collection_length: 1,
+    max_depth: 8,
+    max_output_bytes: 16,
+  }
+  let options = EncodeOptions::{ limits, }
+  assert_true(
+    encode_with_options(repeat(2, u8()), [1U, 2U], options)
+    is Err({ kind: LimitExceeded, .. }),
+  )
+}
