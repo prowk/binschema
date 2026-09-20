@@ -3,6 +3,7 @@ struct BridgeError {
   error : String
 } derive(ToJson)
 
+///|
 pub extend BridgeError with ToJson::{to_json}
 
 ///|
