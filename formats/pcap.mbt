@@ -6,8 +6,11 @@ pub(all) struct PcapPacket {
   data : Bytes
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend PcapPacket with Eq::{not_equal, equal}
+///|
 pub extend PcapPacket with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend PcapPacket with ToJson::{to_json}
 
 ///|
@@ -23,8 +26,11 @@ pub(all) struct PcapFile {
   packets : Array[PcapPacket]
 } derive(Eq, Debug, ToJson)
 
+///|
 pub extend PcapFile with Eq::{not_equal, equal}
+///|
 pub extend PcapFile with @moonbitlang/core/debug.Debug::{to_repr}
+///|
 pub extend PcapFile with ToJson::{to_json}
 
 ///|
