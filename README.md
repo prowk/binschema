@@ -1,15 +1,134 @@
 # BinSchema
 
-安全、可组合、可追踪的 MoonBit 二进制协议编解码框架，附带 CLI、Wasm-GC 可视化工具和 PNG/WAVE/PCAP 示例。
+> 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。
 
-完整文档请阅读 [README.mbt.md](README.mbt.md)。
+BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 PNG、WAVE、PCAP 三种真实格式实现。
 
-## Highlights
+## 特性
 
-- 同一 `Codec[T]` 定义编码与解码
-- 默认资源限制、严格 EOF、字段路径和精确错误偏移
-- PNG CRC、WAVE RIFF、PCAP 多字节序真实格式验证
-- Wasm、Wasm-GC、JavaScript、Native 四后端测试
-- 浏览器本地可视化，不上传文件
+- **安全默认值**：64 MiB 核心输入/输出限制、集合长度上限、嵌套深度上限和严格 EOF 检查。
+- **双向定义**：同一 `Codec[T]` 同时负责解码和编码，便于验证 `encode(decode(bytes)) == bytes`。
+- **可诊断错误**：错误包含分类、绝对字节偏移、字段路径和稳定的可读消息。
+- **结构追踪**：`.named()` 记录字段的 `[start, end)`、类型和值预览，可直接驱动可视化界面。
+- **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
+- **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
+- **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序、长度及时间戳。
 
-Apache-2.0 licensed.
+## 快速开始
+
+在 MoonBit 项目中添加依赖：
+
+```bash
+moon add prowk/binschema
+```
+
+组合一个带魔数、版本号和 LEB128 流 ID 的协议：
+
+```mbt nocheck
+///|
+let packet = @bin.pair(
+  @bin.magic(b"BS").named("magic"),
+  @bin.pair(@bin.u8().named("version"), @bin.uleb128().named("stream_id")),
+)
+
+///|
+let value = ((), (1U, 624485UL))
+
+///|
+let bytes = @bin.encode(packet, value).unwrap()
+
+///|
+let decoded = @bin.decode(packet, bytes).unwrap()
+
+// decoded.value == value
+// decoded.trace 包含每个命名字段的路径和精确字节范围
+```
+
+基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if` 和 `checksum_suffix`。
+
+## 可复现的自定义协议示例
+
+仓库中的 [`examples/custom_packet`](examples/custom_packet) 定义了如下布局：
+
+```text
+magic "BS" | version u8 | stream_id uleb128 | sequence u16_le
+```
+
+克隆仓库后可直接运行：
+
+```bash
+moon update
+moon run --target native examples/custom_packet
+```
+
+预期输出包含：
+
+```text
+encoded: 42 53 01 e5 8e 26 07 00
+stream_id: 624485
+trace fields: 4
+```
+
+## CLI
+
+```bash
+moon run --target native cmd/main -- inspect image.png
+moon run --target native cmd/main -- inspect capture.pcap --json
+moon run --target native cmd/main -- verify audio.wav
+moon run --target native cmd/main -- sample png sample.png
+moon run --target native cmd/main -- formats
+```
+
+CLI 支持自动识别或通过 `--format png|wav|pcap` 显式指定格式。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
+
+## Web / Wasm-GC 检查器
+
+```bash
+moon build --target wasm-gc web/bridge --release
+cp _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
+python -m http.server 4173 --directory web
+```
+
+Windows PowerShell 可用：
+
+```powershell
+Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
+```
+
+打开 `http://127.0.0.1:4173/`。文件仅在浏览器本地处理，不会上传；浏览器输入上限为 16 MiB。界面可查看字段结构、十六进制范围和往返校验结果，并支持键盘导航。
+
+## 仓库结构
+
+```text
+├─ codec.mbt / decoder.mbt / encoder.mbt  # 安全组合子核心
+├─ primitives.mbt / varint.mbt            # 定长与变长基础类型
+├─ formats/                               # PNG / WAVE / PCAP
+├─ cmd/main/                              # 原生 CLI
+├─ web/                                   # Wasm-GC 桥接与浏览器检查器
+├─ examples/custom_packet/                # 可构建的自定义协议示例
+└─ docs/                                  # 架构和安全模型
+```
+
+## 开发与验收
+
+```bash
+moon update
+moon info
+moon fmt --check
+moon check --target all --deny-warn
+moon test --target all --deny-warn
+moon test --target native --enable-coverage --deny-warn
+moon coverage analyze
+moon build --target native cmd/main --release
+moon build --target native examples/custom_packet --release
+moon build --target wasm-gc web/bridge --release
+cmp README.md README.mbt.md
+```
+
+测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会执行跨后端检查、示例构建、覆盖率流程和 README 同步校验。
+
+更多设计细节见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
+
+## License
+
+[Apache-2.0](LICENSE)

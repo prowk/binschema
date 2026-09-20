@@ -1,0 +1,5 @@
+import {
+  "prowk/binschema" @bin,
+}
+
+pkgtype(kind: "executable")

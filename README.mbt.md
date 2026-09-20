@@ -2,42 +2,71 @@
 
 > 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。
 
-BinSchema 是一个以 MoonBit 编写的二进制协议编解码框架。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 可视化界面以及 PNG、WAVE、PCAP 三种真实格式示例。
+BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 PNG、WAVE、PCAP 三种真实格式实现。
 
-## 为什么是 BinSchema
+## 特性
 
-手写二进制解析器很容易出现长度溢出、越界读取、尾随数据被忽略、校验和漏验，以及编码与解码逻辑漂移。BinSchema 把这些风险变成框架默认行为：
-
-- **安全默认值**：64 MiB 输入/输出限制、集合长度上限、嵌套深度上限和严格 EOF 检查。
-- **双向定义**：同一 `Codec[T]` 同时负责 decode/encode，便于验证 `encode(decode(bytes)) == bytes`。
-- **可诊断错误**：统一错误包含分类、绝对字节偏移、字段路径和可读消息。
-- **结构追踪**：`.named()` 自动记录每个字段的 `[start, end)`、类型和值预览。
-- **跨后端**：核心库和格式实现通过 Wasm、Wasm-GC、JavaScript、Native 四后端测试。
-- **开箱即用**：带 CLI、纯浏览器 Wasm 检查器以及 PNG CRC、RIFF 长度、PCAP 字节序等真实校验。
+- **安全默认值**：64 MiB 核心输入/输出限制、集合长度上限、嵌套深度上限和严格 EOF 检查。
+- **双向定义**：同一 `Codec[T]` 同时负责解码和编码，便于验证 `encode(decode(bytes)) == bytes`。
+- **可诊断错误**：错误包含分类、绝对字节偏移、字段路径和稳定的可读消息。
+- **结构追踪**：`.named()` 记录字段的 `[start, end)`、类型和值预览，可直接驱动可视化界面。
+- **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
+- **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
+- **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序、长度及时间戳。
 
 ## 快速开始
 
-```mbt nocheck
-let header = @bin.pair(
-  @bin.magic(b"BS").named("magic"),
-  @bin.u16_le().named("version"),
-)
-
-match @bin.decode(header, b"BS\x01\x00") {
-  Ok(decoded) => {
-    // decoded.value == ((), 1U)
-    // decoded.trace 包含字段路径和精确字节范围
-  }
-  Err(error) => println(error.render())
-}
-```
-
-主要组合子包括：`pair`、`repeat`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if` 和 `checksum_suffix`。基础类型覆盖有/无符号 8/16/32/64 位整数、大小端、固定字节串、magic、MSB 位域和布尔值。
-
-安装依赖：
+在 MoonBit 项目中添加依赖：
 
 ```bash
 moon add prowk/binschema
+```
+
+组合一个带魔数、版本号和 LEB128 流 ID 的协议：
+
+```mbt nocheck
+///|
+let packet = @bin.pair(
+  @bin.magic(b"BS").named("magic"),
+  @bin.pair(@bin.u8().named("version"), @bin.uleb128().named("stream_id")),
+)
+
+///|
+let value = ((), (1U, 624485UL))
+
+///|
+let bytes = @bin.encode(packet, value).unwrap()
+
+///|
+let decoded = @bin.decode(packet, bytes).unwrap()
+
+// decoded.value == value
+// decoded.trace 包含每个命名字段的路径和精确字节范围
+```
+
+基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if` 和 `checksum_suffix`。
+
+## 可复现的自定义协议示例
+
+仓库中的 [`examples/custom_packet`](examples/custom_packet) 定义了如下布局：
+
+```text
+magic "BS" | version u8 | stream_id uleb128 | sequence u16_le
+```
+
+克隆仓库后可直接运行：
+
+```bash
+moon update
+moon run --target native examples/custom_packet
+```
+
+预期输出包含：
+
+```text
+encoded: 42 53 01 e5 8e 26 07 00
+stream_id: 624485
+trace fields: 4
 ```
 
 ## CLI
@@ -47,43 +76,59 @@ moon run --target native cmd/main -- inspect image.png
 moon run --target native cmd/main -- inspect capture.pcap --json
 moon run --target native cmd/main -- verify audio.wav
 moon run --target native cmd/main -- sample png sample.png
+moon run --target native cmd/main -- formats
 ```
 
-支持 `PNG`、`WAVE`、`PCAP`，也可通过 `--format` 显式指定。
+CLI 支持自动识别或通过 `--format png|wav|pcap` 显式指定格式。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
 
-## Web / Wasm-GC 演示
+## Web / Wasm-GC 检查器
 
-```powershell
-moon build --target wasm-gc web/bridge
-Copy-Item _build/wasm-gc/debug/build/web/bridge/bridge.wasm web/binschema.wasm
+```bash
+moon build --target wasm-gc web/bridge --release
+cp _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
 python -m http.server 4173 --directory web
 ```
 
-打开 `http://127.0.0.1:4173/`。文件完全在浏览器本地处理，不会上传；悬停结构字段时会高亮对应十六进制字节。
+Windows PowerShell 可用：
+
+```powershell
+Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
+```
+
+打开 `http://127.0.0.1:4173/`。文件仅在浏览器本地处理，不会上传；浏览器输入上限为 16 MiB。界面可查看字段结构、十六进制范围和往返校验结果，并支持键盘导航。
 
 ## 仓库结构
 
 ```text
 ├─ codec.mbt / decoder.mbt / encoder.mbt  # 安全组合子核心
-├─ primitives.mbt                         # 基础二进制类型
-├─ formats/                               # PNG / WAVE / PCAP 与统一检查 API
+├─ primitives.mbt / varint.mbt            # 定长与变长基础类型
+├─ formats/                               # PNG / WAVE / PCAP
 ├─ cmd/main/                              # 原生 CLI
-├─ web/                                   # Wasm-GC 桥接与可视化页面
-├─ docs/                                  # 架构和安全模型
-└─ 比赛要求/                              # 参赛要求与项目申报材料
+├─ web/                                   # Wasm-GC 桥接与浏览器检查器
+├─ examples/custom_packet/                # 可构建的自定义协议示例
+└─ docs/                                  # 架构和安全模型
 ```
 
-## 质量保证
+## 开发与验收
 
 ```bash
+moon update
+moon info
+moon fmt --check
 moon check --target all --deny-warn
 moon test --target all --deny-warn
-moon info
-moon fmt
+moon test --target native --enable-coverage --deny-warn
+moon coverage analyze
+moon build --target native cmd/main --release
+moon build --target native examples/custom_packet --release
+moon build --target wasm-gc web/bridge --release
+cmp README.md README.mbt.md
 ```
 
-测试覆盖正常往返、大小端、位域、条件字段、长度前缀、限制触发、尾随字节、校验和破坏及三种示例格式。更多设计细节见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY.md)。
+测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会执行跨后端检查、示例构建、覆盖率流程和 README 同步校验。
+
+更多设计细节见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
 
 ## License
 
-Apache-2.0
+[Apache-2.0](LICENSE)

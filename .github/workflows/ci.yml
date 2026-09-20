@@ -19,9 +19,17 @@ jobs:
         run: moon check --target all --deny-warn
       - name: Test all backends
         run: moon test --target all --deny-warn
+      - name: Verify coverage workflow
+        run: |
+          moon test --target native --enable-coverage --deny-warn
+          moon coverage analyze
       - name: Verify formatting
         run: moon fmt --check
+      - name: Verify README synchronization
+        run: cmp README.md README.mbt.md
       - name: Build native CLI
         run: moon build --target native cmd/main --release
+      - name: Build reproducible example
+        run: moon build --target native examples/custom_packet --release
       - name: Build Wasm-GC bridge
         run: moon build --target wasm-gc web/bridge --release
