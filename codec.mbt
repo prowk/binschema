@@ -102,7 +102,14 @@ pub fn[A, B] Codec::xmap(
       match encode_map(value) {
         Ok(mapped) => inner.encode_into(encoder, mapped)
         Err(message) =>
-          Err(BinError::new(InvalidValue, encoder.length(), encoder.path(), message))
+          Err(
+            BinError::new(
+              InvalidValue,
+              encoder.length(),
+              encoder.path(),
+              message,
+            ),
+          )
       }
     },
     kind=inner.kind,
@@ -224,7 +231,9 @@ pub fn[T] Codec::validate(
       if predicate(value) {
         inner.encode_into(encoder, value)
       } else {
-        Err(BinError::new(InvalidValue, encoder.length(), encoder.path(), message))
+        Err(
+          BinError::new(InvalidValue, encoder.length(), encoder.path(), message),
+        )
       }
     },
     kind=inner.kind,
