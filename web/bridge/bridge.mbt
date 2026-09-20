@@ -3,7 +3,7 @@ struct BridgeError {
   error : String
 } derive(ToJson)
 
-extend BridgeError with ToJson::{to_json}
+pub extend BridgeError with ToJson::{to_json}
 
 ///|
 let web_max_bytes : Int = 16 * 1024 * 1024
