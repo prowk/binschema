@@ -275,6 +275,16 @@ pub fn pcap_codec() -> @bin.Codec[PcapFile] {
       })
     },
     fn(encoder, value) {
+      if value.packets.length() > encoder.max_collection_length() {
+        return Err(
+          @bin.BinError::new(
+            @bin.LimitExceeded,
+            encoder.length(),
+            "packets",
+            "PCAP packet count exceeds configured limit",
+          ),
+        )
+      }
       match
         validate_pcap_header(
           value.version_major,
