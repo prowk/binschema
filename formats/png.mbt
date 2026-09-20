@@ -6,9 +6,27 @@ pub(all) struct PngChunk {
 } derive(Eq, Debug, ToJson)
 
 ///|
+pub extend PngChunk with Eq::{not_equal, equal}
+
+///|
+pub extend PngChunk with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend PngChunk with ToJson::{to_json}
+
+///|
 pub(all) struct PngFile {
   chunks : Array[PngChunk]
 } derive(Eq, Debug, ToJson)
+
+///|
+pub extend PngFile with Eq::{not_equal, equal}
+
+///|
+pub extend PngFile with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend PngFile with ToJson::{to_json}
 
 ///|
 fn ascii_chunk_type(bytes : Bytes) -> Result[String, String] {

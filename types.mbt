@@ -6,6 +6,15 @@ pub(all) enum Endian {
 } derive(Eq, Debug, ToJson)
 
 ///|
+pub extend Endian with Eq::{not_equal, equal}
+
+///|
+pub extend Endian with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend Endian with ToJson::{to_json}
+
+///|
 /// 统一的编解码错误分类。
 pub(all) enum ErrorKind {
   UnexpectedEof
@@ -18,6 +27,15 @@ pub(all) enum ErrorKind {
 } derive(Eq, Debug, ToJson)
 
 ///|
+pub extend ErrorKind with Eq::{not_equal, equal}
+
+///|
+pub extend ErrorKind with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend ErrorKind with ToJson::{to_json}
+
+///|
 /// 带绝对偏移和字段路径的错误。
 pub(all) struct BinError {
   kind : ErrorKind
@@ -25,6 +43,15 @@ pub(all) struct BinError {
   path : String
   message : String
 } derive(Eq, Debug, ToJson)
+
+///|
+pub extend BinError with Eq::{not_equal, equal}
+
+///|
+pub extend BinError with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend BinError with ToJson::{to_json}
 
 ///|
 pub fn BinError::new(
@@ -71,6 +98,15 @@ pub(all) struct TraceEntry {
 } derive(Eq, Debug, ToJson)
 
 ///|
+pub extend TraceEntry with Eq::{not_equal, equal}
+
+///|
+pub extend TraceEntry with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
+pub extend TraceEntry with ToJson::{to_json}
+
+///|
 /// 防止恶意长度字段造成过量内存或递归消耗。
 pub(all) struct Limits {
   max_input_bytes : Int
@@ -78,6 +114,12 @@ pub(all) struct Limits {
   max_depth : Int
   max_output_bytes : Int
 } derive(Eq, Debug)
+
+///|
+pub extend Limits with Eq::{not_equal, equal}
+
+///|
+pub extend Limits with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub fn Limits::default() -> Limits {
@@ -96,6 +138,12 @@ pub(all) struct DecodeOptions {
 } derive(Eq, Debug)
 
 ///|
+pub extend DecodeOptions with Eq::{not_equal, equal}
+
+///|
+pub extend DecodeOptions with @moonbitlang/core/debug.Debug::{to_repr}
+
+///|
 pub fn DecodeOptions::default() -> DecodeOptions {
   { limits: Limits::default(), require_eof: true, }
 }
@@ -104,6 +152,12 @@ pub fn DecodeOptions::default() -> DecodeOptions {
 pub(all) struct EncodeOptions {
   limits : Limits
 } derive(Eq, Debug)
+
+///|
+pub extend EncodeOptions with Eq::{not_equal, equal}
+
+///|
+pub extend EncodeOptions with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub fn EncodeOptions::default() -> EncodeOptions {
@@ -117,3 +171,6 @@ pub(all) struct Decoded[T] {
   consumed : Int
   trace : Array[TraceEntry]
 } derive(Debug)
+
+///|
+pub extend Decoded with @moonbitlang/core/debug.Debug::{to_repr}

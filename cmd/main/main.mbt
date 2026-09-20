@@ -14,7 +14,7 @@ enum CliError {
   Usage(String)
   Data(String)
   Io(String)
-} derive(Eq, Debug)
+}
 
 ///|
 fn CliError::message(self : CliError) -> String {
