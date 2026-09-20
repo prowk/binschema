@@ -4,6 +4,9 @@ struct BridgeError {
 } derive(ToJson)
 
 ///|
+let web_max_bytes : Int = 16 * 1024 * 1024
+
+///|
 fn error_json(message : String) -> String {
   @json.to_json(BridgeError::{ error: message, }).stringify()
 }
@@ -22,9 +25,15 @@ fn hex_digit(value : Int) -> Int? {
 }
 
 ///|
-fn decode_hex(input : String) -> Result[Bytes, String] {
+fn decode_hex_with_limit(
+  input : String,
+  max_bytes : Int,
+) -> Result[Bytes, String] {
   if input.length() % 2 != 0 {
     return Err("hex input must contain an even number of characters")
+  }
+  if input.length() / 2 > max_bytes {
+    return Err("input exceeds the browser safety limit of \{max_bytes} bytes")
   }
   let output : Array[Byte] = []
   let mut index = 0
@@ -41,6 +50,20 @@ fn decode_hex(input : String) -> Result[Bytes, String] {
     index += 2
   }
   Ok(Bytes::from_array(output))
+}
+
+///|
+fn decode_hex(input : String) -> Result[Bytes, String] {
+  decode_hex_with_limit(input, web_max_bytes)
+}
+
+///|
+fn encode_compact_hex(bytes : Bytes) -> String {
+  let parts : Array[String] = []
+  for byte in bytes {
+    parts.push(byte.to_hex())
+  }
+  parts.join("")
 }
 
 ///|
@@ -70,5 +93,5 @@ pub fn sample_hex(format_name : String) -> String {
     Ok(@formats.Auto) => return error_json("sample format cannot be auto")
     Err(message) => return error_json(message)
   }
-  @bin.bytes_to_hex(bytes)
+  encode_compact_hex(bytes)
 }

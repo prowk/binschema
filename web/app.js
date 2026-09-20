@@ -1,4 +1,5 @@
 const state = { wasm: null, bytes: null, name: "sample.bin", report: null };
+const MAX_FILE_BYTES = 16 * 1024 * 1024;
 const $ = (selector) => document.querySelector(selector);
 
 async function loadWasm() {
@@ -49,7 +50,7 @@ function render(report) {
   $("#hex").innerHTML = Array.from(state.bytes, (byte, index) =>
     `<span data-index="${index}">${byte.toString(16).padStart(2, "0")}</span>`).join(" ");
   $("#trace").innerHTML = report.trace.map((entry) => `
-    <div class="trace-row" data-start="${entry.start}" data-end="${entry.end}">
+    <div class="trace-row" tabindex="0" data-start="${entry.start}" data-end="${entry.end}">
       <span class="offset">${entry.start.toString(16).padStart(4, "0")}</span>
       <span class="path" title="${escapeText(entry.path)}">${escapeText(entry.path || "root")}</span>
       <span class="value" title="${escapeText(entry.value)}">${escapeText(entry.value)}</span>
@@ -57,12 +58,27 @@ function render(report) {
   document.querySelectorAll(".trace-row").forEach((row) => {
     row.addEventListener("mouseenter", () => highlight(Number(row.dataset.start), Number(row.dataset.end)));
     row.addEventListener("mouseleave", () => highlight(-1, -1));
+    row.addEventListener("focus", () => highlight(Number(row.dataset.start), Number(row.dataset.end)));
+    row.addEventListener("blur", () => highlight(-1, -1));
   });
   $("#error").hidden = true;
   $("#result").hidden = false;
+  $("#status").textContent = `已解析 ${report.format}，${report.trace.length} 个字段`;
 }
 
 function inspectBytes(bytes, name = "sample.bin") {
+  if (bytes.length === 0) {
+    $("#result").hidden = true;
+    $("#error").textContent = "文件为空，无法识别二进制格式。";
+    $("#error").hidden = false;
+    return;
+  }
+  if (bytes.length > MAX_FILE_BYTES) {
+    $("#result").hidden = true;
+    $("#error").textContent = "文件超过浏览器安全上限（16 MiB）。请使用 CLI 处理更大的文件。";
+    $("#error").hidden = false;
+    return;
+  }
   state.bytes = bytes;
   state.name = name;
   const raw = state.wasm.inspect_hex($("#format").value, toHex(bytes));
@@ -77,6 +93,12 @@ function inspectBytes(bytes, name = "sample.bin") {
 }
 
 async function openFile(file) {
+  if (file.size > MAX_FILE_BYTES) {
+    $("#result").hidden = true;
+    $("#error").textContent = "文件超过浏览器安全上限（16 MiB）。请使用 CLI 处理更大的文件。";
+    $("#error").hidden = false;
+    return;
+  }
   inspectBytes(new Uint8Array(await file.arrayBuffer()), file.name);
 }
 
@@ -97,6 +119,12 @@ async function init() {
     zone.addEventListener(eventName, (event) => { event.preventDefault(); zone.classList.remove("drag"); });
   }
   zone.addEventListener("drop", (event) => event.dataTransfer.files[0] && openFile(event.dataTransfer.files[0]));
+  zone.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      $("#file").click();
+    }
+  });
   document.querySelectorAll(".sample").forEach((button) => button.addEventListener("click", () => {
     const format = button.dataset.format;
     $("#format").value = format;

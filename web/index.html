@@ -37,14 +37,15 @@
         <button class="sample" data-format="pcap">PCAP</button>
       </div>
 
-      <label id="dropzone" class="dropzone" for="file">
+      <label id="dropzone" class="dropzone" for="file" tabindex="0" role="button" aria-label="选择或拖入二进制文件，最大 16 MiB">
         <input id="file" type="file" hidden>
         <span class="drop-icon">↧</span>
         <strong>拖入二进制文件</strong>
-        <small>或点击选择 · 文件只在本机处理</small>
+        <small>或点击选择 · 最大 16 MiB · 文件只在本机处理</small>
       </label>
 
-      <div id="error" class="error" hidden></div>
+      <div id="error" class="error" role="alert" hidden></div>
+      <div id="status" class="sr-only" role="status" aria-live="polite"></div>
 
       <section id="result" class="result" hidden>
         <div class="overview">
