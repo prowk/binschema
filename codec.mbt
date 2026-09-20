@@ -342,7 +342,7 @@ pub fn[T] length_prefixed(
             )
           }
           let length = raw_length.reinterpret_as_int()
-          if length > max_length || length > decoder.max_collection_length() {
+          if length > max_length {
             return Err(
               BinError::new(
                 LimitExceeded,
