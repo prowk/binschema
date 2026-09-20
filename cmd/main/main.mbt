@@ -106,6 +106,21 @@ fn render_report(report : @formats.Inspection) -> String {
 }
 
 ///|
+fn verify_report(report : @formats.Inspection) -> Result[String, CliError] {
+  if report.roundtrip_equal {
+    Ok(
+      "验证通过：\{report.format}，\{report.size} 字节，往返一致=true",
+    )
+  } else {
+    Err(
+      Data(
+        "验证失败：\{report.format} 解码后重新编码的字节与原始输入不一致",
+      ),
+    )
+  }
+}
+
+///|
 fn inspect_input(
   input : Bytes,
   format : @formats.Format,
@@ -117,9 +132,7 @@ fn inspect_input(
     Err(error) => return Err(Data(error.render()))
   }
   if verify_only {
-    Ok(
-      "验证通过：\{report.format}，\{report.size} 字节，往返一致=\{report.roundtrip_equal}",
-    )
+    verify_report(report)
   } else if json {
     Ok(report.to_json_string(pretty=true))
   } else {

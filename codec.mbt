@@ -62,7 +62,9 @@ pub fn[T] Codec::named(self : Codec[T], name : String) -> Codec[T] {
         }
       })
     },
-    fn(encoder, value) { inner.encode_into(encoder, value) },
+    fn(encoder, value) {
+      encoder.with_path(name, fn() { inner.encode_into(encoder, value) })
+    },
     kind=inner.kind,
     render=inner.render,
   )
@@ -100,7 +102,14 @@ pub fn[A, B] Codec::xmap(
       match encode_map(value) {
         Ok(mapped) => inner.encode_into(encoder, mapped)
         Err(message) =>
-          Err(BinError::new(InvalidValue, encoder.length(), "", message))
+          Err(
+            BinError::new(
+              InvalidValue,
+              encoder.length(),
+              encoder.path(),
+              message,
+            ),
+          )
       }
     },
     kind=inner.kind,
@@ -173,7 +182,7 @@ pub fn[T] repeat(count : Int, item : Codec[T]) -> Codec[Array[T]] {
           BinError::new(
             InvalidValue,
             encoder.length(),
-            "",
+            encoder.path(),
             "array length does not match fixed repeat count",
           ),
         )
@@ -187,7 +196,7 @@ pub fn[T] repeat(count : Int, item : Codec[T]) -> Codec[Array[T]] {
       Ok(())
     },
     kind="array",
-    render=fn(values) { "[[0m\{values.length()} items]" },
+    render=fn(values) { "[\{values.length()} items]" },
   )
 }
 
@@ -222,7 +231,9 @@ pub fn[T] Codec::validate(
       if predicate(value) {
         inner.encode_into(encoder, value)
       } else {
-        Err(BinError::new(InvalidValue, encoder.length(), "", message))
+        Err(
+          BinError::new(InvalidValue, encoder.length(), encoder.path(), message),
+        )
       }
     },
     kind=inner.kind,
@@ -293,7 +304,7 @@ pub fn[T] bounded(
                   BinError::new(
                     InvalidValue,
                     encoder.length(),
-                    "",
+                    encoder.path(),
                     "encoded value does not match bounded length",
                   ),
                 )
@@ -358,7 +369,7 @@ pub fn[T] length_prefixed(
                   BinError::new(
                     LimitExceeded,
                     encoder.length(),
-                    "",
+                    encoder.path(),
                     "length-prefixed field exceeds configured limit",
                   ),
                 )

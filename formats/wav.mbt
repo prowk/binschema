@@ -82,7 +82,10 @@ fn ascii_id(
 }
 
 ///|
-fn parse_wav_format(data : Bytes) -> Result[WavFormat, @bin.BinError] {
+fn parse_wav_format(
+  data : Bytes,
+  limits : @bin.Limits,
+) -> Result[WavFormat, @bin.BinError] {
   if data.length() < 16 {
     return Err(
       @bin.BinError::new(
@@ -93,10 +96,7 @@ fn parse_wav_format(data : Bytes) -> Result[WavFormat, @bin.BinError] {
       ),
     )
   }
-  let options = @bin.DecodeOptions::{
-    limits: @bin.Limits::default(),
-    require_eof: false,
-  }
+  let options = @bin.DecodeOptions::{ limits, require_eof: false, }
   let codec = @bin.Codec::make(
     fn(decoder) {
       let audio_format = match
@@ -296,7 +296,7 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
               ),
             )
           }
-          let parsed = match parse_wav_format(data) {
+          let parsed = match parse_wav_format(data, decoder.limits) {
             Err(error) => return Err(error)
             Ok(value) => value
           }
@@ -340,7 +340,7 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
       Ok({ riff_size, chunks, format, })
     },
     fn(encoder, value) {
-      let body = @bin.Encoder::new(@bin.Limits::default())
+      let body = @bin.Encoder::new(encoder.limits)
       match @bin.magic(b"WAVE").encode_into(body, ()) {
         Err(error) => return Err(error)
         Ok(_) => ()
@@ -359,7 +359,7 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
               ),
             )
           }
-          let parsed = match parse_wav_format(chunk.data) {
+          let parsed = match parse_wav_format(chunk.data, encoder.limits) {
             Err(error) => return Err(error)
             Ok(format) => format
           }
