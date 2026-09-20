@@ -113,8 +113,6 @@ pub fn Decoder::take_bytes(
     Ok(_) =>
       if count < 0 {
         Err(self.error(InvalidValue, "byte count cannot be negative"))
-      } else if count > self.limits.max_collection_length {
-        Err(self.error(LimitExceeded, "byte count exceeds collection limit"))
       } else if count > self.remaining() {
         Err(self.error(UnexpectedEof, "not enough bytes for requested field"))
       } else {
