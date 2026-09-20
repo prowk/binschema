@@ -219,14 +219,13 @@ pub fn pcap_codec() -> @bin.Codec[PcapFile] {
           )
         }
         let length = included_length.reinterpret_as_int()
-        if length > decoder.max_collection_length() ||
-          included_length > snapshot_length {
+        if included_length > snapshot_length {
           return Err(
             @bin.BinError::new(
               @bin.LimitExceeded,
               decoder.absolute_offset(),
               prefix,
-              "PCAP packet exceeds snapshot or configured limit",
+              "PCAP packet exceeds the declared snapshot length",
             ),
           )
         }
