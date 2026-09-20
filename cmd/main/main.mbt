@@ -14,10 +14,7 @@ enum CliError {
   Usage(String)
   Data(String)
   Io(String)
-} derive(Eq, Debug)
-
-extend CliError with Eq::{not_equal, equal}
-extend CliError with @moonbitlang/core/debug.Debug::{to_repr}
+}
 
 ///|
 fn CliError::message(self : CliError) -> String {
