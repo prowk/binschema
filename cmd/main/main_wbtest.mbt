@@ -83,3 +83,15 @@ test "CLI errors expose stable process exit codes" {
   assert_eq(Io("x").exit_code(), 4)
   assert_eq(Usage("message").message(), "message")
 }
+
+///|
+test "CLI verification rejects non-canonical round trips" {
+  let report = @formats.Inspection::{
+    format: "TEST",
+    size: 1,
+    roundtrip_equal: false,
+    summary: [],
+    trace: [],
+  }
+  assert_true(verify_report(report) is Err(Data(_)))
+}
