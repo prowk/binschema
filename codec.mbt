@@ -177,6 +177,16 @@ pub fn[T] repeat(count : Int, item : Codec[T]) -> Codec[Array[T]] {
       Ok(values)
     },
     fn(encoder, values) {
+      if count > encoder.max_collection_length() {
+        return Err(
+          BinError::new(
+            LimitExceeded,
+            encoder.length(),
+            encoder.path(),
+            "repeat count exceeds collection limit",
+          ),
+        )
+      }
       if values.length() != count {
         return Err(
           BinError::new(
