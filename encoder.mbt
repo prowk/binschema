@@ -57,9 +57,7 @@ fn Encoder::ensure_capacity(
   additional : Int,
 ) -> Result[Unit, BinError] {
   if additional < 0 || self.length() + additional > self.limits.max_output_bytes {
-    Err(
-      self.error(LimitExceeded, "encoded output exceeds max_output_bytes"),
-    )
+    Err(self.error(LimitExceeded, "encoded output exceeds max_output_bytes"))
   } else {
     Ok(())
   }
@@ -71,9 +69,7 @@ pub fn Encoder::write_bytes(
   bytes : BytesView,
 ) -> Result[Unit, BinError] {
   if self.bit_count != 0 {
-    return Err(
-      self.error(Misaligned, "operation requires byte alignment"),
-    )
+    return Err(self.error(Misaligned, "operation requires byte alignment"))
   }
   match self.ensure_capacity(bytes.length()) {
     Err(error) => Err(error)
@@ -92,9 +88,7 @@ pub fn Encoder::write_uint(
   endian : Endian,
 ) -> Result[Unit, BinError] {
   guard width == 1 || width == 2 || width == 4 else {
-    return Err(
-      self.error(Unsupported, "UInt width must be 1, 2, or 4"),
-    )
+    return Err(self.error(Unsupported, "UInt width must be 1, 2, or 4"))
   }
   let output : Array[Byte] = []
   match endian {
@@ -138,9 +132,7 @@ pub fn Encoder::write_bits_msb(
   width : Int,
 ) -> Result[Unit, BinError] {
   guard width > 0 && width <= 32 else {
-    return Err(
-      self.error(InvalidValue, "bit width must be in 1..32"),
-    )
+    return Err(self.error(InvalidValue, "bit width must be in 1..32"))
   }
   if width < 32 && value >= 1U << width {
     return Err(
