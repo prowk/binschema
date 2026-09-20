@@ -1,11 +1,16 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "prowk/binschema/cmd/main"
 
+import {
+  "moonbitlang/core/debug",
+}
+
 // Values
 
 // Errors
 
 // Types and methods
+type CliError derive(Eq, @debug.Debug)
 
 // Type aliases
 
