@@ -148,7 +148,7 @@ pub fn bytes_fixed(count : Int) -> Codec[Bytes] {
           BinError::new(
             InvalidValue,
             encoder.length(),
-            "",
+            encoder.path(),
             "byte string length does not match fixed field length",
           ),
         )
