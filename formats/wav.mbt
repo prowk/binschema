@@ -251,16 +251,6 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
           )
         }
         let size = raw_size.reinterpret_as_int()
-        if size > decoder.max_collection_length() {
-          return Err(
-            @bin.BinError::new(
-              @bin.LimitExceeded,
-              decoder.absolute_offset(),
-              prefix,
-              "WAVE chunk exceeds configured collection limit",
-            ),
-          )
-        }
         let data = match
           @bin.bytes_fixed(size).named(prefix + ".data").decode_from(decoder) {
           Err(error) => return Err(error)
