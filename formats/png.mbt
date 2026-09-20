@@ -203,6 +203,16 @@ pub fn png_codec() -> @bin.Codec[PngFile] {
       Ok({ chunks, })
     },
     fn(encoder, value) {
+      if value.chunks.length() > encoder.max_collection_length() {
+        return Err(
+          @bin.BinError::new(
+            @bin.LimitExceeded,
+            encoder.length(),
+            "chunks",
+            "PNG chunk count exceeds configured limit",
+          ),
+        )
+      }
       match validate_png_file(value) {
         Err(message) =>
           return Err(

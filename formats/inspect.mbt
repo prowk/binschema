@@ -230,7 +230,15 @@ pub fn inspect(
     value => value
   }
   match selected {
-    Auto => abort("unreachable auto format")
+    Auto =>
+      Err(
+        @bin.BinError::new(
+          @bin.Unsupported,
+          0,
+          "format",
+          "auto format must be resolved before inspection",
+        ),
+      )
     Png => inspect_png(input)
     Wav => inspect_wav(input)
     Pcap => inspect_pcap(input)
