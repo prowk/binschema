@@ -92,3 +92,22 @@ test "PNG encoding enforces collection item limits" {
     is Err({ kind: @bin.LimitExceeded, .. }),
   )
 }
+
+///|
+test "PNG encoding enforces collection item limits" {
+  let decoded = match @bin.decode(@formats.png_codec(), @formats.sample_png()) {
+    Err(error) => fail(error.render())
+    Ok(value) => value
+  }
+  let limits = @bin.Limits::{
+    max_input_bytes: 1024 * 1024,
+    max_collection_length: 2,
+    max_depth: 16,
+    max_output_bytes: 1024 * 1024,
+  }
+  let options = @bin.EncodeOptions::{ limits, }
+  assert_true(
+    @bin.encode_with_options(@formats.png_codec(), decoded.value, options)
+    is Err({ kind: @bin.LimitExceeded, .. }),
+  )
+}
