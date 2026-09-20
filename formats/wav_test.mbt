@@ -52,3 +52,23 @@ test "WAVE requires a valid fmt chunk before data" {
     is Err({ kind: @bin.InvalidValue, .. }),
   )
 }
+
+///|
+test "WAV byte payloads are independent from collection count limits" {
+  let limits = @bin.Limits::{
+    max_input_bytes: 1024 * 1024,
+    max_collection_length: 3,
+    max_depth: 16,
+    max_output_bytes: 1024 * 1024,
+  }
+  let options = @bin.DecodeOptions::{ limits, require_eof: true, }
+  match
+    @bin.decode_with_options(
+      @formats.wav_codec(),
+      @formats.sample_wav(),
+      options,
+    ) {
+    Err(error) => fail(error.render())
+    Ok(_) => ()
+  }
+}
