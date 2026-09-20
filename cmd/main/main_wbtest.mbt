@@ -1,11 +1,27 @@
 ///|
+fn assert_ok_text(result : Result[String, CliError], expected : String) -> Unit {
+  match result {
+    Ok(value) => assert_eq(value, expected)
+    Err(error) => fail(error.message())
+  }
+}
+
+///|
+fn assert_ok_bytes(result : Result[Bytes, CliError], expected : Bytes) -> Unit {
+  match result {
+    Ok(value) => assert_eq(value, expected)
+    Err(error) => fail(error.message())
+  }
+}
+
+///|
 test "CLI metadata commands are pure and stable" {
   assert_true(
     run(["binschema"]) is Ok(text) &&
     text.contains("安全的二进制协议检查器"),
   )
-  assert_eq(run(["binschema", "formats"]), Ok("支持格式: PNG, WAVE, PCAP"))
-  assert_eq(run(["binschema", "--version"]), Ok("binschema " + @bin.VERSION))
+  assert_ok_text(run(["binschema", "formats"]), "支持格式: PNG, WAVE, PCAP")
+  assert_ok_text(run(["binschema", "--version"]), "binschema " + @bin.VERSION)
   assert_true(run(["binschema", "unknown"]) is Err(Usage(_)))
 }
 
@@ -21,9 +37,9 @@ test "CLI parameter parser rejects malformed flags" {
   assert_true(
     parse_format(["binschema", "inspect", "x", "--wat"], 3) is Err(Usage(_)),
   )
-  assert_eq(
-    parse_format(["binschema", "inspect", "x", "--format", "png", "--json"], 3),
-    Ok(@formats.Png),
+  assert_true(
+    parse_format(["binschema", "inspect", "x", "--format", "png", "--json"], 3)
+    is Ok(@formats.Png),
   )
 }
 
@@ -50,11 +66,11 @@ test "CLI inspection renders text JSON and verification" {
 
 ///|
 test "CLI input budgets and sample selection are enforced" {
-  assert_eq(enforce_input_limit(b"ab", 2), Ok(b"ab"))
+  assert_ok_bytes(enforce_input_limit(b"ab", 2), b"ab")
   assert_true(enforce_input_limit(b"abc", 2) is Err(Data(_)))
-  assert_eq(sample_bytes("png"), Ok(@formats.sample_png()))
-  assert_eq(sample_bytes("wav"), Ok(@formats.sample_wav()))
-  assert_eq(sample_bytes("pcap"), Ok(@formats.sample_pcap()))
+  assert_ok_bytes(sample_bytes("png"), @formats.sample_png())
+  assert_ok_bytes(sample_bytes("wav"), @formats.sample_wav())
+  assert_ok_bytes(sample_bytes("pcap"), @formats.sample_pcap())
   assert_true(sample_bytes("auto") is Err(Usage(_)))
 }
 
