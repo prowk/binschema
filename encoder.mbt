@@ -1,6 +1,6 @@
 ///|
 /// 与 Decoder 对称的有界二进制写入器。
-pub(all) struct Encoder {
+pub struct Encoder {
   buffer : @buffer.Buffer
   mut bit_buffer : UInt
   mut bit_count : Int
