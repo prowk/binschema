@@ -181,28 +181,34 @@ fn validate_wav_format(format : WavFormat) -> Result[Unit, String] {
   Ok(())
 }
 
-
 ///|
 fn wav_schema() -> @bin.SchemaNode {
-  @bin.SchemaNode::node("wav", [
-    @bin.SchemaNode::leaf("bytes[4]").with_name("signature"),
-    @bin.SchemaNode::leaf("u32le").with_name("riff_size"),
-    @bin.SchemaNode::leaf("bytes[4]").with_name("form_type"),
-    @bin.SchemaNode::node(
-      "chunks",
-      [
-        @bin.SchemaNode::node("chunk", [
-          @bin.SchemaNode::leaf("bytes[4]").with_name("id"),
-          @bin.SchemaNode::leaf("u32le").with_name("size"),
-          @bin.SchemaNode::leaf("bytes[size]").with_name("data"),
-          @bin.SchemaNode::leaf("padding[0|1]").with_name("padding"),
-        ], constraints=["padding=word-alignment"]),
-      ],
-      constraints=["repeat=until-region-eof", "fmt-before-data"],
-    ),
-  ], constraints=["signature=RIFF", "form_type=WAVE"])
+  @bin.SchemaNode::node(
+    "wav",
+    [
+      @bin.SchemaNode::leaf("bytes[4]").with_name("signature"),
+      @bin.SchemaNode::leaf("u32le").with_name("riff_size"),
+      @bin.SchemaNode::leaf("bytes[4]").with_name("form_type"),
+      @bin.SchemaNode::node(
+        "chunks",
+        [
+          @bin.SchemaNode::node(
+            "chunk",
+            [
+              @bin.SchemaNode::leaf("bytes[4]").with_name("id"),
+              @bin.SchemaNode::leaf("u32le").with_name("size"),
+              @bin.SchemaNode::leaf("bytes[size]").with_name("data"),
+              @bin.SchemaNode::leaf("padding[0|1]").with_name("padding"),
+            ],
+            constraints=["padding=word-alignment"],
+          ),
+        ],
+        constraints=["repeat=until-region-eof", "fmt-before-data"],
+      ),
+    ],
+    constraints=["signature=RIFF", "form_type=WAVE"],
+  )
 }
-
 ///|
 pub fn wav_codec() -> @bin.Codec[WavFile] {
   @bin.Codec::make(
