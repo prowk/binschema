@@ -102,7 +102,12 @@ test "repeat and validation enforce structural rules" {
 
 ///|
 test "limits reject oversized input before parsing" {
-  let limits = @binschema.Limits::new(max_input_bytes=2, max_collection_length=16, max_depth=8, max_output_bytes=16)
+  let limits = @binschema.Limits::new(
+    max_input_bytes=2,
+    max_collection_length=16,
+    max_depth=8,
+    max_output_bytes=16,
+  )
   let options = @binschema.DecodeOptions::{ limits, require_eof: true, }
   match
     @binschema.decode_with_options(@binschema.bytes_fixed(3), b"abc", options) {
@@ -192,7 +197,12 @@ test "repeat rejects invalid declarations and value lengths" {
     @binschema.encode(@binschema.repeat(2, @binschema.u8()), [1U])
     is Err({ kind: @binschema.InvalidValue, .. }),
   )
-  let limits = @binschema.Limits::new(max_input_bytes=16, max_collection_length=1, max_depth=4, max_output_bytes=16)
+  let limits = @binschema.Limits::new(
+    max_input_bytes=16,
+    max_collection_length=1,
+    max_depth=4,
+    max_output_bytes=16,
+  )
   assert_true(
     @binschema.decode_with_options(
       @binschema.repeat(2, @binschema.u8()),
@@ -227,7 +237,12 @@ test "bounded codecs enforce size eof and nesting depth" {
     is Err({ kind: @binschema.InvalidValue, .. }),
   )
   let nested = @binschema.bounded(1, @binschema.bounded(1, @binschema.u8()))
-  let limits = @binschema.Limits::new(max_input_bytes=16, max_collection_length=16, max_depth=1, max_output_bytes=16)
+  let limits = @binschema.Limits::new(
+    max_input_bytes=16,
+    max_collection_length=16,
+    max_depth=1,
+    max_output_bytes=16,
+  )
   assert_true(
     @binschema.decode_with_options(nested, b"\x01", @binschema.DecodeOptions::{
       limits,
@@ -256,7 +271,12 @@ test "length-prefixed codec rejects oversized regions" {
 
 ///|
 test "output budgets stop encoding before allocation grows" {
-  let limits = @binschema.Limits::new(max_input_bytes=16, max_collection_length=16, max_depth=4, max_output_bytes=2)
+  let limits = @binschema.Limits::new(
+    max_input_bytes=16,
+    max_collection_length=16,
+    max_depth=4,
+    max_output_bytes=2,
+  )
   assert_true(
     @binschema.encode_with_options(@binschema.bytes_fixed(3), b"abc", @binschema.EncodeOptions::{
       limits,
@@ -285,7 +305,6 @@ test "valid checksum suffix round-trips" {
   }
 }
 
-
 ///|
 test "trace budgets reject diagnostic amplification" {
   let limits = @binschema.Limits::new(
@@ -300,11 +319,10 @@ test "trace budgets reject diagnostic amplification" {
     @binschema.u8().named("second"),
   )
   assert_true(
-    @binschema.decode_with_options(
-      codec,
-      b"\x01\x02",
-      @binschema.DecodeOptions::{ limits, require_eof: true, },
-    )
+    @binschema.decode_with_options(codec, b"\x01\x02", @binschema.DecodeOptions::{
+      limits,
+      require_eof: true,
+    })
     is Err({ kind: @binschema.LimitExceeded, .. }),
   )
 }
