@@ -89,11 +89,11 @@ test "property: zero-copy view codecs compose inside bounded regions" {
     Err(error) => fail(error.render())
     Ok(decoded) => {
       assert_eq(decoded.consumed, 4)
-      assert_eq(decoded.value.to_bytes(), b"abc")
+      assert_eq(decoded.value.to_owned(), b"abc")
     }
   }
   match decode_view(remaining_view(), source[4:]) {
     Err(error) => fail(error.render())
-    Ok(decoded) => assert_eq(decoded.value.to_bytes(), b"TAIL")
+    Ok(decoded) => assert_eq(decoded.value.to_owned(), b"TAIL")
   }
 }
