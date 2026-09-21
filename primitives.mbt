@@ -305,7 +305,6 @@ pub fn bytes_view_to_hex_preview(bytes : BytesView, max_bytes : Int) -> String {
   }
 }
 
-
 ///|
 /// 消费或写入固定数量的零填充字节。
 pub fn padding(count : Int) -> Codec[Unit] {
