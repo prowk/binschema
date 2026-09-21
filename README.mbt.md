@@ -1,5 +1,7 @@
 # BinSchema
 
+**简体中文** · [English](README.en.md)
+
 > 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。
 
 BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 PNG、WAVE、PCAP 三种真实格式实现。
@@ -24,26 +26,39 @@ BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。�
 moon add prowk/binschema
 ```
 
-组合一个带魔数、版本号和 LEB128 流 ID 的协议：
+并在调用方的 `moon.pkg` 中导入：
 
-```mbt nocheck
+```text
+import {
+  "prowk/binschema" @bin,
+}
+```
+
+下面的快速开始同时是仓库里的可执行文档测试。组合一个带魔数、版本号和 LEB128 流 ID 的协议：
+
+```mbt check
 ///|
-let packet = @bin.pair(
-  @bin.magic(b"BS").named("magic"),
-  @bin.pair(@bin.u8().named("version"), @bin.uleb128().named("stream_id")),
-)
-
-///|
-let value = ((), (1U, 624485UL))
-
-///|
-let bytes = @bin.encode(packet, value).unwrap()
-
-///|
-let decoded = @bin.decode(packet, bytes).unwrap()
-
-// decoded.value == value
-// decoded.trace 包含每个命名字段的路径和精确字节范围
+test "README quick start" {
+  let packet = @binschema.pair(
+    @binschema.magic(b"BS").named("magic"),
+    @binschema.pair(
+      @binschema.u8().named("version"),
+      @binschema.uleb128().named("stream_id"),
+    ),
+  )
+  let value = ((), (1U, 624485UL))
+  let bytes = match @binschema.encode(packet, value) {
+    Err(error) => fail(error.render())
+    Ok(bytes) => bytes
+  }
+  match @binschema.decode(packet, bytes) {
+    Err(error) => fail(error.render())
+    Ok(decoded) => {
+      assert_eq(decoded.value, value)
+      assert_eq(decoded.trace.length(), 3)
+    }
+  }
+}
 ```
 
 基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`count_prefixed`、`until_eof`、`tagged`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if`、`checksum_suffix` 与零拷贝 `checksum_suffix_view`。对于大输入，可用 `decode_view` + `bytes_view_fixed` / `remaining_view` 避免不必要的字节复制。
@@ -119,6 +134,8 @@ moon info
 moon fmt --check
 moon check --target all --deny-warn
 moon test --target all --deny-warn
+moon test README.mbt.md --target native --deny-warn
+moon bench --build-only --target native --deny-warn
 moon test --target native --enable-coverage --deny-warn
 moon coverage analyze
 moon build --target native cmd/main --release
@@ -129,7 +146,7 @@ cmp README.md README.mbt.md
 
 测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、确定性 property roundtrip、固定二进制 corpus、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会在四后端执行这些测试，并验证示例构建、覆盖率流程和 README 同步。
 
-更多设计细节见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
+更多设计细节见 [架构说明](docs/ARCHITECTURE.md)、[安全模型](docs/SECURITY.md)、[兼容性策略](docs/COMPATIBILITY.md) 与 [发布流程](docs/RELEASING.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
 
 ## License
 

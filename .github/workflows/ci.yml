@@ -14,7 +14,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install MoonBit
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
@@ -23,16 +23,26 @@ jobs:
         run: moon update
       - name: Verify generated interfaces are committed
         run: |
-          moon info
+          moon info --target all
           git diff --exit-code
       - name: Build API documentation
         run: moon doc
       - name: Audit publish package
-        run: moon package --list
+        run: |
+          moon package --list 2>&1 | tee /tmp/binschema-package-files.txt
+          grep -q "codec.mbt" /tmp/binschema-package-files.txt
+          if grep -Eq "(^|/)(\.github|\.githooks|web)/" /tmp/binschema-package-files.txt; then
+            echo "repository-only files leaked into the publish archive"
+            exit 1
+          fi
       - name: Check all backends
         run: moon check --target all --deny-warn
       - name: Test all backends including property and corpus suites
         run: moon test --target all --deny-warn
+      - name: Verify executable README
+        run: moon test README.mbt.md --target native --deny-warn
+      - name: Compile native benchmarks
+        run: moon bench --build-only --target native --deny-warn
       - name: Verify coverage workflow
         run: |
           moon test --target native --enable-coverage --deny-warn

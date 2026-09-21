@@ -1,0 +1,22 @@
+# Repository-only automation and local tooling.
+/.github/
+/.githooks/
+/.moonagent/
+/.tmp-test/
+/比赛要求/
+
+# Maintainer/agent instructions are not part of the runtime package.
+/AGENTS.md
+
+# The browser demo is deployed separately; library consumers do not need it.
+/web/
+
+# Keep only user-facing architecture, security, compatibility, and release docs.
+docs/*
+!/docs/ARCHITECTURE.md
+!/docs/SECURITY.md
+!/docs/COMPATIBILITY.md
+!/docs/RELEASING.md
+
+# Keep the publishing policy itself for reproducible archive audits.
+!/.moonignore

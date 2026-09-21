@@ -1,0 +1,64 @@
+name: Deploy playground
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "web/**"
+      - "formats/**"
+      - "codec.mbt"
+      - "decoder.mbt"
+      - "encoder.mbt"
+      - "primitives.mbt"
+      - "types.mbt"
+      - "varint.mbt"
+      - "moon.mod"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Restore dependencies
+        run: moon update
+      - name: Build Wasm-GC bridge
+        run: moon build --target wasm-gc web/bridge --release
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp web/index.html web/styles.css web/app.js _site/
+          cp _build/wasm-gc/release/build/web/bridge/bridge.wasm _site/binschema.wasm
+          touch _site/.nojekyll
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

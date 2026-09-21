@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 声明模块/包级后端支持范围，补充 Native benchmark、可执行 README、英文入口与 GitHub Pages 部署流程。
+- 新增兼容性/发布规范，并通过 `.moonignore` 与 CI 对发布归档进行审计。
+
 - 新增 `count_prefixed`、`until_eof`、`tagged` 高级组合子，并为大输入提供 `decode_view` / `BytesView` 零拷贝解码路径。
 - 新增确定性 property-style roundtrip 测试与固定二进制 corpus 回归测试，并纳入 Wasm、Wasm-GC、JavaScript、Native 四后端 CI。
 
