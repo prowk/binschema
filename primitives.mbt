@@ -180,7 +180,7 @@ pub fn remaining_bytes() -> Codec[Bytes] {
     fn(decoder) {
       match decoder.take_view(decoder.remaining()) {
         Err(error) => Err(error)
-        Ok(view) => Ok(view.to_bytes())
+        Ok(view) => Ok(view.to_owned())
       }
     },
     fn(encoder, value) { encoder.write_bytes(value[:]) },
