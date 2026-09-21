@@ -86,6 +86,14 @@ stream_id: 624485
 trace fields: 4
 ```
 
+如果想看一个更接近真实应用的完整协议示例，参见 [`examples/demo_protocol`](examples/demo_protocol)。它在一份 codec 树中组合 magic、版本校验、计数数组、tagged union、长度前缀 payload、字段 trace 和整包 checksum，展示“定义一次协议，同时获得编码、解码、校验与字节级解释”的完整工作流。
+
+运行：
+
+```bash
+moon run --target native examples/demo_protocol
+```
+
 ## CLI
 
 ```bash
@@ -128,7 +136,8 @@ Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
 ├─ formats/                               # PNG / WAVE / PCAP
 ├─ cmd/main/                              # 原生 CLI
 ├─ web/                                   # Wasm-GC 桥接与浏览器检查器
-├─ examples/custom_packet/                # 可构建的自定义协议示例
+├─ examples/custom_packet/                # 最小自定义协议示例
+├─ examples/demo_protocol/                # 更完整的真实协议示例
 └─ docs/                                  # 架构和安全模型
 ```
 
@@ -146,6 +155,7 @@ moon test --target native --enable-coverage --deny-warn
 moon coverage analyze
 moon build --target native cmd/main --release
 moon build --target native examples/custom_packet --release
+moon build --target native examples/demo_protocol --release
 moon build --target wasm-gc web/bridge --release
 cmp README.md README.mbt.md
 ```
