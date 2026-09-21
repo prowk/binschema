@@ -37,6 +37,17 @@ function highlight(start, end) {
   });
 }
 
+function renderSchemaNode(node, depth = 0) {
+  const label = node.name ? `${escapeText(node.name)} <span class="schema-kind">${escapeText(node.kind)}</span>` : `<span class="schema-kind">${escapeText(node.kind)}</span>`;
+  const constraints = (node.constraints || []).map((constraint) => `<span>${escapeText(constraint)}</span>`).join("");
+  const children = (node.children || []).map((child) => renderSchemaNode(child, depth + 1)).join("");
+  return `
+    <div class="schema-node" style="--depth:${depth}">
+      <div class="schema-row">${label}<span class="schema-constraints">${constraints}</span></div>
+      ${children}
+    </div>`;
+}
+
 function render(report) {
   state.report = report;
   $("#result-format").textContent = report.format;
@@ -47,6 +58,7 @@ function render(report) {
   $("#file-name").textContent = state.name;
   $("#summary").innerHTML = report.summary.map(({ key, value }) =>
     `<span>${escapeText(key)} · <b>${escapeText(value)}</b></span>`).join("");
+  $("#schema").innerHTML = renderSchemaNode(report.schema);
   $("#hex").innerHTML = Array.from(state.bytes, (byte, index) =>
     `<span data-index="${index}">${byte.toString(16).padStart(2, "0")}</span>`).join(" ");
   $("#trace").innerHTML = report.trace.map((entry) => `
