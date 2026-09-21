@@ -188,10 +188,10 @@ pub(all) enum ErrorKind {
   Unsupported
 } derive(Eq, ToJson, @debug.Debug)
 pub fn ErrorKind::equal(Self, Self) -> Bool
+pub fn ErrorKind::name(Self) -> String
 pub fn ErrorKind::not_equal(Self, Self) -> Bool
 pub fn ErrorKind::to_json(Self) -> Json
 pub fn ErrorKind::to_repr(Self) -> @debug.Repr
-pub fn ErrorKind::name(Self) -> String
 
 pub struct Limits {
   max_input_bytes : Int
