@@ -10,6 +10,7 @@ pub fn sample_hex(String) -> String
 
 // Types and methods
 type BridgeError derive(ToJson)
+pub fn BridgeError::to_json(Self) -> Json
 
 // Type aliases
 

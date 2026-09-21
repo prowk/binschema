@@ -1,6 +1,6 @@
 ///|
 /// 一份 Codec 同时定义解码和编码行为。
-pub(all) struct Codec[T] {
+pub struct Codec[T] {
   decode_impl : (Decoder) -> Result[T, BinError]
   encode_impl : (Encoder, T) -> Result[Unit, BinError]
   kind : String
@@ -49,16 +49,18 @@ pub fn[T] Codec::named(self : Codec[T], name : String) -> Codec[T] {
       decoder.with_path(name, fn() {
         match inner.decode_from(decoder) {
           Err(error) => Err(error)
-          Ok(value) => {
-            decoder.record(
-              full_path,
-              inner.kind,
-              start,
-              decoder.absolute_offset(),
-              (inner.render)(value),
-            )
-            Ok(value)
-          }
+          Ok(value) =>
+            match
+              decoder.record(
+                full_path,
+                inner.kind,
+                start,
+                decoder.absolute_offset(),
+                fn() { (inner.render)(value) },
+              ) {
+              Err(error) => Err(error)
+              Ok(_) => Ok(value)
+            }
         }
       })
     },
@@ -294,8 +296,10 @@ pub fn[T] bounded(
                   ),
                 )
               } else {
-                decoder.append_trace(child.trace())
-                Ok(value)
+                match decoder.append_trace(child.trace()) {
+                  Err(error) => Err(error)
+                  Ok(_) => Ok(value)
+                }
               }
           }
         }

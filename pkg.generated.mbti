@@ -76,16 +76,20 @@ pub fn uleb128() -> Codec[UInt64]
 // Errors
 
 // Types and methods
-pub(all) struct BinError {
+pub struct BinError {
   kind : ErrorKind
   offset : Int
   path : String
   message : String
 } derive(Eq, ToJson, @debug.Debug)
+pub fn BinError::equal(Self, Self) -> Bool
 pub fn BinError::new(ErrorKind, Int, String, String) -> Self
+pub fn BinError::not_equal(Self, Self) -> Bool
 pub fn BinError::render(Self) -> String
+pub fn BinError::to_json(Self) -> Json
+pub fn BinError::to_repr(Self) -> @debug.Repr
 
-pub(all) struct Codec[T] {
+pub struct Codec[T] {
   decode_impl : (Decoder) -> Result[T, BinError]
   encode_impl : (Encoder, T) -> Result[Unit, BinError]
   kind : String
@@ -103,20 +107,24 @@ pub(all) struct DecodeOptions {
   require_eof : Bool
 } derive(Eq, @debug.Debug)
 pub fn DecodeOptions::default() -> Self
+pub fn DecodeOptions::equal(Self, Self) -> Bool
+pub fn DecodeOptions::not_equal(Self, Self) -> Bool
+pub fn DecodeOptions::to_repr(Self) -> @debug.Repr
 
-pub(all) struct Decoded[T] {
+pub struct Decoded[T] {
   value : T
   consumed : Int
   trace : Array[TraceEntry]
 } derive(@debug.Debug)
+pub fn[T : @debug.Debug] Decoded::to_repr(Self[T]) -> @debug.Repr
 
-pub(all) struct Decoder {
+pub struct Decoder {
   input : Bytes
   base_offset : Int
   mut offset : Int
   mut bit_offset : Int
   mut field_path : String
-  mut depth : Int
+  depth : Int
   limits : Limits
   trace_entries : Array[TraceEntry]
 }
@@ -139,17 +147,23 @@ pub(all) struct EncodeOptions {
   limits : Limits
 } derive(Eq, @debug.Debug)
 pub fn EncodeOptions::default() -> Self
+pub fn EncodeOptions::equal(Self, Self) -> Bool
+pub fn EncodeOptions::not_equal(Self, Self) -> Bool
+pub fn EncodeOptions::to_repr(Self) -> @debug.Repr
 
-pub(all) struct Encoder {
+pub struct Encoder {
   buffer : @buffer.Buffer
   mut bit_buffer : UInt
   mut bit_count : Int
+  mut field_path : String
   limits : Limits
 }
 pub fn Encoder::align_byte(Self, fill_bit? : Bool) -> Result[Unit, BinError]
 pub fn Encoder::finish(Self) -> Result[Bytes, BinError]
 pub fn Encoder::length(Self) -> Int
+pub fn Encoder::max_collection_length(Self) -> Int
 pub fn Encoder::new(Limits) -> Self
+pub fn Encoder::path(Self) -> String
 pub fn Encoder::write_bits_msb(Self, UInt, Int) -> Result[Unit, BinError]
 pub fn Encoder::write_bytes(Self, BytesView) -> Result[Unit, BinError]
 pub fn Encoder::write_uint(Self, UInt, Int, Endian) -> Result[Unit, BinError]
@@ -159,6 +173,10 @@ pub(all) enum Endian {
   Big
   Little
 } derive(Eq, ToJson, @debug.Debug)
+pub fn Endian::equal(Self, Self) -> Bool
+pub fn Endian::not_equal(Self, Self) -> Bool
+pub fn Endian::to_json(Self) -> Json
+pub fn Endian::to_repr(Self) -> @debug.Repr
 
 pub(all) enum ErrorKind {
   UnexpectedEof
@@ -169,23 +187,36 @@ pub(all) enum ErrorKind {
   TrailingBytes
   Unsupported
 } derive(Eq, ToJson, @debug.Debug)
+pub fn ErrorKind::equal(Self, Self) -> Bool
 pub fn ErrorKind::name(Self) -> String
+pub fn ErrorKind::not_equal(Self, Self) -> Bool
+pub fn ErrorKind::to_json(Self) -> Json
+pub fn ErrorKind::to_repr(Self) -> @debug.Repr
 
-pub(all) struct Limits {
+pub struct Limits {
   max_input_bytes : Int
   max_collection_length : Int
   max_depth : Int
   max_output_bytes : Int
+  max_trace_entries : Int
 } derive(Eq, @debug.Debug)
 pub fn Limits::default() -> Self
+pub fn Limits::equal(Self, Self) -> Bool
+pub fn Limits::new(max_input_bytes? : Int, max_collection_length? : Int, max_depth? : Int, max_output_bytes? : Int, max_trace_entries? : Int) -> Self
+pub fn Limits::not_equal(Self, Self) -> Bool
+pub fn Limits::to_repr(Self) -> @debug.Repr
 
-pub(all) struct TraceEntry {
+pub struct TraceEntry {
   path : String
   kind : String
   start : Int
   end : Int
   value : String
 } derive(Eq, ToJson, @debug.Debug)
+pub fn TraceEntry::equal(Self, Self) -> Bool
+pub fn TraceEntry::not_equal(Self, Self) -> Bool
+pub fn TraceEntry::to_json(Self) -> Json
+pub fn TraceEntry::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 

@@ -1,12 +1,12 @@
 ///|
 /// 有界二进制读取器。所有读取都会先检查范围。
-pub(all) struct Decoder {
+pub struct Decoder {
   input : Bytes
   base_offset : Int
   mut offset : Int
   mut bit_offset : Int
   mut field_path : String
-  mut depth : Int
+  depth : Int
   limits : Limits
   trace_entries : Array[TraceEntry]
 }
@@ -230,14 +230,27 @@ fn Decoder::record(
   kind : String,
   start : Int,
   end : Int,
-  value : String,
-) -> Unit {
-  self.trace_entries.push({ path, kind, start, end, value, })
+  render_value : () -> String,
+) -> Result[Unit, BinError] {
+  if self.trace_entries.length() >= self.limits.max_trace_entries {
+    Err(self.error(LimitExceeded, "trace entry limit exceeded"))
+  } else {
+    self.trace_entries.push({ path, kind, start, end, value: render_value(), })
+    Ok(())
+  }
 }
 
 ///|
-fn Decoder::append_trace(self : Decoder, entries : Array[TraceEntry]) -> Unit {
+fn Decoder::append_trace(
+  self : Decoder,
+  entries : Array[TraceEntry],
+) -> Result[Unit, BinError] {
+  if entries.length() >
+    self.limits.max_trace_entries - self.trace_entries.length() {
+    return Err(self.error(LimitExceeded, "trace entry limit exceeded"))
+  }
   for entry in entries {
     self.trace_entries.push(entry)
   }
+  Ok(())
 }

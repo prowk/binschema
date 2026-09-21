@@ -29,6 +29,7 @@ bounded Decoder ──► Codec[T] ──► typed value
 - 默认解码必须消费完整输入。
 - 编码输出始终受到 `max_output_bytes` 限制。
 - 具名字段的错误路径和轨迹使用同一命名空间。
+- 轨迹记录受 `max_trace_entries` 预算约束，避免诊断数据绕过输入资源限制。
 
 ## 扩展一种格式
 
