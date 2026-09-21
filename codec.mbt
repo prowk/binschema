@@ -5,6 +5,7 @@ pub struct Codec[T] {
   encode_impl : (Encoder, T) -> Result[Unit, BinError]
   kind : String
   render : (T) -> String
+  schema : SchemaNode
 }
 
 ///|
@@ -13,8 +14,9 @@ pub fn[T] Codec::make(
   encode_impl : (Encoder, T) -> Result[Unit, BinError],
   kind~ : String,
   render~ : (T) -> String,
+  schema? : SchemaNode = SchemaNode::leaf(kind),
 ) -> Codec[T] {
-  { decode_impl, encode_impl, kind, render, }
+  { decode_impl, encode_impl, kind, render, schema, }
 }
 
 ///|
@@ -32,6 +34,18 @@ pub fn[T] Codec::encode_into(
   value : T,
 ) -> Result[Unit, BinError] {
   (self.encode_impl)(encoder, value)
+}
+
+///|
+/// 返回当前 Codec 的独立 Schema 快照。
+pub fn[T] Codec::schema_node(self : Codec[T]) -> SchemaNode {
+  self.schema.copy()
+}
+
+///|
+/// 渲染当前 Codec 的 Schema 树。
+pub fn[T] Codec::describe(self : Codec[T]) -> String {
+  self.schema.render()
 }
 
 ///|
@@ -69,6 +83,7 @@ pub fn[T] Codec::named(self : Codec[T], name : String) -> Codec[T] {
     },
     kind=inner.kind,
     render=inner.render,
+    schema=inner.schema.with_name(name),
   )
 }
 
@@ -116,6 +131,7 @@ pub fn[A, B] Codec::xmap(
     },
     kind=inner.kind,
     render~,
+    schema=inner.schema,
   )
 }
 
@@ -141,6 +157,7 @@ pub fn[A, B] pair(first : Codec[A], second : Codec[B]) -> Codec[(A, B)] {
     },
     kind="pair",
     render=fn(_) { "<pair>" },
+    schema=SchemaNode::node("pair", [first.schema, second.schema]),
   )
 }
 
@@ -209,6 +226,11 @@ pub fn[T] repeat(count : Int, item : Codec[T]) -> Codec[Array[T]] {
     },
     kind="array",
     render=fn(values) { "[\{values.length()} items]" },
+    schema=SchemaNode::node(
+      "array",
+      [item.schema],
+      constraints=["count=" + count.to_string()],
+    ),
   )
 }
 
@@ -250,6 +272,7 @@ pub fn[T] Codec::validate(
     },
     kind=inner.kind,
     render=inner.render,
+    schema=inner.schema.with_constraint("validate: " + message),
   )
 }
 
@@ -330,6 +353,14 @@ pub fn[T] bounded(
     },
     kind="bounded[\{length}]",
     render=body.render,
+    schema=SchemaNode::node(
+      "bounded",
+      [body.schema],
+      constraints=[
+        "length=" + length.to_string(),
+        "require_eof=" + require_eof.to_string(),
+      ],
+    ),
   )
 }
 
@@ -402,6 +433,11 @@ pub fn[T] length_prefixed(
     },
     kind="length-prefixed",
     render=body.render,
+    schema=SchemaNode::node(
+      "length-prefixed",
+      [length_codec.schema.with_name("length"), body.schema],
+      constraints=["max_length=" + max_length.to_string()],
+    ),
   )
 }
 
@@ -437,6 +473,10 @@ pub fn[T] optional_if(flag : Codec[Bool], item : Codec[T]) -> Codec[T?] {
         Some(actual) => (item.render)(actual)
       }
     },
+    schema=SchemaNode::node(
+      "optional",
+      [flag.schema.with_name("present"), item.schema.with_name("value")],
+    ),
   )
 }
 
@@ -513,6 +553,10 @@ pub fn[T] checksum_suffix_view(
     },
     kind="checksummed",
     render=body.render,
+    schema=SchemaNode::node(
+      "checksummed",
+      [body.schema, checksum_codec.schema.with_name("checksum")],
+    ),
   )
 }
 
@@ -593,6 +637,11 @@ pub fn[T] count_prefixed(
     },
     kind="count-prefixed-array",
     render=fn(values) { "[\{values.length()} items]" },
+    schema=SchemaNode::node(
+      "count-prefixed-array",
+      [count_codec.schema.with_name("count"), item.schema],
+      constraints=["max_count=" + max_count.to_string()],
+    ),
   )
 }
 
@@ -652,6 +701,11 @@ pub fn[T] until_eof(item : Codec[T]) -> Codec[Array[T]] {
     },
     kind="until-eof-array",
     render=fn(values) { "[\{values.length()} items]" },
+    schema=SchemaNode::node(
+      "until-eof-array",
+      [item.schema],
+      constraints=["terminates=current-region-eof"],
+    ),
   )
 }
 
@@ -714,5 +768,10 @@ pub fn[T] tagged(
     },
     kind="tagged",
     render~,
+    schema=SchemaNode::node(
+      "tagged",
+      [tag_codec.schema.with_name("tag")],
+      constraints=["variants=dynamic"],
+    ),
   )
 }
