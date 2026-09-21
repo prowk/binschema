@@ -1,20 +1,7 @@
 ///|
 test "demo protocol round-trips tagged messages and rejects corruption" {
   let codec = demo_protocol_codec()
-  let value = (
-    (),
-    (
-      1U,
-      (
-        0U,
-        [
-          Counter(7U),
-          Sensor((3U, 512U)),
-          Blob(b"abc"),
-        ],
-      ),
-    ),
-  )
+  let value = ((), (1U, (0U, [Counter(7U), Sensor((3U, 512U)), Blob(b"abc")])))
   let bytes = match @bin.encode(codec, value) {
     Err(error) => fail(error.render())
     Ok(bytes) => bytes
@@ -23,8 +10,12 @@ test "demo protocol round-trips tagged messages and rejects corruption" {
     Err(error) => fail(error.render())
     Ok(decoded) => {
       assert_eq(decoded.value, value)
-      assert_true(decoded.trace.any(fn(entry) { entry.path.contains("messages") }))
-      assert_true(decoded.trace.any(fn(entry) { entry.path.contains("checksum") }))
+      assert_true(
+        decoded.trace.any(fn(entry) { entry.path.contains("messages") }),
+      )
+      assert_true(
+        decoded.trace.any(fn(entry) { entry.path.contains("checksum") }),
+      )
     }
   }
 
