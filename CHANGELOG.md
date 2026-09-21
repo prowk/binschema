@@ -2,19 +2,17 @@
 
 ## Unreleased
 
-- 声明模块/包级后端支持范围，补充 Native benchmark、可执行 README、英文入口与 GitHub Pages 部署流程。
-- 新增兼容性/发布规范，并通过 `.moonignore` 与 CI 对发布归档进行审计。
+## 0.2.0 — 2026-09-21
 
 - 新增 `count_prefixed`、`until_eof`、`tagged` 高级组合子，并为大输入提供 `decode_view` / `BytesView` 零拷贝解码路径。
 - 新增确定性 property-style roundtrip 测试与固定二进制 corpus 回归测试，并纳入 Wasm、Wasm-GC、JavaScript、Native 四后端 CI。
-
 - 收紧核心公开结构的可变性，新增可配置轨迹预算以防止诊断数据放大。
-- CI 新增 `moon info` 接口同步校验、API 文档构建与发布包清单审计。
-
 - 新增规范的 ULEB128/SLEB128 codec，并补齐边界、溢出、截断和跨后端测试。
 - 强化 PNG、WAVE、PCAP 结构不变量及损坏样例校验。
 - CLI 增加可测试调度、输入限制和稳定退出码；浏览器检查器增加 16 MiB 限制和键盘可访问性。
-- GitHub 首页发布完整使用文档，并加入可复现的自定义协议示例。
+- CI 增加生成接口同步、API 文档、发布包审计、可执行 README、Native benchmark、coverage 与完整构建门禁。
+- 声明模块/包级后端支持范围，补充英文入口、兼容性策略、正式发布流程与 GitHub Pages 在线 Playground。
+- 浏览器 Wasm 改为由源码在构建/部署阶段生成，不再提交 `web/binschema.wasm` 预编译产物，避免二进制与源码漂移。
 
 ## 0.1.0 — 2026-09-19
 

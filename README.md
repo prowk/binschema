@@ -1,6 +1,6 @@
 # BinSchema
 
-**简体中文** · [English](README.en.md)
+**简体中文** · [English](README.en.md) · [🌐 在线 Playground](https://prowk.github.io/binschema/)
 
 > 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。
 
@@ -99,6 +99,12 @@ moon run --target native cmd/main -- formats
 CLI 支持自动识别或通过 `--format png|wav|pcap` 显式指定格式。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
 
 ## Web / Wasm-GC 检查器
+
+**在线体验：** [https://prowk.github.io/binschema/](https://prowk.github.io/binschema/)
+
+无需安装 MoonBit，直接在浏览器中选择 PNG、WAVE 或 PCAP 文件即可查看结构；文件只在本地浏览器处理，不会上传。
+
+本地开发时，Wasm 二进制由源码构建生成，仓库不再提交 `web/binschema.wasm`：
 
 ```bash
 moon build --target wasm-gc web/bridge --release

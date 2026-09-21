@@ -35,6 +35,9 @@ moon build --target wasm-gc web/bridge --release
 Inspect `moon package --list` before publishing. The root `.moonignore` is the source of truth
 for repository-only files that must not enter the release archive.
 
+`web/binschema.wasm` is a generated artifact: build it from `web/bridge` for local use or Pages
+deployment, but do not commit it to source control.
+
 For performance-sensitive releases, also run:
 
 ```bash
