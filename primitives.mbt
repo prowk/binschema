@@ -139,6 +139,57 @@ pub fn i64_le() -> Codec[Int64] {
 }
 
 ///|
+/// 零拷贝固定长度字节字段。返回的 `BytesView` 借用原始输入。
+pub fn bytes_view_fixed(count : Int) -> Codec[BytesView] {
+  Codec::make(
+    fn(decoder) { decoder.take_view(count) },
+    fn(encoder, value) {
+      if value.length() != count {
+        Err(
+          BinError::new(
+            InvalidValue,
+            encoder.length(),
+            encoder.path(),
+            "byte view length does not match fixed field length",
+          ),
+        )
+      } else {
+        encoder.write_bytes(value)
+      }
+    },
+    kind="bytes-view[\{count}]",
+    render=fn(value) { bytes_view_to_hex_preview(value, 32) },
+  )
+}
+
+///|
+/// 零拷贝消费当前区域的全部剩余字节。
+pub fn remaining_view() -> Codec[BytesView] {
+  Codec::make(
+    fn(decoder) { decoder.take_view(decoder.remaining()) },
+    fn(encoder, value) { encoder.write_bytes(value) },
+    kind="remaining-view",
+    render=fn(value) { bytes_view_to_hex_preview(value, 32) },
+  )
+}
+
+///|
+/// 拥有型版本的“消费全部剩余字节”组合子。
+pub fn remaining_bytes() -> Codec[Bytes] {
+  Codec::make(
+    fn(decoder) {
+      match decoder.take_view(decoder.remaining()) {
+        Err(error) => Err(error)
+        Ok(view) => Ok(view.to_bytes())
+      }
+    },
+    fn(encoder, value) { encoder.write_bytes(value[:]) },
+    kind="remaining-bytes",
+    render=fn(value) { bytes_to_hex_preview(value, 32) },
+  )
+}
+
+///|
 pub fn bytes_fixed(count : Int) -> Codec[Bytes] {
   Codec::make(
     fn(decoder) { decoder.take_bytes(count) },
@@ -213,6 +264,32 @@ pub fn bytes_to_hex(bytes : Bytes) -> String {
 ///|
 /// 为检查轨迹生成有界十六进制预览，避免大字段制造巨量日志。
 pub fn bytes_to_hex_preview(bytes : Bytes, max_bytes : Int) -> String {
+  let limit = if max_bytes < 0 {
+    0
+  } else if max_bytes < bytes.length() {
+    max_bytes
+  } else {
+    bytes.length()
+  }
+  let parts : Array[String] = []
+  for index in 0..<limit {
+    parts.push(bytes[index].to_hex())
+  }
+  let prefix = parts.join(" ")
+  if limit < bytes.length() {
+    prefix + " … (+\{bytes.length() - limit} bytes)"
+  } else {
+    prefix
+  }
+}
+
+
+///|
+/// BytesView 版本的有界十六进制预览；不会复制整个输入。
+pub fn bytes_view_to_hex_preview(
+  bytes : BytesView,
+  max_bytes : Int,
+) -> String {
   let limit = if max_bytes < 0 {
     0
   } else if max_bytes < bytes.length() {
