@@ -31,7 +31,7 @@ jobs:
         run: moon package --list
       - name: Check all backends
         run: moon check --target all --deny-warn
-      - name: Test all backends
+      - name: Test all backends including property and corpus suites
         run: moon test --target all --deny-warn
       - name: Verify coverage workflow
         run: |
