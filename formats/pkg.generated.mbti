@@ -32,8 +32,12 @@ pub(all) enum Format {
   Wav
   Pcap
 } derive(Eq, ToJson, @debug.Debug)
+pub fn Format::equal(Self, Self) -> Bool
 pub fn Format::name(Self) -> String
+pub fn Format::not_equal(Self, Self) -> Bool
 pub fn Format::parse(String) -> Result[Self, String]
+pub fn Format::to_json(Self) -> Json
+pub fn Format::to_repr(Self) -> @debug.Repr
 
 pub(all) struct Inspection {
   format : String
@@ -42,7 +46,11 @@ pub(all) struct Inspection {
   summary : Array[SummaryItem]
   trace : Array[@binschema.TraceEntry]
 } derive(Eq, ToJson, @debug.Debug)
+pub fn Inspection::equal(Self, Self) -> Bool
+pub fn Inspection::not_equal(Self, Self) -> Bool
+pub fn Inspection::to_json(Self) -> Json
 pub fn Inspection::to_json_string(Self, pretty? : Bool) -> String
+pub fn Inspection::to_repr(Self) -> @debug.Repr
 
 pub(all) struct PcapFile {
   endian : @binschema.Endian
@@ -55,6 +63,10 @@ pub(all) struct PcapFile {
   link_type : UInt
   packets : Array[PcapPacket]
 } derive(Eq, ToJson, @debug.Debug)
+pub fn PcapFile::equal(Self, Self) -> Bool
+pub fn PcapFile::not_equal(Self, Self) -> Bool
+pub fn PcapFile::to_json(Self) -> Json
+pub fn PcapFile::to_repr(Self) -> @debug.Repr
 
 pub(all) struct PcapPacket {
   timestamp_seconds : UInt
@@ -62,33 +74,57 @@ pub(all) struct PcapPacket {
   original_length : UInt
   data : Bytes
 } derive(Eq, ToJson, @debug.Debug)
+pub fn PcapPacket::equal(Self, Self) -> Bool
+pub fn PcapPacket::not_equal(Self, Self) -> Bool
+pub fn PcapPacket::to_json(Self) -> Json
+pub fn PcapPacket::to_repr(Self) -> @debug.Repr
 
 pub(all) struct PngChunk {
   kind : String
   data : Bytes
   crc : UInt
 } derive(Eq, ToJson, @debug.Debug)
+pub fn PngChunk::equal(Self, Self) -> Bool
+pub fn PngChunk::not_equal(Self, Self) -> Bool
+pub fn PngChunk::to_json(Self) -> Json
+pub fn PngChunk::to_repr(Self) -> @debug.Repr
 
 pub(all) struct PngFile {
   chunks : Array[PngChunk]
 } derive(Eq, ToJson, @debug.Debug)
+pub fn PngFile::equal(Self, Self) -> Bool
+pub fn PngFile::not_equal(Self, Self) -> Bool
+pub fn PngFile::to_json(Self) -> Json
+pub fn PngFile::to_repr(Self) -> @debug.Repr
 
 pub(all) struct SummaryItem {
   key : String
   value : String
 } derive(Eq, ToJson, @debug.Debug)
+pub fn SummaryItem::equal(Self, Self) -> Bool
+pub fn SummaryItem::not_equal(Self, Self) -> Bool
+pub fn SummaryItem::to_json(Self) -> Json
+pub fn SummaryItem::to_repr(Self) -> @debug.Repr
 
 pub(all) struct WavChunk {
   id : String
   data : Bytes
   padding : Byte?
 } derive(Eq, ToJson, @debug.Debug)
+pub fn WavChunk::equal(Self, Self) -> Bool
+pub fn WavChunk::not_equal(Self, Self) -> Bool
+pub fn WavChunk::to_json(Self) -> Json
+pub fn WavChunk::to_repr(Self) -> @debug.Repr
 
 pub(all) struct WavFile {
   riff_size : UInt
   chunks : Array[WavChunk]
   format : WavFormat?
 } derive(Eq, ToJson, @debug.Debug)
+pub fn WavFile::equal(Self, Self) -> Bool
+pub fn WavFile::not_equal(Self, Self) -> Bool
+pub fn WavFile::to_json(Self) -> Json
+pub fn WavFile::to_repr(Self) -> @debug.Repr
 
 pub(all) struct WavFormat {
   audio_format : UInt
@@ -98,6 +134,10 @@ pub(all) struct WavFormat {
   block_align : UInt
   bits_per_sample : UInt
 } derive(Eq, ToJson, @debug.Debug)
+pub fn WavFormat::equal(Self, Self) -> Bool
+pub fn WavFormat::not_equal(Self, Self) -> Bool
+pub fn WavFormat::to_json(Self) -> Json
+pub fn WavFormat::to_repr(Self) -> @debug.Repr
 
 // Type aliases
 
