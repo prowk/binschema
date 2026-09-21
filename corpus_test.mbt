@@ -31,7 +31,11 @@ test "corpus: canonical integer and varint encodings" {
 
 ///|
 test "corpus: malformed lengths tags and varints stay rejected" {
-  let counted = @binschema.count_prefixed(@binschema.u8(), @binschema.u16_be(), max_count=4)
+  let counted = @binschema.count_prefixed(
+    @binschema.u8(),
+    @binschema.u16_be(),
+    max_count=4,
+  )
   assert_true(
     @binschema.decode(counted, b"\x05\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05")
     is Err({ kind: @binschema.LimitExceeded, .. }),
@@ -39,13 +43,7 @@ test "corpus: malformed lengths tags and varints stay rejected" {
 
   let tagged_codec = @binschema.tagged(
     @binschema.u8(),
-    fn(tag) {
-      if tag == 1U {
-        Ok(@binschema.u8())
-      } else {
-        Err("unknown tag")
-      }
-    },
+    fn(tag) { if tag == 1U { Ok(@binschema.u8()) } else { Err("unknown tag") } },
     fn(_) { Ok(1U) },
     render=fn(value) { value.to_string() },
   )
@@ -55,9 +53,7 @@ test "corpus: malformed lengths tags and varints stay rejected" {
   )
 
   let malformed_uleb = [
-    b"\x80",
-    b"\x80\x00",
-    b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x02",
+    b"\x80", b"\x80\x00", b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x02",
   ]
   for bytes in malformed_uleb {
     assert_true(@binschema.decode(@binschema.uleb128(), bytes) is Err(_))
