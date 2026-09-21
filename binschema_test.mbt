@@ -326,3 +326,38 @@ test "trace budgets reject diagnostic amplification" {
     is Err({ kind: @binschema.LimitExceeded, .. }),
   )
 }
+
+///|
+test "layout primitives enforce padding alignment and termination" {
+  let padded = @binschema.pair(
+    @binschema.u8(),
+    @binschema.pair(@binschema.align(4), @binschema.u16_be()),
+  )
+  assert_eq(
+    @binschema.encode(padded, (1U, ((), 0x0203U))),
+    Ok(b"\x01\x00\x00\x00\x02\x03"),
+  )
+  match @binschema.decode(padded, b"\x01\x00\x00\x00\x02\x03") {
+    Ok(decoded) => assert_eq(decoded.value, (1U, ((), 0x0203U)))
+    Err(error) => fail(error.render())
+  }
+  assert_true(
+    @binschema.decode(padded, b"\x01\x00\x01\x00\x02\x03")
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+
+  let terminated = @binschema.nul_terminated_bytes(max_length=4)
+  assert_eq(@binschema.encode(terminated, b"abc"), Ok(b"abc\x00"))
+  match @binschema.decode(terminated, b"abc\x00") {
+    Ok(decoded) => assert_eq(decoded.value, b"abc")
+    Err(error) => fail(error.render())
+  }
+  assert_true(
+    @binschema.encode(terminated, b"a\x00b")
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  assert_true(
+    @binschema.decode(terminated, b"abcde\x00")
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
+}

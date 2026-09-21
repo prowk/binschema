@@ -304,3 +304,186 @@ pub fn bytes_view_to_hex_preview(bytes : BytesView, max_bytes : Int) -> String {
     prefix
   }
 }
+
+///|
+/// 消费或写入固定数量的零填充字节。
+pub fn padding(count : Int) -> Codec[Unit] {
+  Codec::make(
+    fn(decoder) {
+      if count < 0 {
+        return Err(
+          BinError::new(
+            InvalidValue,
+            decoder.absolute_offset(),
+            decoder.path(),
+            "padding count cannot be negative",
+          ),
+        )
+      }
+      match decoder.take_view(count) {
+        Err(error) => Err(error)
+        Ok(bytes) => {
+          for byte in bytes {
+            if byte != 0U.to_byte() {
+              return Err(
+                BinError::new(
+                  InvalidValue,
+                  decoder.absolute_offset(),
+                  decoder.path(),
+                  "padding bytes must be zero",
+                ),
+              )
+            }
+          }
+          Ok(())
+        }
+      }
+    },
+    fn(encoder, _) {
+      if count < 0 {
+        return Err(
+          BinError::new(
+            InvalidValue,
+            encoder.length(),
+            encoder.path(),
+            "padding count cannot be negative",
+          ),
+        )
+      }
+      let bytes : Array[Byte] = []
+      for _ in 0..<count {
+        bytes.push(0U.to_byte())
+      }
+      encoder.write_bytes(Bytes::from_array(bytes)[:])
+    },
+    kind="padding[\{count}]",
+    render=fn(_) { "padding(\{count})" },
+  )
+}
+
+///|
+/// 使用零填充将当前位置推进到给定字节边界；边界相对于当前解码区域起点。
+pub fn align(boundary : Int) -> Codec[Unit] {
+  Codec::make(
+    fn(decoder) {
+      if boundary <= 0 {
+        return Err(
+          BinError::new(
+            InvalidValue,
+            decoder.absolute_offset(),
+            decoder.path(),
+            "alignment boundary must be positive",
+          ),
+        )
+      }
+      let remainder = decoder.offset() % boundary
+      let count = if remainder == 0 { 0 } else { boundary - remainder }
+      padding(count).decode_from(decoder)
+    },
+    fn(encoder, _) {
+      if boundary <= 0 {
+        return Err(
+          BinError::new(
+            InvalidValue,
+            encoder.length(),
+            encoder.path(),
+            "alignment boundary must be positive",
+          ),
+        )
+      }
+      let remainder = encoder.length() % boundary
+      let count = if remainder == 0 { 0 } else { boundary - remainder }
+      padding(count).encode_into(encoder, ())
+    },
+    kind="align[\{boundary}]",
+    render=fn(_) { "align(\{boundary})" },
+  )
+}
+
+///|
+/// 读取以 NUL 结尾的字节串；返回值不包含终止字节。
+pub fn nul_terminated_bytes(max_length? : Int = 4096) -> Codec[Bytes] {
+  Codec::make(
+    fn(decoder) {
+      if max_length < 0 {
+        return Err(
+          BinError::new(
+            InvalidValue,
+            decoder.absolute_offset(),
+            decoder.path(),
+            "maximum terminated byte length cannot be negative",
+          ),
+        )
+      }
+      let bytes : Array[Byte] = []
+      while bytes.length() <= max_length {
+        let byte = match decoder.read_byte() {
+          Err(error) => return Err(error)
+          Ok(value) => value
+        }
+        if byte == 0U.to_byte() {
+          return Ok(Bytes::from_array(bytes))
+        }
+        if bytes.length() == max_length {
+          return Err(
+            BinError::new(
+              LimitExceeded,
+              decoder.absolute_offset(),
+              decoder.path(),
+              "terminated byte string exceeds configured limit",
+            ),
+          )
+        }
+        bytes.push(byte)
+      }
+      Err(
+        BinError::new(
+          LimitExceeded,
+          decoder.absolute_offset(),
+          decoder.path(),
+          "terminated byte string exceeds configured limit",
+        ),
+      )
+    },
+    fn(encoder, value) {
+      if max_length < 0 {
+        return Err(
+          BinError::new(
+            InvalidValue,
+            encoder.length(),
+            encoder.path(),
+            "maximum terminated byte length cannot be negative",
+          ),
+        )
+      }
+      if value.length() > max_length {
+        return Err(
+          BinError::new(
+            LimitExceeded,
+            encoder.length(),
+            encoder.path(),
+            "terminated byte string exceeds configured limit",
+          ),
+        )
+      }
+      for byte in value {
+        if byte == 0U.to_byte() {
+          return Err(
+            BinError::new(
+              InvalidValue,
+              encoder.length(),
+              encoder.path(),
+              "terminated byte string payload cannot contain NUL",
+            ),
+          )
+        }
+      }
+      match encoder.write_bytes(value[:]) {
+        Err(error) => Err(error)
+        Ok(_) => encoder.write_bytes(b"\x00"[:])
+      }
+    },
+    kind="nul-terminated-bytes",
+    render=fn(value) { bytes_to_hex_preview(value, 32) },
+  )
+}

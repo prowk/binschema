@@ -9,6 +9,8 @@ import {
 // Values
 pub const VERSION : String = "0.2.0"
 
+pub fn align(Int) -> Codec[Unit]
+
 pub fn bits_msb(Int) -> Codec[UInt]
 
 pub fn bool8() -> Codec[Bool]
@@ -61,7 +63,11 @@ pub fn[T] length_prefixed(Codec[UInt], Codec[T], max_length? : Int) -> Codec[T]
 
 pub fn magic(Bytes) -> Codec[Unit]
 
+pub fn nul_terminated_bytes(max_length? : Int) -> Codec[Bytes]
+
 pub fn[T] optional_if(Codec[Bool], Codec[T]) -> Codec[T?]
+
+pub fn padding(Int) -> Codec[Unit]
 
 pub fn[A, B] pair(Codec[A], Codec[B]) -> Codec[(A, B)]
 
