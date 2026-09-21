@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Inspector 结果现包含协议 Schema 树，PNG/WAVE/PCAP 提供静态结构描述，Web Inspector 可直接浏览协议层级与约束。
+
 - `Codec[T]` 现携带可检查的 Schema 元数据树，可导出名称、组合结构与约束，并支持稳定文本描述。
 
 - 新增零填充、字节边界对齐与 NUL 终止字节串 codec，补齐常见二进制布局基础能力。
