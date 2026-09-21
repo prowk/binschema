@@ -29,7 +29,7 @@ jobs:
         run: moon doc
       - name: Audit publish package
         run: |
-          moon package --list | tee /tmp/binschema-package-files.txt
+          moon package --list 2>&1 | tee /tmp/binschema-package-files.txt
           grep -q "codec.mbt" /tmp/binschema-package-files.txt
           if grep -Eq "(^|/)(\.github|\.githooks|web)/" /tmp/binschema-package-files.txt; then
             echo "repository-only files leaked into the publish archive"
