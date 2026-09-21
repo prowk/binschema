@@ -1,6 +1,6 @@
 # BinSchema
 
-[简体中文](README.md) · **English**
+[简体中文](README.md) · **English** · [🌐 Online Playground](https://prowk.github.io/binschema/)
 
 > Define safe binary decoding and encoding once with a composable `Codec[T]`, while keeping every byte explainable.
 
@@ -49,6 +49,12 @@ in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
 [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Browser inspector
+
+**Try it online:** [https://prowk.github.io/binschema/](https://prowk.github.io/binschema/)
+
+No MoonBit installation is required. Pick a PNG, WAVE, or PCAP file in the browser; the file is processed locally and is not uploaded.
+
+For local development, the Wasm binary is generated from source and is not committed to the repository.
 
 Build locally:
 
