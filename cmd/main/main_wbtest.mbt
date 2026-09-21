@@ -91,6 +91,7 @@ test "CLI verification rejects non-canonical round trips" {
     size: 1,
     roundtrip_equal: false,
     summary: [],
+    schema: @bin.SchemaNode::leaf("test"),
     trace: [],
   }
   assert_true(verify_report(report) is Err(Data(_)))
