@@ -526,7 +526,7 @@ pub fn[T] checksum_suffix(
   checksum_suffix_view(
     body,
     checksum_codec,
-    fn(view) { calculate(view.to_bytes()) },
+    fn(view) { calculate(view.to_owned()) },
   )
 }
 
