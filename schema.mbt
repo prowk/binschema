@@ -27,7 +27,12 @@ pub fn SchemaNode::node(
   children : Array[SchemaNode],
   constraints? : Array[String] = [],
 ) -> SchemaNode {
-  { name: "", kind, constraints: constraints.copy(), children: children.copy(), }
+  {
+    name: "",
+    kind,
+    constraints: constraints.copy(),
+    children: children.copy(),
+  }
 }
 
 ///|
