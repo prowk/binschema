@@ -505,7 +505,8 @@ pub fn[T] checksum_suffix_view(
             Ok(bytes) =>
               match encoder.write_bytes(bytes[:]) {
                 Err(error) => Err(error)
-                Ok(_) => checksum_codec.encode_into(encoder, calculate(bytes[:]))
+                Ok(_) =>
+                  checksum_codec.encode_into(encoder, calculate(bytes[:]))
               }
           }
       }
@@ -515,7 +516,6 @@ pub fn[T] checksum_suffix_view(
   )
 }
 
-
 ///|
 /// 兼容原有拥有型校验和回调。新代码优先使用 `checksum_suffix_view` 避免解码时复制。
 pub fn[T] checksum_suffix(
@@ -523,11 +523,9 @@ pub fn[T] checksum_suffix(
   checksum_codec : Codec[UInt],
   calculate : (Bytes) -> UInt,
 ) -> Codec[T] {
-  checksum_suffix_view(
-    body,
-    checksum_codec,
-    fn(view) { calculate(view.to_owned()) },
-  )
+  checksum_suffix_view(body, checksum_codec, fn(view) {
+    calculate(view.to_owned())
+  })
 }
 
 ///|
@@ -587,10 +585,8 @@ pub fn[T] count_prefixed(
           ),
         )
       }
-      match count_codec.encode_into(
-        encoder,
-        values.length().reinterpret_as_uint(),
-      ) {
+      match
+        count_codec.encode_into(encoder, values.length().reinterpret_as_uint()) {
         Err(error) => Err(error)
         Ok(_) => repeat(values.length(), item).encode_into(encoder, values)
       }
