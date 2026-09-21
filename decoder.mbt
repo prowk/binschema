@@ -1,7 +1,7 @@
 ///|
-/// 有界二进制读取器。所有读取都会先检查范围。
+/// 有界二进制读取器。内部持有 `BytesView`，子区域解析不会复制底层字节。
 pub struct Decoder {
-  input : Bytes
+  input : BytesView
   base_offset : Int
   mut offset : Int
   mut bit_offset : Int
@@ -13,6 +13,12 @@ pub struct Decoder {
 
 ///|
 pub fn Decoder::new(input : Bytes, limits : Limits) -> Decoder {
+  Decoder::new_view(input[:], limits)
+}
+
+///|
+/// 从借用视图创建 Decoder，适合解析大缓冲区中的子区间而不复制。
+pub fn Decoder::new_view(input : BytesView, limits : Limits) -> Decoder {
   {
     input,
     base_offset: 0,
@@ -67,7 +73,7 @@ pub fn Decoder::depth(self : Decoder) -> Int {
 
 ///|
 fn Decoder::new_child(
-  input : Bytes,
+  input : BytesView,
   base_offset : Int,
   path : String,
   depth : Int,
@@ -104,10 +110,11 @@ fn Decoder::ensure_byte_aligned(self : Decoder) -> Result[Unit, BinError] {
 }
 
 ///|
-pub fn Decoder::take_bytes(
+/// 借用接下来 `count` 个字节，不复制底层缓冲区。
+pub fn Decoder::take_view(
   self : Decoder,
   count : Int,
-) -> Result[Bytes, BinError] {
+) -> Result[BytesView, BinError] {
   match self.ensure_byte_aligned() {
     Err(error) => Err(error)
     Ok(_) =>
@@ -118,8 +125,29 @@ pub fn Decoder::take_bytes(
       } else {
         let start = self.offset
         self.offset = self.offset + count
-        Ok(self.input[start:self.offset].to_owned())
+        Ok(self.input[start:self.offset])
       }
+  }
+}
+
+///|
+/// 读取拥有所有权的字节串。需要零拷贝时优先使用 `take_view`。
+pub fn Decoder::take_bytes(
+  self : Decoder,
+  count : Int,
+) -> Result[Bytes, BinError] {
+  match self.take_view(count) {
+    Err(error) => Err(error)
+    Ok(view) => Ok(view.to_bytes())
+  }
+}
+
+///|
+/// 读取单个字节，避免为整数/变长整数解析创建临时字节串。
+pub fn Decoder::read_byte(self : Decoder) -> Result[Byte, BinError] {
+  match self.take_view(1) {
+    Err(error) => Err(error)
+    Ok(view) => Ok(view[0])
   }
 }
 
@@ -132,7 +160,7 @@ pub fn Decoder::read_uint(
   guard width == 1 || width == 2 || width == 4 else {
     return Err(self.error(Unsupported, "UInt width must be 1, 2, or 4"))
   }
-  match self.take_bytes(width) {
+  match self.take_view(width) {
     Err(error) => Err(error)
     Ok(bytes) => {
       let mut value = 0U
@@ -156,7 +184,7 @@ pub fn Decoder::read_uint64(
   self : Decoder,
   endian : Endian,
 ) -> Result[UInt64, BinError] {
-  match self.take_bytes(8) {
+  match self.take_view(8) {
     Err(error) => Err(error)
     Ok(bytes) => {
       let mut value = 0UL
