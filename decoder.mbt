@@ -138,7 +138,7 @@ pub fn Decoder::take_bytes(
 ) -> Result[Bytes, BinError] {
   match self.take_view(count) {
     Err(error) => Err(error)
-    Ok(view) => Ok(view.to_bytes())
+    Ok(view) => Ok(view.to_owned())
   }
 }
 
