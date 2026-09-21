@@ -18,7 +18,11 @@ test "property: integer codecs round-trip generated values" {
 
 ///|
 test "property: count-prefixed arrays round-trip generated lengths" {
-  let codec = @binschema.count_prefixed(@binschema.u8(), @binschema.u16_le(), max_count=32)
+  let codec = @binschema.count_prefixed(
+    @binschema.u8(),
+    @binschema.u16_le(),
+    max_count=32,
+  )
   for length in 0..<32 {
     let values : Array[UInt] = []
     for index in 0..<length {
@@ -55,7 +59,7 @@ test "property: until-eof is symmetric for byte sequences" {
 }
 
 ///|
-test "property: @binschema.tagged codec selects symmetric branches" {
+test "property: tagged codec selects symmetric branches" {
   let codec = @binschema.tagged(
     @binschema.u8(),
     fn(tag) {
@@ -84,7 +88,11 @@ test "property: @binschema.tagged codec selects symmetric branches" {
 ///|
 test "property: zero-copy view codecs compose inside bounded regions" {
   let source = b"\x03abcTAIL"
-  let codec = @binschema.length_prefixed(@binschema.u8(), @binschema.bytes_view_fixed(3), max_length=8)
+  let codec = @binschema.length_prefixed(
+    @binschema.u8(),
+    @binschema.bytes_view_fixed(3),
+    max_length=8,
+  )
   match @binschema.decode_view(codec, source[:4]) {
     Err(error) => fail(error.render())
     Ok(decoded) => {
