@@ -1,3 +1,5 @@
+supported_targets = "wasm-gc"
+
 import {
   "prowk/binschema/formats",
   "moonbitlang/core/json",
