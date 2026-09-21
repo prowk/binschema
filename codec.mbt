@@ -273,7 +273,7 @@ pub fn[T] bounded(
         )
       }
       let start = decoder.absolute_offset()
-      match decoder.take_bytes(length) {
+      match decoder.take_view(length) {
         Err(error) => Err(error)
         Ok(bytes) => {
           let child = Decoder::new_child(
@@ -442,10 +442,10 @@ pub fn[T] optional_if(flag : Codec[Bool], item : Codec[T]) -> Codec[T?] {
 
 ///|
 /// 为任意字节对齐的主体增加尾随校验值。
-pub fn[T] checksum_suffix(
+pub fn[T] checksum_suffix_view(
   body : Codec[T],
   checksum_codec : Codec[UInt],
-  calculate : (Bytes) -> UInt,
+  calculate : (BytesView) -> UInt,
 ) -> Codec[T] {
   Codec::make(
     fn(decoder) {
@@ -473,7 +473,7 @@ pub fn[T] checksum_suffix(
               ),
             )
           }
-          let body_bytes = decoder.input[start:decoder.offset()].to_owned()
+          let body_bytes = decoder.input[start:decoder.offset()]
           match checksum_codec.named("checksum").decode_from(decoder) {
             Err(error) => Err(error)
             Ok(expected) => {
@@ -505,12 +505,218 @@ pub fn[T] checksum_suffix(
             Ok(bytes) =>
               match encoder.write_bytes(bytes[:]) {
                 Err(error) => Err(error)
-                Ok(_) => checksum_codec.encode_into(encoder, calculate(bytes))
+                Ok(_) => checksum_codec.encode_into(encoder, calculate(bytes[:]))
               }
           }
       }
     },
     kind="checksummed",
     render=body.render,
+  )
+}
+
+
+///|
+/// 兼容原有拥有型校验和回调。新代码优先使用 `checksum_suffix_view` 避免解码时复制。
+pub fn[T] checksum_suffix(
+  body : Codec[T],
+  checksum_codec : Codec[UInt],
+  calculate : (Bytes) -> UInt,
+) -> Codec[T] {
+  checksum_suffix_view(
+    body,
+    checksum_codec,
+    fn(view) { calculate(view.to_bytes()) },
+  )
+}
+
+///|
+/// 使用前置计数字段编解码数组。
+pub fn[T] count_prefixed(
+  count_codec : Codec[UInt],
+  item : Codec[T],
+  max_count? : Int = 1_000_000,
+) -> Codec[Array[T]] {
+  Codec::make(
+    fn(decoder) {
+      let raw_count = match count_codec.named("count").decode_from(decoder) {
+        Err(error) => return Err(error)
+        Ok(value) => value
+      }
+      if raw_count > 0x7fffffffU {
+        return Err(
+          BinError::new(
+            LimitExceeded,
+            decoder.absolute_offset(),
+            decoder.path(),
+            "collection count cannot be represented by this runtime",
+          ),
+        )
+      }
+      let count = raw_count.reinterpret_as_int()
+      let effective_limit = if max_count < decoder.max_collection_length() {
+        max_count
+      } else {
+        decoder.max_collection_length()
+      }
+      if count > effective_limit {
+        return Err(
+          BinError::new(
+            LimitExceeded,
+            decoder.absolute_offset(),
+            decoder.path(),
+            "collection count exceeds configured limit",
+          ),
+        )
+      }
+      repeat(count, item).decode_from(decoder)
+    },
+    fn(encoder, values) {
+      let effective_limit = if max_count < encoder.max_collection_length() {
+        max_count
+      } else {
+        encoder.max_collection_length()
+      }
+      if values.length() > effective_limit {
+        return Err(
+          BinError::new(
+            LimitExceeded,
+            encoder.length(),
+            encoder.path(),
+            "collection count exceeds configured limit",
+          ),
+        )
+      }
+      match count_codec.encode_into(
+        encoder,
+        values.length().reinterpret_as_uint(),
+      ) {
+        Err(error) => Err(error)
+        Ok(_) => repeat(values.length(), item).encode_into(encoder, values)
+      }
+    },
+    kind="count-prefixed-array",
+    render=fn(values) { "[\{values.length()} items]" },
+  )
+}
+
+///|
+/// 重复解码元素直到当前输入区域耗尽。每个元素必须至少消费一个字节。
+pub fn[T] until_eof(item : Codec[T]) -> Codec[Array[T]] {
+  Codec::make(
+    fn(decoder) {
+      let values : Array[T] = []
+      while decoder.remaining() > 0 {
+        if values.length() >= decoder.max_collection_length() {
+          return Err(
+            BinError::new(
+              LimitExceeded,
+              decoder.absolute_offset(),
+              decoder.path(),
+              "collection count exceeds configured limit",
+            ),
+          )
+        }
+        let before = decoder.offset()
+        match item.named(values.length().to_string()).decode_from(decoder) {
+          Err(error) => return Err(error)
+          Ok(value) => values.push(value)
+        }
+        if decoder.offset() == before {
+          return Err(
+            BinError::new(
+              InvalidValue,
+              decoder.absolute_offset(),
+              decoder.path(),
+              "until_eof item codec must consume input",
+            ),
+          )
+        }
+      }
+      Ok(values)
+    },
+    fn(encoder, values) {
+      if values.length() > encoder.max_collection_length() {
+        return Err(
+          BinError::new(
+            LimitExceeded,
+            encoder.length(),
+            encoder.path(),
+            "collection count exceeds configured limit",
+          ),
+        )
+      }
+      for value in values {
+        match item.encode_into(encoder, value) {
+          Err(error) => return Err(error)
+          Ok(_) => ()
+        }
+      }
+      Ok(())
+    },
+    kind="until-eof-array",
+    render=fn(values) { "[\{values.length()} items]" },
+  )
+}
+
+///|
+/// 由标签值动态选择后续 Codec，适合 tagged union / switch 协议。
+pub fn[T] tagged(
+  tag_codec : Codec[UInt],
+  select : (UInt) -> Result[Codec[T], String],
+  tag_of : (T) -> Result[UInt, String],
+  render~ : (T) -> String,
+) -> Codec[T] {
+  Codec::make(
+    fn(decoder) {
+      let tag = match tag_codec.named("tag").decode_from(decoder) {
+        Err(error) => return Err(error)
+        Ok(value) => value
+      }
+      match select(tag) {
+        Err(message) =>
+          Err(
+            BinError::new(
+              InvalidValue,
+              decoder.absolute_offset(),
+              decoder.path(),
+              message,
+            ),
+          )
+        Ok(body) => body.named("value").decode_from(decoder)
+      }
+    },
+    fn(encoder, value) {
+      let tag = match tag_of(value) {
+        Err(message) =>
+          return Err(
+            BinError::new(
+              InvalidValue,
+              encoder.length(),
+              encoder.path(),
+              message,
+            ),
+          )
+        Ok(value) => value
+      }
+      let body = match select(tag) {
+        Err(message) =>
+          return Err(
+            BinError::new(
+              InvalidValue,
+              encoder.length(),
+              encoder.path(),
+              message,
+            ),
+          )
+        Ok(codec) => codec
+      }
+      match tag_codec.encode_into(encoder, tag) {
+        Err(error) => Err(error)
+        Ok(_) => body.encode_into(encoder, value)
+      }
+    },
+    kind="tagged",
+    render~,
   )
 }
