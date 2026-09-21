@@ -362,7 +362,6 @@ test "layout primitives enforce padding alignment and termination" {
   )
 }
 
-
 ///|
 test "schema metadata mirrors codec composition" {
   let codec = @binschema.pair(
