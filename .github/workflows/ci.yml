@@ -65,5 +65,9 @@ jobs:
         run: moon build --target native cmd/main --release
       - name: Build reproducible example
         run: moon build --target native examples/custom_packet --release
+      - name: Build demo protocol
+        run: moon build --target native examples/demo_protocol --release
+      - name: Test demo protocol
+        run: moon test --target native examples/demo_protocol --deny-warn
       - name: Build Wasm-GC bridge
         run: moon build --target wasm-gc web/bridge --release
