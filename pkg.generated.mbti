@@ -238,7 +238,6 @@ pub fn Limits::new(max_input_bytes? : Int, max_collection_length? : Int, max_dep
 pub fn Limits::not_equal(Self, Self) -> Bool
 pub fn Limits::to_repr(Self) -> @debug.Repr
 
-
 pub(all) struct SchemaNode {
   name : String
   kind : String
@@ -248,7 +247,7 @@ pub(all) struct SchemaNode {
 pub fn SchemaNode::copy(Self) -> Self
 pub fn SchemaNode::equal(Self, Self) -> Bool
 pub fn SchemaNode::leaf(String) -> Self
-pub fn SchemaNode::node(String, Array[SchemaNode], constraints? : Array[String]) -> Self
+pub fn SchemaNode::node(String, Array[Self], constraints? : Array[String]) -> Self
 pub fn SchemaNode::not_equal(Self, Self) -> Bool
 pub fn SchemaNode::render(Self) -> String
 pub fn SchemaNode::to_json(Self) -> Json
