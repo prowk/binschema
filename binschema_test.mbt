@@ -361,3 +361,25 @@ test "layout primitives enforce padding alignment and termination" {
     is Err({ kind: @binschema.LimitExceeded, .. }),
   )
 }
+
+
+///|
+test "schema metadata mirrors codec composition" {
+  let codec = @binschema.pair(
+    @binschema.u8().named("version"),
+    @binschema.length_prefixed(
+      @binschema.u16_be(),
+      @binschema.bytes_fixed(3).named("payload"),
+      max_length=8,
+    ),
+  ).named("packet")
+  let schema = codec.schema_node()
+  assert_eq(schema.name, "packet")
+  assert_eq(schema.kind, "pair")
+  assert_eq(schema.children.length(), 2)
+  assert_eq(schema.children[0].name, "version")
+  assert_eq(schema.children[1].kind, "length-prefixed")
+  assert_eq(schema.children[1].constraints, ["max_length=8"])
+  assert_true(codec.describe().contains("packet : pair"))
+  assert_true(codec.describe().contains("payload : bytes[3]"))
+}
