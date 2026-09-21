@@ -2,9 +2,10 @@
 
 ## Unreleased
 
+## 0.2.0 — 2026-09-22
+
 - 同步公开版本常量与 `moon.mod`，并在 CI 中强制校验版本一致性。
 - 新增完整 Demo Protocol，展示计数数组、tagged 消息、长度前缀 payload、字段 trace 与 checksum 的组合用法。
-
 - 新增 `count_prefixed`、`until_eof`、`tagged` 高级组合子，并为大输入提供 `decode_view` / `BytesView` 零拷贝解码路径。
 - 新增确定性 property-style roundtrip 测试与固定二进制 corpus 回归测试，并纳入 Wasm、Wasm-GC、JavaScript、Native 四后端 CI。
 - 收紧核心公开结构的可变性，新增可配置轨迹预算以防止诊断数据放大。
