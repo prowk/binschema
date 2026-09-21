@@ -1,0 +1,8 @@
+supported_targets = "native"
+
+import {
+  "prowk/binschema" @bin,
+  "moonbitlang/core/debug",
+}
+
+pkgtype(kind: "executable")
