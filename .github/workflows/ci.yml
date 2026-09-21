@@ -25,6 +25,16 @@ jobs:
         run: |
           moon info --target all
           git diff --exit-code
+      - name: Verify module/API version synchronization
+        run: |
+          module_version=$(sed -n 's/^version = "\(.*\)"/\1/p' moon.mod)
+          api_version=$(sed -n 's/^pub const VERSION : String = "\(.*\)"/\1/p' binschema.mbt)
+          test -n "$module_version"
+          test -n "$api_version"
+          if [ "$module_version" != "$api_version" ]; then
+            echo "version mismatch: moon.mod=$module_version binschema.mbt=$api_version"
+            exit 1
+          fi
       - name: Build API documentation
         run: moon doc
       - name: Audit publish package
