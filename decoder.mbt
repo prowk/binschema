@@ -235,13 +235,7 @@ fn Decoder::record(
   if self.trace_entries.length() >= self.limits.max_trace_entries {
     Err(self.error(LimitExceeded, "trace entry limit exceeded"))
   } else {
-    self.trace_entries.push({
-      path,
-      kind,
-      start,
-      end,
-      value: render_value(),
-    })
+    self.trace_entries.push({ path, kind, start, end, value: render_value(), })
     Ok(())
   }
 }
@@ -251,7 +245,8 @@ fn Decoder::append_trace(
   self : Decoder,
   entries : Array[TraceEntry],
 ) -> Result[Unit, BinError] {
-  if entries.length() > self.limits.max_trace_entries - self.trace_entries.length() {
+  if entries.length() >
+    self.limits.max_trace_entries - self.trace_entries.length() {
     return Err(self.error(LimitExceeded, "trace entry limit exceeded"))
   }
   for entry in entries {
