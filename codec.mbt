@@ -49,18 +49,18 @@ pub fn[T] Codec::named(self : Codec[T], name : String) -> Codec[T] {
       decoder.with_path(name, fn() {
         match inner.decode_from(decoder) {
           Err(error) => Err(error)
-          Ok(value) => {
-            match decoder.record(
-              full_path,
-              inner.kind,
-              start,
-              decoder.absolute_offset(),
-              fn() { (inner.render)(value) },
-            ) {
+          Ok(value) =>
+            match
+              decoder.record(
+                full_path,
+                inner.kind,
+                start,
+                decoder.absolute_offset(),
+                fn() { (inner.render)(value) },
+              ) {
               Err(error) => Err(error)
               Ok(_) => Ok(value)
             }
-          }
         }
       })
     },
