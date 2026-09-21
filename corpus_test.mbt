@@ -9,7 +9,7 @@ test "corpus: canonical integer and varint encodings" {
     (b"\xff\xff", 0xffffU),
   ]
   for (bytes, expected) in u16_cases {
-    match decode(u16_be(), bytes) {
+    match @binschema.decode(@binschema.u16_be(), bytes) {
       Err(error) => fail(error.render())
       Ok(decoded) => assert_eq(decoded.value, expected)
     }
@@ -22,7 +22,7 @@ test "corpus: canonical integer and varint encodings" {
     (b"\xe5\x8e\x26", 624485UL),
   ]
   for (bytes, expected) in uleb_cases {
-    match decode(uleb128(), bytes) {
+    match @binschema.decode(@binschema.uleb128(), bytes) {
       Err(error) => fail(error.render())
       Ok(decoded) => assert_eq(decoded.value, expected)
     }
@@ -31,17 +31,17 @@ test "corpus: canonical integer and varint encodings" {
 
 ///|
 test "corpus: malformed lengths tags and varints stay rejected" {
-  let counted = count_prefixed(u8(), u16_be(), max_count=4)
+  let counted = @binschema.count_prefixed(@binschema.u8(), @binschema.u16_be(), max_count=4)
   assert_true(
-    decode(counted, b"\x05\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05")
-    is Err({ kind: LimitExceeded, .. }),
+    @binschema.decode(counted, b"\x05\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05")
+    is Err({ kind: @binschema.LimitExceeded, .. }),
   )
 
-  let tagged_codec = tagged(
-    u8(),
+  let tagged_codec = @binschema.tagged(
+    @binschema.u8(),
     fn(tag) {
       if tag == 1U {
-        Ok(u8())
+        Ok(@binschema.u8())
       } else {
         Err("unknown tag")
       }
@@ -50,8 +50,8 @@ test "corpus: malformed lengths tags and varints stay rejected" {
     render=fn(value) { value.to_string() },
   )
   assert_true(
-    decode(tagged_codec, b"\x02\x00")
-    is Err({ kind: InvalidValue, .. }),
+    @binschema.decode(tagged_codec, b"\x02\x00")
+    is Err({ kind: @binschema.InvalidValue, .. }),
   )
 
   let malformed_uleb = [
@@ -60,20 +60,20 @@ test "corpus: malformed lengths tags and varints stay rejected" {
     b"\xff\xff\xff\xff\xff\xff\xff\xff\xff\x02",
   ]
   for bytes in malformed_uleb {
-    assert_true(decode(uleb128(), bytes) is Err(_))
+    assert_true(@binschema.decode(@binschema.uleb128(), bytes) is Err(_))
   }
 }
 
 ///|
 test "corpus: until-eof rejects zero-progress element codecs" {
-  let empty = Codec::make(
+  let empty = @binschema.Codec::make(
     fn(_) { Ok(()) },
     fn(_, _) { Ok(()) },
     kind="empty",
     render=fn(_) { "()" },
   )
   assert_true(
-    decode(until_eof(empty), b"\x00")
-    is Err({ kind: InvalidValue, .. }),
+    @binschema.decode(@binschema.until_eof(empty), b"\x00")
+    is Err({ kind: @binschema.InvalidValue, .. }),
   )
 }
