@@ -44,6 +44,7 @@ pub(all) struct Inspection {
   size : Int
   roundtrip_equal : Bool
   summary : Array[SummaryItem]
+  schema : @binschema.SchemaNode
   trace : Array[@binschema.TraceEntry]
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Inspection::equal(Self, Self) -> Bool
