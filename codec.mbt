@@ -226,11 +226,9 @@ pub fn[T] repeat(count : Int, item : Codec[T]) -> Codec[Array[T]] {
     },
     kind="array",
     render=fn(values) { "[\{values.length()} items]" },
-    schema=SchemaNode::node(
-      "array",
-      [item.schema],
-      constraints=["count=" + count.to_string()],
-    ),
+    schema=SchemaNode::node("array", [item.schema], constraints=[
+      "count=" + count.to_string(),
+    ]),
   )
 }
 
@@ -353,14 +351,10 @@ pub fn[T] bounded(
     },
     kind="bounded[\{length}]",
     render=body.render,
-    schema=SchemaNode::node(
-      "bounded",
-      [body.schema],
-      constraints=[
-        "length=" + length.to_string(),
-        "require_eof=" + (if require_eof { "true" } else { "false" }),
-      ],
-    ),
+    schema=SchemaNode::node("bounded", [body.schema], constraints=[
+      "length=" + length.to_string(),
+      "require_eof=" + (if require_eof { "true" } else { "false" }),
+    ]),
   )
 }
 
@@ -473,10 +467,10 @@ pub fn[T] optional_if(flag : Codec[Bool], item : Codec[T]) -> Codec[T?] {
         Some(actual) => (item.render)(actual)
       }
     },
-    schema=SchemaNode::node(
-      "optional",
-      [flag.schema.with_name("present"), item.schema.with_name("value")],
-    ),
+    schema=SchemaNode::node("optional", [
+      flag.schema.with_name("present"),
+      item.schema.with_name("value"),
+    ]),
   )
 }
 
@@ -553,10 +547,10 @@ pub fn[T] checksum_suffix_view(
     },
     kind="checksummed",
     render=body.render,
-    schema=SchemaNode::node(
-      "checksummed",
-      [body.schema, checksum_codec.schema.with_name("checksum")],
-    ),
+    schema=SchemaNode::node("checksummed", [
+      body.schema,
+      checksum_codec.schema.with_name("checksum"),
+    ]),
   )
 }
 
@@ -701,11 +695,9 @@ pub fn[T] until_eof(item : Codec[T]) -> Codec[Array[T]] {
     },
     kind="until-eof-array",
     render=fn(values) { "[\{values.length()} items]" },
-    schema=SchemaNode::node(
-      "until-eof-array",
-      [item.schema],
-      constraints=["terminates=current-region-eof"],
-    ),
+    schema=SchemaNode::node("until-eof-array", [item.schema], constraints=[
+      "terminates=current-region-eof",
+    ]),
   )
 }
 
@@ -768,10 +760,8 @@ pub fn[T] tagged(
     },
     kind="tagged",
     render~,
-    schema=SchemaNode::node(
-      "tagged",
-      [tag_codec.schema.with_name("tag")],
-      constraints=["variants=dynamic"],
-    ),
+    schema=SchemaNode::node("tagged", [tag_codec.schema.with_name("tag")], constraints=[
+      "variants=dynamic",
+    ]),
   )
 }
