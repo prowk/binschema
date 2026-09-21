@@ -94,7 +94,12 @@ test "PCAP decoder rejects timestamp fractions outside resolution" {
 
 ///|
 test "PCAP byte payloads are independent from collection count limits" {
-  let limits = @bin.Limits::new(max_input_bytes=1024 * 1024, max_collection_length=2, max_depth=16, max_output_bytes=1024 * 1024)
+  let limits = @bin.Limits::new(
+    max_input_bytes=1024 * 1024,
+    max_collection_length=2,
+    max_depth=16,
+    max_output_bytes=1024 * 1024,
+  )
   let options = @bin.DecodeOptions::{ limits, require_eof: true, }
   match
     @bin.decode_with_options(
@@ -114,7 +119,12 @@ test "PCAP encoding enforces collection item limits" {
     Err(error) => fail(error.render())
     Ok(value) => value
   }
-  let limits = @bin.Limits::new(max_input_bytes=1024 * 1024, max_collection_length=0, max_depth=16, max_output_bytes=1024 * 1024)
+  let limits = @bin.Limits::new(
+    max_input_bytes=1024 * 1024,
+    max_collection_length=0,
+    max_depth=16,
+    max_output_bytes=1024 * 1024,
+  )
   let options = @bin.EncodeOptions::{ limits, }
   assert_true(
     @bin.encode_with_options(@formats.pcap_codec(), decoded.value, options)
