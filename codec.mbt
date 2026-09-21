@@ -358,7 +358,7 @@ pub fn[T] bounded(
       [body.schema],
       constraints=[
         "length=" + length.to_string(),
-        "require_eof=" + require_eof.to_string(),
+        "require_eof=" + (if require_eof { "true" } else { "false" }),
       ],
     ),
   )
