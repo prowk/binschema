@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- 新增 `count_prefixed`、`until_eof`、`tagged` 高级组合子，并为大输入提供 `decode_view` / `BytesView` 零拷贝解码路径。
+- 新增确定性 property-style roundtrip 测试与固定二进制 corpus 回归测试。
+
 - 收紧核心公开结构的可变性，新增可配置轨迹预算以防止诊断数据放大。
 - CI 新增 `moon info` 接口同步校验、API 文档构建与发布包清单审计。
 
