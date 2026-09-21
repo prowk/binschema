@@ -31,12 +31,21 @@ pub fn SchemaNode::node(
 }
 
 ///|
+fn copy_schema_children(children : Array[SchemaNode]) -> Array[SchemaNode] {
+  let copied : Array[SchemaNode] = []
+  for child in children {
+    copied.push(child.copy())
+  }
+  copied
+}
+
+///|
 pub fn SchemaNode::with_name(self : SchemaNode, name : String) -> SchemaNode {
   {
     name,
     kind: self.kind,
     constraints: self.constraints.copy(),
-    children: self.children.map(fn(child) { child.copy() }),
+    children: copy_schema_children(self.children),
   }
 }
 
@@ -51,7 +60,7 @@ pub fn SchemaNode::with_constraint(
     name: self.name,
     kind: self.kind,
     constraints,
-    children: self.children.map(fn(child) { child.copy() }),
+    children: copy_schema_children(self.children),
   }
 }
 
@@ -61,7 +70,7 @@ pub fn SchemaNode::copy(self : SchemaNode) -> SchemaNode {
     name: self.name,
     kind: self.kind,
     constraints: self.constraints.copy(),
-    children: self.children.map(fn(child) { child.copy() }),
+    children: copy_schema_children(self.children),
   }
 }
 
