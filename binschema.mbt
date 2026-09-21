@@ -8,7 +8,16 @@ pub fn[T] decode(
   codec : Codec[T],
   input : Bytes,
 ) -> Result[Decoded[T], BinError] {
-  decode_with_options(codec, input, DecodeOptions::default())
+  decode_view_with_options(codec, input[:], DecodeOptions::default())
+}
+
+///|
+/// 从借用字节视图解码，允许返回引用原始输入的 `BytesView`。
+pub fn[T] decode_view(
+  codec : Codec[T],
+  input : BytesView,
+) -> Result[Decoded[T], BinError] {
+  decode_view_with_options(codec, input, DecodeOptions::default())
 }
 
 ///|
@@ -18,12 +27,22 @@ pub fn[T] decode_with_options(
   input : Bytes,
   options : DecodeOptions,
 ) -> Result[Decoded[T], BinError] {
+  decode_view_with_options(codec, input[:], options)
+}
+
+///|
+/// `decode_with_options` 的零拷贝视图版本。
+pub fn[T] decode_view_with_options(
+  codec : Codec[T],
+  input : BytesView,
+  options : DecodeOptions,
+) -> Result[Decoded[T], BinError] {
   guard input.length() <= options.limits.max_input_bytes else {
     return Err(
       BinError::new(LimitExceeded, 0, "", "input exceeds max_input_bytes"),
     )
   }
-  let decoder = Decoder::new(input, options.limits)
+  let decoder = Decoder::new_view(input, options.limits)
   match codec.decode_from(decoder) {
     Err(error) => Err(error)
     Ok(value) =>
