@@ -327,7 +327,6 @@ test "trace budgets reject diagnostic amplification" {
   )
 }
 
-
 ///|
 test "layout primitives enforce padding alignment and termination" {
   let padded = @binschema.pair(
