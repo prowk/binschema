@@ -283,13 +283,9 @@ pub fn bytes_to_hex_preview(bytes : Bytes, max_bytes : Int) -> String {
   }
 }
 
-
 ///|
 /// BytesView 版本的有界十六进制预览；不会复制整个输入。
-pub fn bytes_view_to_hex_preview(
-  bytes : BytesView,
-  max_bytes : Int,
-) -> String {
+pub fn bytes_view_to_hex_preview(bytes : BytesView, max_bytes : Int) -> String {
   let limit = if max_bytes < 0 {
     0
   } else if max_bytes < bytes.length() {
