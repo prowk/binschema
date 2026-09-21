@@ -31,10 +31,7 @@ fn counter_codec() -> @bin.Codec[DemoMessage] {
 
 ///|
 fn sensor_codec() -> @bin.Codec[DemoMessage] {
-  @bin.pair(
-    @bin.u16_le().named("sensor_id"),
-    @bin.u16_le().named("reading"),
-  ).xmap(
+  @bin.pair(@bin.u16_le().named("sensor_id"), @bin.u16_le().named("reading")).xmap(
     fn(value) { Ok(Sensor(value)) },
     fn(message) {
       match message {
@@ -97,12 +94,14 @@ fn checksum8(bytes : BytesView) -> UInt {
 }
 
 ///|
-fn demo_protocol_codec(
-) -> @bin.Codec[(Unit, (UInt, (UInt, Array[DemoMessage])))] {
+fn demo_protocol_codec() -> @bin.Codec[
+  (Unit, (UInt, (UInt, Array[DemoMessage]))),
+] {
   let body = @bin.pair(
     @bin.magic(b"BS").named("magic"),
     @bin.pair(
-      @bin.u8().validate(fn(value) { value == 1U }, "unsupported version")
+      @bin.u8()
+      .validate(fn(value) { value == 1U }, "unsupported version")
       .named("version"),
       @bin.pair(
         @bin.u8().named("flags"),
@@ -114,28 +113,14 @@ fn demo_protocol_codec(
       ),
     ),
   )
-  @bin.checksum_suffix_view(
-    body,
-    @bin.u8().named("checksum"),
-    checksum8,
-  )
+  @bin.checksum_suffix_view(body, @bin.u8().named("checksum"), checksum8)
 }
 
 ///|
 fn main {
   let packet = (
     (),
-    (
-      1U,
-      (
-        0x01U,
-        [
-          Counter(42U),
-          Sensor((7U, 900U)),
-          Blob(b"hello"),
-        ],
-      ),
-    ),
+    (1U, (0x01U, [Counter(42U), Sensor((7U, 900U)), Blob(b"hello")])),
   )
   let codec = demo_protocol_codec()
   match @bin.encode(codec, packet) {
