@@ -1,0 +1,23 @@
+# Source-control and local tooling files are not part of the published module.
+/.git/
+/.github/
+/.githooks/
+/.moonagent/
+/.tmp-test/
+/比赛要求/
+
+# Repository-only project maintenance material.
+/AGENTS.md
+
+# Browser demo is deployed separately and is not required by library consumers.
+/web/
+
+# Keep release/security architecture docs with the published module.
+/docs/
+!/docs/ARCHITECTURE.md
+!/docs/SECURITY.md
+!/docs/COMPATIBILITY.md
+!/docs/RELEASING.md
+
+# Explicitly keep the publishing policy itself for reproducibility.
+!/.moonignore
