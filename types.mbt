@@ -37,7 +37,7 @@ pub extend ErrorKind with ToJson::{to_json}
 
 ///|
 /// 带绝对偏移和字段路径的错误。
-pub(all) struct BinError {
+pub struct BinError {
   kind : ErrorKind
   offset : Int
   path : String
@@ -89,7 +89,7 @@ pub fn ErrorKind::name(self : ErrorKind) -> String {
 
 ///|
 /// 字段的解析轨迹，可用于 CLI 和浏览器可视化。
-pub(all) struct TraceEntry {
+pub struct TraceEntry {
   path : String
   kind : String
   start : Int
@@ -108,11 +108,12 @@ pub extend TraceEntry with ToJson::{to_json}
 
 ///|
 /// 防止恶意长度字段造成过量内存或递归消耗。
-pub(all) struct Limits {
+pub struct Limits {
   max_input_bytes : Int
   max_collection_length : Int
   max_depth : Int
   max_output_bytes : Int
+  max_trace_entries : Int
 } derive(Eq, Debug)
 
 ///|
@@ -122,13 +123,25 @@ pub extend Limits with Eq::{not_equal, equal}
 pub extend Limits with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
-pub fn Limits::default() -> Limits {
+pub fn Limits::new(
+  max_input_bytes? : Int = 64 * 1024 * 1024,
+  max_collection_length? : Int = 1_000_000,
+  max_depth? : Int = 64,
+  max_output_bytes? : Int = 64 * 1024 * 1024,
+  max_trace_entries? : Int = 100_000,
+) -> Limits {
   {
-    max_input_bytes: 64 * 1024 * 1024,
-    max_collection_length: 1_000_000,
-    max_depth: 64,
-    max_output_bytes: 64 * 1024 * 1024,
+    max_input_bytes,
+    max_collection_length,
+    max_depth,
+    max_output_bytes,
+    max_trace_entries,
   }
+}
+
+///|
+pub fn Limits::default() -> Limits {
+  Limits::new()
 }
 
 ///|
@@ -166,7 +179,7 @@ pub fn EncodeOptions::default() -> EncodeOptions {
 
 ///|
 /// 解码成功后的值、消费字节数和字段轨迹。
-pub(all) struct Decoded[T] {
+pub struct Decoded[T] {
   value : T
   consumed : Int
   trace : Array[TraceEntry]
