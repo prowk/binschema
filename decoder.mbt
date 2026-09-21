@@ -6,7 +6,7 @@ pub struct Decoder {
   mut offset : Int
   mut bit_offset : Int
   mut field_path : String
-  mut depth : Int
+  depth : Int
   limits : Limits
   trace_entries : Array[TraceEntry]
 }
