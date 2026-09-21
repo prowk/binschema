@@ -36,7 +36,30 @@ import {
 
 下面的快速开始同时是仓库里的可执行文档测试。组合一个带魔数、版本号和 LEB128 流 ID 的协议：
 
-<!-- placeholder -->
+```mbt check
+///|
+test "README quick start" {
+  let packet = @binschema.pair(
+    @binschema.magic(b"BS").named("magic"),
+    @binschema.pair(
+      @binschema.u8().named("version"),
+      @binschema.uleb128().named("stream_id"),
+    ),
+  )
+  let value = ((), (1U, 624485UL))
+  let bytes = match @binschema.encode(packet, value) {
+    Err(error) => fail(error.render())
+    Ok(bytes) => bytes
+  }
+  match @binschema.decode(packet, bytes) {
+    Err(error) => fail(error.render())
+    Ok(decoded) => {
+      assert_eq(decoded.value, value)
+      assert_eq(decoded.trace.length(), 3)
+    }
+  }
+}
+```
 
 基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`count_prefixed`、`until_eof`、`tagged`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if`、`checksum_suffix` 与零拷贝 `checksum_suffix_view`。对于大输入，可用 `decode_view` + `bytes_view_fixed` / `remaining_view` 避免不必要的字节复制。
 
