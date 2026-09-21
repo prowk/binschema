@@ -121,6 +121,35 @@ fn validate_pcap_packet(
   Ok(())
 }
 
+
+///|
+fn pcap_schema() -> @bin.SchemaNode {
+  @bin.SchemaNode::node("pcap", [
+    @bin.SchemaNode::leaf("bytes[4]").with_name("magic"),
+    @bin.SchemaNode::node("header", [
+      @bin.SchemaNode::leaf("u16[endian]").with_name("version_major"),
+      @bin.SchemaNode::leaf("u16[endian]").with_name("version_minor"),
+      @bin.SchemaNode::leaf("i32[endian]").with_name("timezone_offset"),
+      @bin.SchemaNode::leaf("u32[endian]").with_name("timestamp_accuracy"),
+      @bin.SchemaNode::leaf("u32[endian]").with_name("snapshot_length"),
+      @bin.SchemaNode::leaf("u32[endian]").with_name("link_type"),
+    ], constraints=["version=2.4"]),
+    @bin.SchemaNode::node(
+      "packets",
+      [
+        @bin.SchemaNode::node("packet", [
+          @bin.SchemaNode::leaf("u32[endian]").with_name("timestamp_seconds"),
+          @bin.SchemaNode::leaf("u32[endian]").with_name("timestamp_fraction"),
+          @bin.SchemaNode::leaf("u32[endian]").with_name("included_length"),
+          @bin.SchemaNode::leaf("u32[endian]").with_name("original_length"),
+          @bin.SchemaNode::leaf("bytes[included_length]").with_name("data"),
+        ], constraints=["included_length<=snapshot_length"]),
+      ],
+      constraints=["repeat=until-region-eof", "max_count=runtime-limit"],
+    ),
+  ], constraints=["endianness=from-magic", "timestamp-resolution=from-magic"])
+}
+
 ///|
 pub fn pcap_codec() -> @bin.Codec[PcapFile] {
   @bin.Codec::make(
@@ -372,6 +401,7 @@ pub fn pcap_codec() -> @bin.Codec[PcapFile] {
     },
     kind="pcap",
     render=fn(value) { "PCAP with \{value.packets.length()} packets" },
+    schema=pcap_schema(),
   )
 }
 
