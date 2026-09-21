@@ -21,9 +21,21 @@ pub fn bytes_to_hex(Bytes) -> String
 
 pub fn bytes_to_hex_preview(Bytes, Int) -> String
 
+pub fn bytes_view_fixed(Int) -> Codec[BytesView]
+
+pub fn bytes_view_to_hex_preview(BytesView, Int) -> String
+
 pub fn[T] checksum_suffix(Codec[T], Codec[UInt], (Bytes) -> UInt) -> Codec[T]
 
+pub fn[T] checksum_suffix_view(Codec[T], Codec[UInt], (BytesView) -> UInt) -> Codec[T]
+
+pub fn[T] count_prefixed(Codec[UInt], Codec[T], max_count? : Int) -> Codec[Array[T]]
+
 pub fn[T] decode(Codec[T], Bytes) -> Result[Decoded[T], BinError]
+
+pub fn[T] decode_view(Codec[T], BytesView) -> Result[Decoded[T], BinError]
+
+pub fn[T] decode_view_with_options(Codec[T], BytesView, DecodeOptions) -> Result[Decoded[T], BinError]
 
 pub fn[T] decode_with_options(Codec[T], Bytes, DecodeOptions) -> Result[Decoded[T], BinError]
 
@@ -53,9 +65,15 @@ pub fn[T] optional_if(Codec[Bool], Codec[T]) -> Codec[T?]
 
 pub fn[A, B] pair(Codec[A], Codec[B]) -> Codec[(A, B)]
 
+pub fn remaining_bytes() -> Codec[Bytes]
+
+pub fn remaining_view() -> Codec[BytesView]
+
 pub fn[T] repeat(Int, Codec[T]) -> Codec[Array[T]]
 
 pub fn sleb128() -> Codec[Int64]
+
+pub fn[T] tagged(Codec[UInt], (UInt) -> Result[Codec[T], String], (T) -> Result[UInt, String], render~ : (T) -> String) -> Codec[T]
 
 pub fn u16_be() -> Codec[UInt]
 
@@ -72,6 +90,8 @@ pub fn u64_le() -> Codec[UInt64]
 pub fn u8() -> Codec[UInt]
 
 pub fn uleb128() -> Codec[UInt64]
+
+pub fn[T] until_eof(Codec[T]) -> Codec[Array[T]]
 
 // Errors
 
@@ -119,7 +139,7 @@ pub struct Decoded[T] {
 pub fn[T : @debug.Debug] Decoded::to_repr(Self[T]) -> @debug.Repr
 
 pub struct Decoder {
-  input : Bytes
+  input : BytesView
   base_offset : Int
   mut offset : Int
   mut bit_offset : Int
@@ -133,13 +153,16 @@ pub fn Decoder::align_byte(Self) -> Unit
 pub fn Decoder::depth(Self) -> Int
 pub fn Decoder::max_collection_length(Self) -> Int
 pub fn Decoder::new(Bytes, Limits) -> Self
+pub fn Decoder::new_view(BytesView, Limits) -> Self
 pub fn Decoder::offset(Self) -> Int
 pub fn Decoder::path(Self) -> String
 pub fn Decoder::read_bits_msb(Self, Int) -> Result[UInt, BinError]
+pub fn Decoder::read_byte(Self) -> Result[Byte, BinError]
 pub fn Decoder::read_uint(Self, Int, Endian) -> Result[UInt, BinError]
 pub fn Decoder::read_uint64(Self, Endian) -> Result[UInt64, BinError]
 pub fn Decoder::remaining(Self) -> Int
 pub fn Decoder::take_bytes(Self, Int) -> Result[Bytes, BinError]
+pub fn Decoder::take_view(Self, Int) -> Result[BytesView, BinError]
 pub fn Decoder::total_length(Self) -> Int
 pub fn Decoder::trace(Self) -> Array[TraceEntry]
 

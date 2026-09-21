@@ -47,9 +47,9 @@ pub fn uleb128() -> Codec[UInt64] {
       let encoded : Array[Byte] = []
       let mut value = 0UL
       for index in 0..<10 {
-        let byte = match decoder.take_bytes(1) {
+        let byte = match decoder.read_byte() {
           Err(error) => return Err(error)
-          Ok(bytes) => bytes[0]
+          Ok(value) => value
         }
         encoded.push(byte)
         let payload = (byte.to_uint() & 0x7fU).to_uint64()
@@ -103,9 +103,9 @@ pub fn sleb128() -> Codec[Int64] {
       let encoded : Array[Byte] = []
       let mut value = 0L
       for index in 0..<10 {
-        let byte = match decoder.take_bytes(1) {
+        let byte = match decoder.read_byte() {
           Err(error) => return Err(error)
-          Ok(bytes) => bytes[0]
+          Ok(value) => value
         }
         encoded.push(byte)
         let payload = (byte.to_int() & 0x7f).to_int64()

@@ -11,6 +11,8 @@ BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。�
 - **可诊断错误**：错误包含分类、绝对字节偏移、字段路径和稳定的可读消息。
 - **结构追踪**：`.named()` 记录字段的 `[start, end)`、类型和值预览，可直接驱动可视化界面。
 - **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
+- **高级组合**：提供 `count_prefixed`、`until_eof` 与 `tagged`，覆盖计数数组、流式尾读和标签联合。
+- **零拷贝解码**：`decode_view`、`bytes_view_fixed`、`remaining_view` 与 `checksum_suffix_view` 可直接借用 `BytesView`，有需要时再显式转成拥有型 `Bytes`。
 - **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
 - **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序、长度及时间戳。
 
@@ -44,7 +46,7 @@ let decoded = @bin.decode(packet, bytes).unwrap()
 // decoded.trace 包含每个命名字段的路径和精确字节范围
 ```
 
-基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if` 和 `checksum_suffix`。
+基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`count_prefixed`、`until_eof`、`tagged`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if`、`checksum_suffix` 与零拷贝 `checksum_suffix_view`。对于大输入，可用 `decode_view` + `bytes_view_fixed` / `remaining_view` 避免不必要的字节复制。
 
 ## 可复现的自定义协议示例
 
@@ -125,7 +127,7 @@ moon build --target wasm-gc web/bridge --release
 cmp README.md README.mbt.md
 ```
 
-测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会执行跨后端检查、示例构建、覆盖率流程和 README 同步校验。
+测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、确定性 property roundtrip、固定二进制 corpus、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会在四后端执行这些测试，并验证示例构建、覆盖率流程和 README 同步。
 
 更多设计细节见 [架构说明](docs/ARCHITECTURE.md) 与 [安全模型](docs/SECURITY.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
 
