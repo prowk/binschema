@@ -23,6 +23,8 @@ keywords = [ "binary", "codec", "parser", "wasm", "security" ]
 
 preferred_target = "wasm"
 
+supported_targets = "+wasm+wasm-gc+js+native"
+
 description = "Safe, composable binary protocol codecs for MoonBit with CLI inspection and a Wasm visualizer"
 
 import {
