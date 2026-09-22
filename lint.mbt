@@ -100,21 +100,23 @@ fn lint_duplicate_child_names(
   path : String,
   issues : Array[LintIssue],
 ) -> Unit {
-  for left in 0..<node.children.length() {
+  for left = 0; left < node.children.length(); left = left + 1 {
     let name = node.children[left].name
-    if name == "" {
-      continue
-    }
-    for right in left + 1..<node.children.length() {
-      if node.children[right].name == name {
-        lint_issue(
-          issues,
-          "duplicate-child-name",
-          LintWarning,
-          path,
-          "multiple child fields share the name '" + name + "', which makes traces and generated tooling ambiguous",
-        )
-        break
+    if name != "" {
+      for
+        right = left + 1;
+        right < node.children.length();
+        right = right + 1 {
+        if node.children[right].name == name {
+          lint_issue(
+            issues,
+            "duplicate-child-name",
+            LintWarning,
+            path,
+            "multiple child fields share the name '" + name + "', which makes traces and generated tooling ambiguous",
+          )
+          break
+        }
       }
     }
   }
