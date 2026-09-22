@@ -6,7 +6,7 @@ BinSchema 将协议处理划分为四层：
 
 1. `Decoder` / `Encoder` 管理游标、位偏移、缓冲区和资源预算；Decoder 内部持有 `BytesView`，有界子区域默认借用原输入。
 2. `Codec[T]` 封装双向规则，同时携带只读 `SchemaNode` 元数据；组合子会同步组合运行时规则和协议结构。
-3. `formats` 使用同一套公开 API 实现 PNG、WAVE、PCAP，并为手写动态解析器提供显式 Schema 结构描述。
+3. `formats` 使用同一套公开 API 实现 PNG、WAVE、PCAP、ISO BMFF，并为手写动态解析器提供显式 Schema 结构描述。
 4. CLI 与 Wasm Web 只依赖统一的 `Inspection`；其中同时包含 `SchemaNode`（静态结构）与 `TraceEntry[]`（本次输入的动态字节轨迹）。
 
 ```text
@@ -51,3 +51,8 @@ Web 桥接只导出字符串接口 `inspect_hex` 与 `sample_hex`，避免将 Mo
 ## 增量与流式解码
 
 完整文件仍使用 `decode` / `decode_view` 的严格 EOF 语义。网络帧或拼接缓冲区可使用 `decode_prefix` 只消费一个值；`probe_decode` 仅将 `UnexpectedEof` 映射为 `NeedMore`，其他错误立即暴露。`IncrementalDecoder` 在此基础上负责累积 chunk、遵守 `max_input_bytes`，成功后只丢弃已消费前缀并保留尾部。依赖“当前区域 EOF”的 `until_eof` / `remaining_*` 不适合作为无边界流式 frame，应该先用协议长度字段建立 `bounded` 区域。
+
+
+## ISO BMFF 压力格式
+
+ISO BMFF 用作长度驱动容器协议的真实压力样例。`BmffBox` 保留 4-byte type、普通/扩展尺寸编码方式、`size=0` 语义、可选 `uuid` user type 与原始 payload。未知 box 不做有损解释，因此 `decode -> encode` 可以保持字节级一致；解码在消费 payload 前验证 header 长度、运行时可表示范围和 enclosing region 剩余长度，编码则要求 `size=0` 只能出现在当前区域最后一个 box。自动检测仅接受常见 `ftyp` / `styp` 起始签名，其他合法 BMFF 文件仍可通过显式 `--format bmff` 检查，以降低误识别。
