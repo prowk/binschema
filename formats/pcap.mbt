@@ -164,6 +164,7 @@ fn pcap_schema() -> @bin.SchemaNode {
     constraints=["endianness=from-magic", "timestamp-resolution=from-magic"],
   )
 }
+
 ///|
 pub fn pcap_codec() -> @bin.Codec[PcapFile] {
   @bin.Codec::make(
