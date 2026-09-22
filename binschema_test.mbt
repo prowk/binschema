@@ -348,11 +348,10 @@ test "padding preflights output limits before writing" {
     max_output_bytes=2,
   )
   assert_true(
-    @binschema.encode_with_options(
-      @binschema.padding(1_000_000),
-      (),
-      @binschema.EncodeOptions::{ limits, },
-    ) is Err({ kind: @binschema.LimitExceeded, .. }),
+    @binschema.encode_with_options(@binschema.padding(1_000_000), (), @binschema.EncodeOptions::{
+      limits,
+    })
+    is Err({ kind: @binschema.LimitExceeded, .. }),
   )
 }
 
