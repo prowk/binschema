@@ -35,6 +35,14 @@ pub fn[T] count_prefixed(Codec[UInt], Codec[T], max_count? : Int) -> Codec[Array
 
 pub fn[T] decode(Codec[T], Bytes) -> Result[Decoded[T], BinError]
 
+pub fn[T] decode_prefix(Codec[T], Bytes) -> Result[Decoded[T], BinError]
+
+pub fn[T] decode_prefix_view(Codec[T], BytesView) -> Result[Decoded[T], BinError]
+
+pub fn[T] decode_prefix_view_with_options(Codec[T], BytesView, DecodeOptions) -> Result[Decoded[T], BinError]
+
+pub fn[T] decode_prefix_with_options(Codec[T], Bytes, DecodeOptions) -> Result[Decoded[T], BinError]
+
 pub fn[T] decode_view(Codec[T], BytesView) -> Result[Decoded[T], BinError]
 
 pub fn[T] decode_view_with_options(Codec[T], BytesView, DecodeOptions) -> Result[Decoded[T], BinError]
@@ -72,6 +80,10 @@ pub fn[T] optional_if(Codec[Bool], Codec[T]) -> Codec[T?]
 pub fn padding(Int) -> Codec[Unit]
 
 pub fn[A, B] pair(Codec[A], Codec[B]) -> Codec[(A, B)]
+
+pub fn[T] probe_decode(Codec[T], Bytes) -> DecodeStep[T]
+
+pub fn[T] probe_decode_with_options(Codec[T], Bytes, DecodeOptions) -> DecodeStep[T]
 
 pub fn remaining_bytes() -> Codec[Bytes]
 
@@ -142,6 +154,12 @@ pub fn DecodeOptions::default() -> Self
 pub fn DecodeOptions::equal(Self, Self) -> Bool
 pub fn DecodeOptions::not_equal(Self, Self) -> Bool
 pub fn DecodeOptions::to_repr(Self) -> @debug.Repr
+
+pub(all) enum DecodeStep[T] {
+  Done(Decoded[T])
+  NeedMore
+  Failed(BinError)
+}
 
 pub struct Decoded[T] {
   value : T
@@ -227,6 +245,17 @@ pub fn ErrorKind::name(Self) -> String
 pub fn ErrorKind::not_equal(Self, Self) -> Bool
 pub fn ErrorKind::to_json(Self) -> Json
 pub fn ErrorKind::to_repr(Self) -> @debug.Repr
+
+pub struct IncrementalDecoder[T] {
+  codec : Codec[T]
+  limits : Limits
+  mut buffer : Array[Byte]
+}
+pub fn[T] IncrementalDecoder::buffered_bytes(Self[T]) -> Int
+pub fn[T] IncrementalDecoder::clear(Self[T]) -> Unit
+pub fn[T] IncrementalDecoder::feed(Self[T], Bytes) -> DecodeStep[T]
+pub fn[T] IncrementalDecoder::new(Codec[T], limits? : Limits) -> Self[T]
+pub fn[T] IncrementalDecoder::poll(Self[T]) -> DecodeStep[T]
 
 pub struct Limits {
   max_input_bytes : Int
