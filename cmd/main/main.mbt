@@ -160,9 +160,10 @@ fn inspect_command(
   inspect_input(input, format, has_flag(args, 3, "--json"), verify_only)
 }
 
-
 ///|
-fn schema_for_format(format : @formats.Format) -> Result[@bin.SchemaNode, CliError] {
+fn schema_for_format(
+  format : @formats.Format,
+) -> Result[@bin.SchemaNode, CliError] {
   match format {
     @formats.Png => Ok(@formats.png_codec().schema_node())
     @formats.Wav => Ok(@formats.wav_codec().schema_node())
@@ -172,10 +173,7 @@ fn schema_for_format(format : @formats.Format) -> Result[@bin.SchemaNode, CliErr
 }
 
 ///|
-fn lint_format(
-  name : String,
-  json : Bool,
-) -> Result[String, CliError] {
+fn lint_format(name : String, json : Bool) -> Result[String, CliError] {
   let format = match @formats.Format::parse(name) {
     Ok(value) => value
     Err(message) => return Err(Usage(message))
