@@ -17,6 +17,22 @@ Before 1.0, minor releases may contain intentional API changes, but they must be
 Patch releases should remain source-compatible and focus on fixes, diagnostics, documentation,
 and performance changes that do not alter documented semantics.
 
+## 0.3.0 migration notes
+
+0.3.0 is a pre-1.0 minor release with intentional public-surface growth.
+
+- `Codec[T]` now carries a `schema : SchemaNode` field. Downstream code should prefer
+  `Codec::make` and combinators instead of constructing `Codec` values with struct literals.
+- `Inspection` now contains `schema : SchemaNode`. Downstream code that manually constructs
+  inspection reports must provide this field.
+- The public `Format` enum gained `Bmff`, `Dns`, and `Elf`. Exhaustive downstream matches
+  over `Format` need corresponding branches.
+- New Decoder random-access APIs, incremental decoding APIs, Schema/Linter APIs, and the new
+  format types are additive.
+
+Existing canonical encodings for the v0.2.0 core codecs are not intentionally changed by this
+release.
+
 ## Backend support
 
 The library module declares support for Wasm, Wasm-GC, JavaScript, and Native. Package-level
