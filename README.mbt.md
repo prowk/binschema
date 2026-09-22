@@ -18,6 +18,7 @@ BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。�
 - **零拷贝解码**：`decode_view`、`bytes_view_fixed`、`remaining_view` 与 `checksum_suffix_view` 可直接借用 `BytesView`，有需要时再显式转成拥有型 `Bytes`。
 - **增量帧解析**：`decode_prefix`、`probe_decode` 与 `IncrementalDecoder` 支持分块输入、`NeedMore` 判定和多 frame 尾部保留。
 - **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
+- **结构化安全回归**：从真实格式的 Schema/Trace 派生确定性 mutation，覆盖截断、长度膨胀、CRC 损坏和字段边界翻转。
 - **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序、长度及时间戳。
 
 ## 快速开始
@@ -187,7 +188,7 @@ moon build --target wasm-gc web/bridge --release
 cmp README.md README.mbt.md
 ```
 
-测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、确定性 property roundtrip、固定二进制 corpus、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会在四后端执行这些测试，并验证示例构建、覆盖率流程和 README 同步。
+测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、确定性 property roundtrip、固定二进制 corpus、基于 Schema/Trace 的结构化 mutation、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会在四后端执行这些测试，并验证示例构建、覆盖率流程和 README 同步。
 
 更多设计细节见 [架构说明](docs/ARCHITECTURE.md)、[安全模型](docs/SECURITY.md)、[兼容性策略](docs/COMPATIBILITY.md) 与 [发布流程](docs/RELEASING.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
 
