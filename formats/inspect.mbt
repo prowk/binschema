@@ -261,6 +261,7 @@ fn inspect_bmff(input : Bytes) -> Result[Inspection, @bin.BinError] {
     trace: decoded.trace,
   })
 }
+
 ///|
 pub fn inspect(
   input : Bytes,
