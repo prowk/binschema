@@ -67,6 +67,42 @@ pub fn Decoder::max_collection_length(self : Decoder) -> Int {
 }
 
 ///|
+pub fn Decoder::max_depth(self : Decoder) -> Int {
+  self.limits.max_depth
+}
+
+///|
+/// 借用当前 Decoder 区域内任意绝对相对偏移的字节，不移动游标。
+/// offset 相对于当前 Decoder 区域起点，而不是当前 cursor。
+pub fn Decoder::view_at(
+  self : Decoder,
+  offset : Int,
+  count : Int,
+) -> Result[BytesView, BinError] {
+  if offset < 0 || count < 0 {
+    return Err(
+      BinError::new(
+        InvalidValue,
+        self.absolute_offset(),
+        self.field_path,
+        "random-access offset and count must be non-negative",
+      ),
+    )
+  }
+  if offset > self.input.length() || count > self.input.length() - offset {
+    return Err(
+      BinError::new(
+        UnexpectedEof,
+        self.base_offset + offset,
+        self.field_path,
+        "random-access byte range exceeds decoder bounds",
+      ),
+    )
+  }
+  Ok(self.input[offset:offset + count])
+}
+
+///|
 pub fn Decoder::depth(self : Decoder) -> Int {
   self.depth
 }
