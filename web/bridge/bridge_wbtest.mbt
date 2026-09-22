@@ -28,7 +28,6 @@ test "exported bridge returns structured errors" {
   assert_true(sample_hex("auto").contains("\"error\""))
 }
 
-
 ///|
 test "DNS bridge inspection uses explicit format selection" {
   let hex = sample_hex("dns")
