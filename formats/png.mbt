@@ -81,11 +81,15 @@ fn validate_png_chunk(
     let bit_depth = data[8].to_uint()
     let color_type = data[9].to_uint()
     let valid_depth = match color_type {
-      0U => bit_depth == 1U || bit_depth == 2U || bit_depth == 4U ||
-        bit_depth == 8U || bit_depth == 16U
+      0U =>
+        bit_depth == 1U ||
+        bit_depth == 2U ||
+        bit_depth == 4U ||
+        bit_depth == 8U ||
+        bit_depth == 16U
       2U | 4U | 6U => bit_depth == 8U || bit_depth == 16U
-      3U => bit_depth == 1U || bit_depth == 2U || bit_depth == 4U ||
-        bit_depth == 8U
+      3U =>
+        bit_depth == 1U || bit_depth == 2U || bit_depth == 4U || bit_depth == 8U
       _ => false
     }
     if !valid_depth {
@@ -338,13 +342,21 @@ pub fn sample_png() -> Bytes {
   let ihdr = b"\x00\x00\x00\x01\x00\x00\x00\x01\x08\x00\x00\x00\x00"
   let idat = b"\x78\x9c\x63\x60\x00\x00\x00\x02\x00\x01"
   let chunks = [
-    PngChunk::{ kind: "IHDR", data: ihdr, crc: crc32(chunk_crc_input("IHDR", ihdr)), },
+    PngChunk::{
+      kind: "IHDR",
+      data: ihdr,
+      crc: crc32(chunk_crc_input("IHDR", ihdr)),
+    },
     PngChunk::{
       kind: "IDAT",
       data: idat,
       crc: crc32(chunk_crc_input("IDAT", idat)),
     },
-    PngChunk::{ kind: "IEND", data: b"", crc: crc32(chunk_crc_input("IEND", b"")), },
+    PngChunk::{
+      kind: "IEND",
+      data: b"",
+      crc: crc32(chunk_crc_input("IEND", b"")),
+    },
   ]
   match @bin.encode(png_codec(), { chunks, }) {
     Ok(bytes) => bytes
