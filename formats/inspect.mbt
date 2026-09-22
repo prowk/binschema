@@ -7,6 +7,7 @@ pub(all) enum Format {
   Pcap
   Bmff
   Dns
+  Elf
 } derive(Eq, Debug, ToJson)
 
 ///|
@@ -62,6 +63,7 @@ pub fn Format::parse(name : String) -> Result[Format, String] {
     "pcap" => Ok(Pcap)
     "bmff" | "isobmff" | "mp4" => Ok(Bmff)
     "dns" => Ok(Dns)
+    "elf" => Ok(Elf)
     other => Err("unsupported format: " + other)
   }
 }
@@ -75,6 +77,7 @@ pub fn Format::name(self : Format) -> String {
     Pcap => "pcap"
     Bmff => "bmff"
     Dns => "dns"
+    Elf => "elf"
   }
 }
 
@@ -93,7 +96,9 @@ fn starts_with(input : Bytes, prefix : Bytes) -> Bool {
 
 ///|
 pub fn detect_format(input : Bytes) -> Result[Format, @bin.BinError] {
-  if starts_with(input, b"\x89PNG\x0d\x0a\x1a\x0a") {
+  if starts_with(input, b"\x7fELF") {
+    Ok(Elf)
+  } else if starts_with(input, b"\x89PNG\x0d\x0a\x1a\x0a") {
     Ok(Png)
   } else if starts_with(input, b"RIFF") &&
     input.length() >= 12 &&
@@ -116,7 +121,7 @@ pub fn detect_format(input : Bytes) -> Result[Format, @bin.BinError] {
         @bin.Unsupported,
         0,
         "format",
-        "input does not match an auto-detectable PNG, WAVE, PCAP, or ISO BMFF signature; DNS requires --format dns",
+        "input does not match an auto-detectable ELF, PNG, WAVE, PCAP, or ISO BMFF signature; DNS requires --format dns",
       ),
     )
   }
@@ -296,6 +301,46 @@ fn inspect_dns(input : Bytes) -> Result[Inspection, @bin.BinError] {
   })
 }
 
+
+///|
+fn inspect_elf(input : Bytes) -> Result[Inspection, @bin.BinError] {
+  let decoded = match @bin.decode(elf_codec().named("elf"), input) {
+    Err(error) => return Err(error)
+    Ok(value) => value
+  }
+  let encoded = match @bin.encode(elf_codec(), decoded.value) {
+    Err(error) => return Err(error)
+    Ok(value) => value
+  }
+  let value = decoded.value
+  let endian = match value.endian {
+    @bin.Big => "big"
+    @bin.Little => "little"
+  }
+  let names : Array[String] = []
+  for section in value.sections {
+    if section.name != "" && names.length() < 8 {
+      names.push(section.name)
+    }
+  }
+  let summary = [
+    item("class", value.class.name()),
+    item("endianness", endian),
+    item("type", value.file_type.to_string()),
+    item("machine", value.machine.to_string()),
+    item("sections", value.section_header_count.to_string()),
+    item("section_names", names.join(", ")),
+  ]
+  Ok({
+    format: "ELF",
+    size: input.length(),
+    roundtrip_equal: encoded == input,
+    summary,
+    schema: elf_codec().named("elf").schema_node(),
+    trace: decoded.trace,
+  })
+}
+
 ///|
 pub fn inspect(
   input : Bytes,
@@ -324,6 +369,7 @@ pub fn inspect(
     Pcap => inspect_pcap(input)
     Bmff => inspect_bmff(input)
     Dns => inspect_dns(input)
+    Elf => inspect_elf(input)
   }
 }
 
