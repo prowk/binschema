@@ -67,8 +67,9 @@ fn assert_trace_truncations_rejected(
   for entry in report.trace {
     if entry.start > 0 && entry.start < input.length() {
       cases += 1
-      assert_true(
-        @formats.inspect(mutation_prefix(input, entry.start), format~) is Err(_),
+      assert_structured_mutation_result(
+        mutation_prefix(input, entry.start),
+        format,
       )
     }
     let inside_end = entry.end - 1
