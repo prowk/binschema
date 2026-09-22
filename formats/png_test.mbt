@@ -92,3 +92,52 @@ test "PNG encoding enforces collection item limits" {
     is Err({ kind: @bin.LimitExceeded, .. }),
   )
 }
+
+///|
+test "PNG encoder rejects stale CRC and malformed chunk type without panicking" {
+  let decoded = match @bin.decode(@formats.png_codec(), @formats.sample_png()) {
+    Ok(value) => value.value
+    Err(error) => fail(error.render())
+  }
+  let stale = @formats.PngFile::{
+    chunks: [
+      @formats.PngChunk::{
+        kind: decoded.chunks[0].kind,
+        data: decoded.chunks[0].data,
+        crc: 0U,
+      },
+      decoded.chunks[1],
+      decoded.chunks[2],
+    ],
+  }
+  assert_true(
+    @bin.encode(@formats.png_codec(), stale)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+  let malformed = @formats.PngFile::{
+    chunks: [
+      @formats.PngChunk::{ kind: "A", data: b"", crc: 0U, },
+      @formats.PngChunk::{ kind: "IEND", data: b"", crc: decoded.chunks[2].crc, },
+    ],
+  }
+  assert_true(
+    @bin.encode(@formats.png_codec(), malformed)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}
+
+///|
+test "PNG encoder validates core IHDR semantics" {
+  let invalid_ihdr =
+    b"\x00\x00\x00\x01\x00\x00\x00\x01\x03\x02\x00\x00\x00"
+  let invalid = @formats.PngFile::{
+    chunks: [
+      @formats.PngChunk::{ kind: "IHDR", data: invalid_ihdr, crc: 0U, },
+      @formats.PngChunk::{ kind: "IEND", data: b"", crc: 0U, },
+    ],
+  }
+  assert_true(
+    @bin.encode(@formats.png_codec(), invalid)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}
