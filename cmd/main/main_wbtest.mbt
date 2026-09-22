@@ -5,7 +5,8 @@ test "CLI metadata commands are pure and stable" {
     text.contains("安全的二进制协议检查器"),
   )
   match run(["binschema", "formats"]) {
-    Ok(value) => assert_eq(value, "支持格式: PNG, WAVE, PCAP, ISO BMFF, DNS")
+    Ok(value) =>
+      assert_eq(value, "支持格式: PNG, WAVE, PCAP, ISO BMFF, DNS")
     Err(error) => fail(error.message())
   }
   match run(["binschema", "--version"]) {
