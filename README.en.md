@@ -19,7 +19,8 @@ inspector, and real PNG, WAVE, and PCAP format implementations.
 - zero-copy `BytesView` APIs including `decode_view`, `bytes_view_fixed`, and `remaining_view`;
 - prefix/incremental framing with `decode_prefix`, `probe_decode`, and `IncrementalDecoder`;
 - deterministic property-style tests and a fixed malformed/valid binary corpus;
-- validated Wasm, Wasm-GC, JavaScript, and Native library backends.
+- validated Wasm, Wasm-GC, JavaScript, and Native library backends;
+- deterministic Schema/Trace-guided mutation regression for truncation, length inflation, checksum damage, and field-boundary flips.
 
 ## Install
 
