@@ -76,8 +76,8 @@ test "README quick start" {
 test "README incremental decode" {
   let codec = @binschema.pair(@binschema.u16_be(), @binschema.u8())
   let stream = @binschema.IncrementalDecoder::new(codec)
-  assert_true(stream.feed(b"\\x12") is @binschema.NeedMore)
-  match stream.feed(b"\\x34\\x56\\xaa") {
+  assert_true(stream.feed(b"\x12") is @binschema.NeedMore)
+  match stream.feed(b"\x34\x56\xaa") {
     @binschema.Done(decoded) => assert_eq(decoded.value, (0x1234U, 0x56U))
     _ => fail("expected one complete frame")
   }
