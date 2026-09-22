@@ -132,7 +132,7 @@ fn lint_node(
           "missing-max-length",
           LintError,
           path,
-          "length-prefixed fields should declare max_length so tooling can prove a local allocation bound",
+          "length-prefixed fields should declare max_length so tooling can surface a declared local allocation bound",
         )
       }
     "count-prefixed-array" =>
@@ -142,7 +142,7 @@ fn lint_node(
           "missing-max-count",
           LintError,
           path,
-          "count-prefixed arrays should declare max_count so tooling can prove a local collection bound",
+          "count-prefixed arrays should declare max_count so tooling can surface a declared local collection bound",
         )
       }
     "bounded" =>
