@@ -26,11 +26,12 @@ test "unknown input returns Unsupported" {
   assert_true(result is Err({ kind: @bin.Unsupported, .. }))
 }
 
-
 ///|
 test "DNS inspection is explicit and round-trip stable" {
   let input = @formats.sample_dns()
-  assert_true(@formats.detect_format(input) is Err({ kind: @bin.Unsupported, .. }))
+  assert_true(
+    @formats.detect_format(input) is Err({ kind: @bin.Unsupported, .. }),
+  )
   let report = match @formats.inspect(input, format=@formats.Dns) {
     Ok(value) => value
     Err(error) => fail(error.render())
