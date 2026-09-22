@@ -150,7 +150,7 @@ fn dns_resolve_pointer(
     if first == 0U {
       return Ok(expanded_octets)
     }
-    if first & 0xc0U == 0xc0U {
+    if (first & 0xc0U) == 0xc0U {
       let second = match dns_view_byte(decoder, position + 1) {
         Ok(value) => value.to_uint()
         Err(error) => return Err(error)
@@ -168,7 +168,7 @@ fn dns_resolve_pointer(
       }
       position = target
       hops += 1
-    } else if first & 0xc0U != 0U {
+    } else if (first & 0xc0U) != 0U {
       return Err(
         dns_error(
           decoder,
@@ -220,7 +220,7 @@ fn decode_dns_name(decoder : @bin.Decoder) -> Result[DnsName, @bin.BinError] {
     if first == 0U {
       return Ok({ labels, wire: Bytes::from_array(wire), })
     }
-    if first & 0xc0U == 0xc0U {
+    if (first & 0xc0U) == 0xc0U {
       let second_byte = match decoder.read_byte() {
         Ok(value) => value
         Err(error) => return Err(error)
@@ -245,7 +245,7 @@ fn decode_dns_name(decoder : @bin.Decoder) -> Result[DnsName, @bin.BinError] {
       }
       return Ok({ labels, wire: Bytes::from_array(wire), })
     }
-    if first & 0xc0U != 0U {
+    if (first & 0xc0U) != 0U {
       return Err(
         dns_error(
           decoder,
@@ -304,7 +304,7 @@ fn validate_dns_name_wire(
       }
       return Ok(())
     }
-    if first & 0xc0U == 0xc0U {
+    if (first & 0xc0U) == 0xc0U {
       if position + 2 != wire.length() {
         return Err("DNS compression pointer must terminate the encoded name")
       }
@@ -315,7 +315,7 @@ fn validate_dns_name_wire(
       }
       return Ok(())
     }
-    if first & 0xc0U != 0U {
+    if (first & 0xc0U) != 0U {
       return Err("DNS name uses a reserved label encoding")
     }
     let length = first.reinterpret_as_int()
