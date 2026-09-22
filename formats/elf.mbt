@@ -96,12 +96,18 @@ fn elf_need(
   count : Int,
   path : String,
 ) -> Result[BytesView, @bin.BinError] {
-  if offset < 0 || count < 0 || offset > input.length() ||
+  if offset < 0 ||
+    count < 0 ||
+    offset > input.length() ||
     count > input.length() - offset {
     Err(
       elf_error(
         @bin.UnexpectedEof,
-        if offset < 0 { 0 } else { offset },
+        if offset < 0 {
+          0
+        } else {
+          offset
+        },
         path,
         "ELF field exceeds file bounds",
       ),
@@ -218,7 +224,11 @@ fn elf_range(
     return Err(
       elf_error(
         @bin.UnexpectedEof,
-        if offset > 0x7fffffffUL { input_length } else { offset.to_int() },
+        if offset > 0x7fffffffUL {
+          input_length
+        } else {
+          offset.to_int()
+        },
         path,
         "ELF range exceeds file bounds",
       ),
@@ -246,7 +256,8 @@ fn elf_section_at(
 ) -> Result[ElfSection, @bin.BinError] {
   let base = table_offset + index * entry_size
   let path = "sections.\{index}"
-  let name_offset = match elf_u32_at(input, base, endian, path + ".name_offset") {
+  let name_offset = match
+    elf_u32_at(input, base, endian, path + ".name_offset") {
     Ok(value) => value
     Err(error) => return Err(error)
   }
@@ -254,17 +265,28 @@ fn elf_section_at(
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let (flags, address, offset, size, link_offset, info_offset, align_offset, entsize_offset) = match class {
+  let (
+    flags,
+    address,
+    offset,
+    size,
+    link_offset,
+    info_offset,
+    align_offset,
+    entsize_offset,
+  ) = match class {
     Elf32 => {
       let flags = match elf_u32_at(input, base + 8, endian, path + ".flags") {
         Ok(value) => elf_uint_as_u64(value)
         Err(error) => return Err(error)
       }
-      let address = match elf_u32_at(input, base + 12, endian, path + ".address") {
+      let address = match
+        elf_u32_at(input, base + 12, endian, path + ".address") {
         Ok(value) => elf_uint_as_u64(value)
         Err(error) => return Err(error)
       }
-      let offset = match elf_u32_at(input, base + 16, endian, path + ".offset") {
+      let offset = match
+        elf_u32_at(input, base + 16, endian, path + ".offset") {
         Ok(value) => elf_uint_as_u64(value)
         Err(error) => return Err(error)
       }
@@ -279,11 +301,13 @@ fn elf_section_at(
         Ok(value) => value
         Err(error) => return Err(error)
       }
-      let address = match elf_u64_at(input, base + 16, endian, path + ".address") {
+      let address = match
+        elf_u64_at(input, base + 16, endian, path + ".address") {
         Ok(value) => value
         Err(error) => return Err(error)
       }
-      let offset = match elf_u64_at(input, base + 24, endian, path + ".offset") {
+      let offset = match
+        elf_u64_at(input, base + 24, endian, path + ".offset") {
         Ok(value) => value
         Err(error) => return Err(error)
       }
@@ -294,34 +318,40 @@ fn elf_section_at(
       (flags, address, offset, size, 40, 44, 48, 56)
     }
   }
-  let link = match elf_u32_at(input, base + link_offset, endian, path + ".link") {
+  let link = match
+    elf_u32_at(input, base + link_offset, endian, path + ".link") {
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let info = match elf_u32_at(input, base + info_offset, endian, path + ".info") {
+  let info = match
+    elf_u32_at(input, base + info_offset, endian, path + ".info") {
     Ok(value) => value
     Err(error) => return Err(error)
   }
   let alignment = match class {
     Elf32 =>
-      match elf_u32_at(input, base + align_offset, endian, path + ".alignment") {
+      match
+        elf_u32_at(input, base + align_offset, endian, path + ".alignment") {
         Ok(value) => elf_uint_as_u64(value)
         Err(error) => return Err(error)
       }
     Elf64 =>
-      match elf_u64_at(input, base + align_offset, endian, path + ".alignment") {
+      match
+        elf_u64_at(input, base + align_offset, endian, path + ".alignment") {
         Ok(value) => value
         Err(error) => return Err(error)
       }
   }
   let entry_size = match class {
     Elf32 =>
-      match elf_u32_at(input, base + entsize_offset, endian, path + ".entry_size") {
+      match
+        elf_u32_at(input, base + entsize_offset, endian, path + ".entry_size") {
         Ok(value) => elf_uint_as_u64(value)
         Err(error) => return Err(error)
       }
     Elf64 =>
-      match elf_u64_at(input, base + entsize_offset, endian, path + ".entry_size") {
+      match
+        elf_u64_at(input, base + entsize_offset, endian, path + ".entry_size") {
         Ok(value) => value
         Err(error) => return Err(error)
       }
@@ -384,33 +414,57 @@ fn elf_string_at(
 fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] {
   let input = raw[:]
   if input.length() < 16 {
-    return Err(elf_error(@bin.UnexpectedEof, 0, "ident", "ELF identification is truncated"))
+    return Err(
+      elf_error(
+        @bin.UnexpectedEof,
+        0,
+        "ident",
+        "ELF identification is truncated",
+      ),
+    )
   }
   if input[0] != 0x7fU.to_byte() ||
     input[1] != b'E' ||
     input[2] != b'L' ||
     input[3] != b'F' {
-    return Err(elf_error(@bin.InvalidValue, 0, "magic", "ELF magic bytes mismatch"))
+    return Err(
+      elf_error(@bin.InvalidValue, 0, "magic", "ELF magic bytes mismatch"),
+    )
   }
   let class = match input[4].to_uint() {
     1U => Elf32
     2U => Elf64
-    _ => return Err(elf_error(@bin.Unsupported, 4, "class", "unsupported ELF class"))
+    _ =>
+      return Err(
+        elf_error(@bin.Unsupported, 4, "class", "unsupported ELF class"),
+      )
   }
   let endian = match input[5].to_uint() {
     1U => @bin.Little
     2U => @bin.Big
-    _ => return Err(elf_error(@bin.Unsupported, 5, "data", "unsupported ELF byte order"))
+    _ =>
+      return Err(
+        elf_error(@bin.Unsupported, 5, "data", "unsupported ELF byte order"),
+      )
   }
   if input[6].to_uint() != 1U {
-    return Err(elf_error(@bin.InvalidValue, 6, "ident_version", "unsupported ELF identification version"))
+    return Err(
+      elf_error(
+        @bin.InvalidValue,
+        6,
+        "ident_version",
+        "unsupported ELF identification version",
+      ),
+    )
   }
   let minimum_header = match class {
     Elf32 => 52
     Elf64 => 64
   }
   if input.length() < minimum_header {
-    return Err(elf_error(@bin.UnexpectedEof, 0, "header", "ELF header is truncated"))
+    return Err(
+      elf_error(@bin.UnexpectedEof, 0, "header", "ELF header is truncated"),
+    )
   }
   let os_abi = input[7].to_uint()
   let abi_version = input[8].to_uint()
@@ -427,9 +481,22 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
     Err(error) => return Err(error)
   }
   if version != 1U {
-    return Err(elf_error(@bin.InvalidValue, 20, "version", "unsupported ELF header version"))
+    return Err(
+      elf_error(
+        @bin.InvalidValue,
+        20,
+        "version",
+        "unsupported ELF header version",
+      ),
+    )
   }
-  let (entry, program_header_offset, section_header_offset, flags_offset, header_size_offset) = match class {
+  let (
+    entry,
+    program_header_offset,
+    section_header_offset,
+    flags_offset,
+    header_size_offset,
+  ) = match class {
     Elf32 => {
       let entry = match elf_u32_at(input, 24, endian, "entry") {
         Ok(value) => elf_uint_as_u64(value)
@@ -465,30 +532,53 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let header_size = match elf_u16_at(input, header_size_offset, endian, "header_size") {
+  let header_size = match
+    elf_u16_at(input, header_size_offset, endian, "header_size") {
     Ok(value) => value.reinterpret_as_int()
     Err(error) => return Err(error)
   }
   if header_size < minimum_header || header_size > input.length() {
-    return Err(elf_error(@bin.InvalidValue, header_size_offset, "header_size", "ELF header size is inconsistent with class or file length"))
+    return Err(
+      elf_error(
+        @bin.InvalidValue,
+        header_size_offset,
+        "header_size",
+        "ELF header size is inconsistent with class or file length",
+      ),
+    )
   }
-  let program_header_entry_size = match elf_u16_at(input, header_size_offset + 2, endian, "program_header_entry_size") {
+  let program_header_entry_size = match
+    elf_u16_at(
+      input,
+      header_size_offset + 2,
+      endian,
+      "program_header_entry_size",
+    ) {
     Ok(value) => value.reinterpret_as_int()
     Err(error) => return Err(error)
   }
-  let raw_program_header_count = match elf_u16_at(input, header_size_offset + 4, endian, "program_header_count") {
+  let raw_program_header_count = match
+    elf_u16_at(input, header_size_offset + 4, endian, "program_header_count") {
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let section_header_entry_size = match elf_u16_at(input, header_size_offset + 6, endian, "section_header_entry_size") {
+  let section_header_entry_size = match
+    elf_u16_at(
+      input,
+      header_size_offset + 6,
+      endian,
+      "section_header_entry_size",
+    ) {
     Ok(value) => value.reinterpret_as_int()
     Err(error) => return Err(error)
   }
-  let raw_section_header_count = match elf_u16_at(input, header_size_offset + 8, endian, "section_header_count") {
+  let raw_section_header_count = match
+    elf_u16_at(input, header_size_offset + 8, endian, "section_header_count") {
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let raw_section_name_index = match elf_u16_at(input, header_size_offset + 10, endian, "section_name_index") {
+  let raw_section_name_index = match
+    elf_u16_at(input, header_size_offset + 10, endian, "section_name_index") {
     Ok(value) => value
     Err(error) => return Err(error)
   }
@@ -508,27 +598,63 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
 
   if section_header_offset == 0UL {
     if raw_section_header_count != 0U || raw_section_name_index != 0U {
-      return Err(elf_error(@bin.InvalidValue, header_size_offset + 8, "sections", "ELF declares section metadata without a section header table"))
+      return Err(
+        elf_error(
+          @bin.InvalidValue,
+          header_size_offset + 8,
+          "sections",
+          "ELF declares section metadata without a section header table",
+        ),
+      )
     }
   } else {
     if section_header_entry_size < expected_section_entry {
-      return Err(elf_error(@bin.InvalidValue, header_size_offset + 6, "section_header_entry_size", "ELF section header entry is smaller than the class-defined structure"))
+      return Err(
+        elf_error(
+          @bin.InvalidValue,
+          header_size_offset + 6,
+          "section_header_entry_size",
+          "ELF section header entry is smaller than the class-defined structure",
+        ),
+      )
     }
-    let table_offset = match elf_bounded_int(section_header_offset, header_size_offset + 6, "section_header_offset", "ELF section table offset") {
+    let table_offset = match
+      elf_bounded_int(
+        section_header_offset,
+        header_size_offset + 6,
+        "section_header_offset",
+        "ELF section table offset",
+      ) {
       Ok(value) => value
       Err(error) => return Err(error)
     }
     if table_offset > input.length() ||
       section_header_entry_size > input.length() - table_offset {
-      return Err(elf_error(@bin.UnexpectedEof, table_offset, "sections.0", "ELF section header zero exceeds file bounds"))
+      return Err(
+        elf_error(
+          @bin.UnexpectedEof,
+          table_offset,
+          "sections.0",
+          "ELF section header zero exceeds file bounds",
+        ),
+      )
     }
-    let zero = match elf_section_at(input, table_offset, section_header_entry_size, 0, class, endian) {
+    let zero = match
+      elf_section_at(
+        input, table_offset, section_header_entry_size, 0, class, endian,
+      ) {
       Ok(value) => value
       Err(error) => return Err(error)
     }
     section_zero = Some(zero)
     section_header_count = if raw_section_header_count == 0U {
-      match elf_bounded_int(zero.size, table_offset, "section_header_count", "extended ELF section count") {
+      match
+        elf_bounded_int(
+          zero.size,
+          table_offset,
+          "section_header_count",
+          "extended ELF section count",
+        ) {
         Ok(value) => value
         Err(error) => return Err(error)
       }
@@ -536,22 +662,52 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
       raw_section_header_count.reinterpret_as_int()
     }
     if section_header_count <= 0 {
-      return Err(elf_error(@bin.InvalidValue, table_offset, "section_header_count", "ELF section table must contain section zero"))
+      return Err(
+        elf_error(
+          @bin.InvalidValue,
+          table_offset,
+          "section_header_count",
+          "ELF section table must contain section zero",
+        ),
+      )
     }
     if section_header_count > max_sections {
-      return Err(elf_error(@bin.LimitExceeded, table_offset, "sections", "ELF section count exceeds configured collection limit"))
+      return Err(
+        elf_error(
+          @bin.LimitExceeded,
+          table_offset,
+          "sections",
+          "ELF section count exceeds configured collection limit",
+        ),
+      )
     }
     if section_header_count >
       (input.length() - table_offset) / section_header_entry_size {
-      return Err(elf_error(@bin.UnexpectedEof, table_offset, "sections", "ELF section header table exceeds file bounds"))
+      return Err(
+        elf_error(
+          @bin.UnexpectedEof,
+          table_offset,
+          "sections",
+          "ELF section header table exceeds file bounds",
+        ),
+      )
     }
     for index in 0..<section_header_count {
-      let section = match elf_section_at(input, table_offset, section_header_entry_size, index, class, endian) {
+      let section = match
+        elf_section_at(
+          input, table_offset, section_header_entry_size, index, class, endian,
+        ) {
         Ok(value) => value
         Err(error) => return Err(error)
       }
       if section.section_type != 8U && section.size != 0UL {
-        match elf_range(input.length(), section.offset, section.size, "sections.\{index}.payload") {
+        match
+          elf_range(
+            input.length(),
+            section.offset,
+            section.size,
+            "sections.\{index}.payload",
+          ) {
           Ok(_) => ()
           Err(error) => return Err(error)
         }
@@ -562,21 +718,48 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
       section_name_index = zero.link.reinterpret_as_int()
     }
     if section_name_index < 0 || section_name_index >= section_header_count {
-      return Err(elf_error(@bin.InvalidValue, table_offset, "section_name_index", "ELF section-name string table index is outside the section table"))
+      return Err(
+        elf_error(
+          @bin.InvalidValue,
+          table_offset,
+          "section_name_index",
+          "ELF section-name string table index is outside the section table",
+        ),
+      )
     }
     if section_name_index != 0 {
       let string_section = sections[section_name_index]
       if string_section.section_type != 3U {
-        return Err(elf_error(@bin.InvalidValue, table_offset + section_name_index * section_header_entry_size, "section_name_index", "ELF section-name table is not SHT_STRTAB"))
+        return Err(
+          elf_error(
+            @bin.InvalidValue,
+            table_offset + section_name_index * section_header_entry_size,
+            "section_name_index",
+            "ELF section-name table is not SHT_STRTAB",
+          ),
+        )
       }
-      let (string_offset, string_size) = match elf_range(input.length(), string_section.offset, string_section.size, "section_name_table") {
+      let (string_offset, string_size) = match
+        elf_range(
+          input.length(),
+          string_section.offset,
+          string_section.size,
+          "section_name_table",
+        ) {
         Ok(value) => value
         Err(error) => return Err(error)
       }
       let table = input[string_offset:string_offset + string_size]
       if table.length() > 0 &&
         (table[0] != 0U.to_byte() || table[table.length() - 1] != 0U.to_byte()) {
-        return Err(elf_error(@bin.InvalidValue, string_offset, "section_name_table", "ELF string table must begin and end with NUL"))
+        return Err(
+          elf_error(
+            @bin.InvalidValue,
+            string_offset,
+            "section_name_table",
+            "ELF string table must begin and end with NUL",
+          ),
+        )
       }
       for index in 0..<sections.length() {
         let section = sections[index]
@@ -584,7 +767,14 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
           if section.name_offset == 0U {
             ""
           } else {
-            return Err(elf_error(@bin.InvalidValue, string_offset, "sections.\{index}.name", "non-zero ELF section name references an empty string table"))
+            return Err(
+              elf_error(
+                @bin.InvalidValue,
+                string_offset,
+                "sections.\{index}.name",
+                "non-zero ELF section name references an empty string table",
+              ),
+            )
           }
         } else {
           match elf_string_at(table, section.name_offset, string_offset) {
@@ -613,28 +803,70 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
     match section_zero {
       Some(zero) => zero.info.reinterpret_as_int()
       None =>
-        return Err(elf_error(@bin.InvalidValue, header_size_offset + 4, "program_header_count", "extended ELF program-header count requires section header zero"))
+        return Err(
+          elf_error(
+            @bin.InvalidValue,
+            header_size_offset + 4,
+            "program_header_count",
+            "extended ELF program-header count requires section header zero",
+          ),
+        )
     }
   } else {
     raw_program_header_count.reinterpret_as_int()
   }
   if program_header_count > max_sections {
-    return Err(elf_error(@bin.LimitExceeded, header_size_offset + 4, "program_headers", "ELF program-header count exceeds configured collection limit"))
+    return Err(
+      elf_error(
+        @bin.LimitExceeded,
+        header_size_offset + 4,
+        "program_headers",
+        "ELF program-header count exceeds configured collection limit",
+      ),
+    )
   }
   if program_header_count > 0 {
     if program_header_offset == 0UL {
-      return Err(elf_error(@bin.InvalidValue, header_size_offset + 4, "program_header_offset", "ELF declares program headers with zero table offset"))
+      return Err(
+        elf_error(
+          @bin.InvalidValue,
+          header_size_offset + 4,
+          "program_header_offset",
+          "ELF declares program headers with zero table offset",
+        ),
+      )
     }
     if program_header_entry_size < expected_program_entry {
-      return Err(elf_error(@bin.InvalidValue, header_size_offset + 2, "program_header_entry_size", "ELF program header entry is smaller than the class-defined structure"))
+      return Err(
+        elf_error(
+          @bin.InvalidValue,
+          header_size_offset + 2,
+          "program_header_entry_size",
+          "ELF program header entry is smaller than the class-defined structure",
+        ),
+      )
     }
-    let phoff = match elf_bounded_int(program_header_offset, header_size_offset + 2, "program_header_offset", "ELF program table offset") {
+    let phoff = match
+      elf_bounded_int(
+        program_header_offset,
+        header_size_offset + 2,
+        "program_header_offset",
+        "ELF program table offset",
+      ) {
       Ok(value) => value
       Err(error) => return Err(error)
     }
     if phoff > input.length() ||
-      program_header_count > (input.length() - phoff) / program_header_entry_size {
-      return Err(elf_error(@bin.UnexpectedEof, phoff, "program_headers", "ELF program header table exceeds file bounds"))
+      program_header_count >
+      (input.length() - phoff) / program_header_entry_size {
+      return Err(
+        elf_error(
+          @bin.UnexpectedEof,
+          phoff,
+          "program_headers",
+          "ELF program header table exceeds file bounds",
+        ),
+      )
     }
   }
 
@@ -691,11 +923,18 @@ fn elf_trace_header(
   value : ElfFile,
 ) -> Result[Unit, @bin.BinError] {
   let results : Array[Result[Unit, @bin.BinError]] = []
-  results.push(@bin.magic(b"\x7fELF").named("magic").decode_from(decoder).map(fn(_) { () }))
+  results.push(
+    @bin.magic(b"\x7fELF").named("magic").decode_from(decoder).map(fn(_) { () }),
+  )
   for name in ["class", "data", "ident_version", "os_abi", "abi_version"] {
     results.push(@bin.u8().named(name).decode_from(decoder).map(fn(_) { () }))
   }
-  results.push(@bin.bytes_fixed(7).named("ident_padding").decode_from(decoder).map(fn(_) { () }))
+  results.push(
+    @bin.bytes_fixed(7)
+    .named("ident_padding")
+    .decode_from(decoder)
+    .map(fn(_) { () }),
+  )
   for result in results {
     match result {
       Ok(_) => ()
@@ -717,14 +956,13 @@ fn elf_trace_header(
     Err(error) => return Err(error)
   }
   match value.class {
-    Elf32 => {
+    Elf32 =>
       for name in ["entry", "program_header_offset", "section_header_offset"] {
         match u32.named(name).decode_from(decoder) {
           Ok(_) => ()
           Err(error) => return Err(error)
         }
       }
-    }
     Elf64 => {
       let u64 = elf_u64_codec(value.endian)
       for name in ["entry", "program_header_offset", "section_header_offset"] {
@@ -739,14 +977,11 @@ fn elf_trace_header(
     Ok(_) => ()
     Err(error) => return Err(error)
   }
-  for name in [
-    "header_size",
-    "program_header_entry_size",
-    "program_header_count",
-    "section_header_entry_size",
-    "section_header_count",
-    "section_name_index",
-  ] {
+  for
+    name in [
+      "header_size", "program_header_entry_size", "program_header_count", "section_header_entry_size",
+      "section_header_count", "section_name_index",
+    ] {
     match u16.named(name).decode_from(decoder) {
       Ok(_) => ()
       Err(error) => return Err(error)
@@ -788,37 +1023,47 @@ fn elf_schema() -> @bin.SchemaNode {
         @bin.SchemaNode::leaf("u16[endian]").with_name("machine"),
         @bin.SchemaNode::leaf("u32[endian]").with_name("version"),
         @bin.SchemaNode::leaf("addr[class,endian]").with_name("entry"),
-        @bin.SchemaNode::leaf("offset[class,endian]").with_name("program_header_offset"),
-        @bin.SchemaNode::leaf("offset[class,endian]").with_name("section_header_offset"),
+        @bin.SchemaNode::leaf("offset[class,endian]").with_name(
+          "program_header_offset",
+        ),
+        @bin.SchemaNode::leaf("offset[class,endian]").with_name(
+          "section_header_offset",
+        ),
         @bin.SchemaNode::leaf("u32[endian]").with_name("flags"),
         @bin.SchemaNode::leaf("u16[endian]").with_name("header_size"),
-        @bin.SchemaNode::leaf("u16[endian]").with_name("program_header_entry_size"),
+        @bin.SchemaNode::leaf("u16[endian]").with_name(
+          "program_header_entry_size",
+        ),
         @bin.SchemaNode::leaf("u16[endian]").with_name("program_header_count"),
-        @bin.SchemaNode::leaf("u16[endian]").with_name("section_header_entry_size"),
+        @bin.SchemaNode::leaf("u16[endian]").with_name(
+          "section_header_entry_size",
+        ),
         @bin.SchemaNode::leaf("u16[endian]").with_name("section_header_count"),
         @bin.SchemaNode::leaf("u16[endian]").with_name("section_name_index"),
       ]),
-      @bin.SchemaNode::node("sections", [
-        @bin.SchemaNode::node("section-header", [
-          @bin.SchemaNode::leaf("u32[endian]").with_name("name_offset"),
-          @bin.SchemaNode::leaf("u32[endian]").with_name("type"),
-          @bin.SchemaNode::leaf("word[class,endian]").with_name("flags"),
-          @bin.SchemaNode::leaf("addr[class,endian]").with_name("address"),
-          @bin.SchemaNode::leaf("offset[class,endian]").with_name("offset"),
-          @bin.SchemaNode::leaf("word[class,endian]").with_name("size"),
-          @bin.SchemaNode::leaf("u32[endian]").with_name("link"),
-          @bin.SchemaNode::leaf("u32[endian]").with_name("info"),
-          @bin.SchemaNode::leaf("word[class,endian]").with_name("alignment"),
-          @bin.SchemaNode::leaf("word[class,endian]").with_name("entry_size"),
-        ]),
-      ], constraints=[
-        "table=random-access", "names=e_shstrndx string-table", "max_count=runtime-limit",
-      ]),
+      @bin.SchemaNode::node(
+        "sections",
+        [
+          @bin.SchemaNode::node("section-header", [
+            @bin.SchemaNode::leaf("u32[endian]").with_name("name_offset"),
+            @bin.SchemaNode::leaf("u32[endian]").with_name("type"),
+            @bin.SchemaNode::leaf("word[class,endian]").with_name("flags"),
+            @bin.SchemaNode::leaf("addr[class,endian]").with_name("address"),
+            @bin.SchemaNode::leaf("offset[class,endian]").with_name("offset"),
+            @bin.SchemaNode::leaf("word[class,endian]").with_name("size"),
+            @bin.SchemaNode::leaf("u32[endian]").with_name("link"),
+            @bin.SchemaNode::leaf("u32[endian]").with_name("info"),
+            @bin.SchemaNode::leaf("word[class,endian]").with_name("alignment"),
+            @bin.SchemaNode::leaf("word[class,endian]").with_name("entry_size"),
+          ]),
+        ],
+        constraints=[
+          "table=random-access", "names=e_shstrndx string-table", "max_count=runtime-limit",
+        ],
+      ),
     ],
     constraints=[
-      "classes=ELF32|ELF64",
-      "endianness=EI_DATA",
-      "extended-section-numbering=supported",
+      "classes=ELF32|ELF64", "endianness=EI_DATA", "extended-section-numbering=supported",
       "encode=byte-preserving-validated-view",
     ],
   )
