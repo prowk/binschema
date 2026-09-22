@@ -209,6 +209,7 @@ fn wav_schema() -> @bin.SchemaNode {
     constraints=["signature=RIFF", "form_type=WAVE"],
   )
 }
+
 ///|
 pub fn wav_codec() -> @bin.Codec[WavFile] {
   @bin.Codec::make(
