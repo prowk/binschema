@@ -520,11 +520,7 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
         Err(error) => return Err(error)
         Ok(_) => ()
       }
-      match
-        @bin.u32_le().encode_into(
-          encoder,
-          actual_riff_size,
-        ) {
+      match @bin.u32_le().encode_into(encoder, actual_riff_size) {
         Err(error) => return Err(error)
         Ok(_) => encoder.write_bytes(body_bytes[:])
       }
