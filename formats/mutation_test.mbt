@@ -89,7 +89,14 @@ fn trace_truncations_are_structured(
     let inside_end = entry.end - 1
     if entry.end > entry.start && inside_end > 0 && inside_end < input.length() {
       cases += 1
-      if @formats.inspect(mutation_prefix(input, inside_end), format~) is Ok(_) {
+      if format == @formats.Bmff && entry.path.contains(".payload") {
+        match
+          structured_mutation_result(mutation_prefix(input, inside_end), format) {
+          Ok(_) => ()
+          Err(message) => return Err(message)
+        }
+      } else if
+        @formats.inspect(mutation_prefix(input, inside_end), format~) is Ok(_) {
         return Err(
           "truncation inside field must not parse successfully: " + entry.path,
         )
