@@ -5,7 +5,7 @@ test "CLI metadata commands are pure and stable" {
     text.contains("安全的二进制协议检查器"),
   )
   match run(["binschema", "formats"]) {
-    Ok(value) => assert_eq(value, "支持格式: PNG, WAVE, PCAP, ISO BMFF")
+    Ok(value) => assert_eq(value, "支持格式: PNG, WAVE, PCAP, ISO BMFF, DNS")
     Err(error) => fail(error.message())
   }
   match run(["binschema", "--version"]) {
@@ -77,6 +77,10 @@ test "CLI input budgets and sample selection are enforced" {
     Ok(value) => assert_eq(value, @formats.sample_bmff())
     Err(error) => fail(error.message())
   }
+  match sample_bytes("dns") {
+    Ok(value) => assert_eq(value, @formats.sample_dns())
+    Err(error) => fail(error.message())
+  }
   assert_true(sample_bytes("auto") is Err(Usage(_)))
 }
 
@@ -119,6 +123,10 @@ test "CLI schema lint supports text JSON and validation" {
     Err(error) => fail(error.message())
   }
   match lint_format("bmff", false) {
+    Ok(text) => assert_true(text.contains("0 errors"))
+    Err(error) => fail(error.message())
+  }
+  match lint_format("dns", false) {
     Ok(text) => assert_true(text.contains("0 errors"))
     Err(error) => fail(error.message())
   }
