@@ -7,6 +7,8 @@ import {
 }
 
 // Values
+pub fn bmff_codec() -> @binschema.Codec[BmffFile]
+
 pub fn detect_format(Bytes) -> Result[Format, @binschema.BinError]
 
 pub fn inspect(Bytes, format? : Format) -> Result[Inspection, @binschema.BinError]
@@ -14,6 +16,8 @@ pub fn inspect(Bytes, format? : Format) -> Result[Inspection, @binschema.BinErro
 pub fn pcap_codec() -> @binschema.Codec[PcapFile]
 
 pub fn png_codec() -> @binschema.Codec[PngFile]
+
+pub fn sample_bmff() -> Bytes
 
 pub fn sample_pcap() -> Bytes
 
@@ -26,11 +30,33 @@ pub fn wav_codec() -> @binschema.Codec[WavFile]
 // Errors
 
 // Types and methods
+pub(all) struct BmffBox {
+  kind : Bytes
+  extended_size : Bool
+  size_to_eof : Bool
+  user_type : Bytes?
+  payload : Bytes
+} derive(Eq, ToJson, @debug.Debug)
+pub fn BmffBox::equal(Self, Self) -> Bool
+pub fn BmffBox::not_equal(Self, Self) -> Bool
+pub fn BmffBox::to_json(Self) -> Json
+pub fn BmffBox::to_repr(Self) -> @debug.Repr
+pub fn BmffBox::type_name(Self) -> String
+
+pub(all) struct BmffFile {
+  boxes : Array[BmffBox]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn BmffFile::equal(Self, Self) -> Bool
+pub fn BmffFile::not_equal(Self, Self) -> Bool
+pub fn BmffFile::to_json(Self) -> Json
+pub fn BmffFile::to_repr(Self) -> @debug.Repr
+
 pub(all) enum Format {
   Auto
   Png
   Wav
   Pcap
+  Bmff
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Format::equal(Self, Self) -> Bool
 pub fn Format::name(Self) -> String
