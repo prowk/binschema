@@ -4,7 +4,7 @@
 
 > 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。
 
-BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 PNG、WAVE、PCAP、ISO BMFF 四种真实格式实现。
+BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 PNG、WAVE、PCAP、ISO BMFF 与 DNS 五种真实格式实现。
 
 ## 特性
 
@@ -19,7 +19,7 @@ BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。�
 - **增量帧解析**：`decode_prefix`、`probe_decode` 与 `IncrementalDecoder` 支持分块输入、`NeedMore` 判定和多 frame 尾部保留。
 - **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
 - **结构化安全回归**：从真实格式的 Schema/Trace 派生确定性 mutation，覆盖截断、长度膨胀、CRC 损坏和字段边界翻转。
-- **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序/长度/时间戳，以及 ISO BMFF box 长度、64 位扩展尺寸、`size=0` 与 `uuid` 头。
+- **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序/长度/时间戳、ISO BMFF box 长度与扩展头，以及 DNS section count、label 长度和压缩指针边界/方向/深度。
 
 ## 快速开始
 
@@ -127,19 +127,21 @@ moon run --target native cmd/main -- inspect capture.pcap --json
 moon run --target native cmd/main -- verify audio.wav
 moon run --target native cmd/main -- sample png sample.png
 moon run --target native cmd/main -- sample bmff sample.mp4
+moon run --target native cmd/main -- sample dns sample.dns
 moon run --target native cmd/main -- lint png
 moon run --target native cmd/main -- lint pcap --json
 moon run --target native cmd/main -- inspect sample.mp4 --format bmff
+moon run --target native cmd/main -- inspect sample.dns --format dns
 moon run --target native cmd/main -- formats
 ```
 
-CLI 支持自动识别或通过 `--format png|wav|pcap|bmff` 显式指定格式；`mp4` / `isobmff` 也会解析为 BMFF。`lint <format>` 会对内置协议的 Schema 执行静态检查；Warning 仅提示风险，Lint Error 会返回数据错误退出码，便于接入 CI。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
+CLI 支持 PNG、WAVE、PCAP、BMFF 与 DNS；`mp4` / `isobmff` 会解析为 BMFF。DNS 因缺少可靠固定 magic，不参与自动识别，需显式使用 `--format dns`。`lint <format>` 会对内置协议的 Schema 执行静态检查；Warning 仅提示风险，Lint Error 会返回数据错误退出码，便于接入 CI。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
 
 ## Web / Wasm-GC 检查器
 
 **在线体验：** [https://prowk.github.io/binschema/](https://prowk.github.io/binschema/)
 
-无需安装 MoonBit，直接在浏览器中选择 PNG、WAVE、PCAP 或常见 MP4 / ISO BMFF 文件即可查看结构；文件只在本地浏览器处理，不会上传。
+无需安装 MoonBit，直接在浏览器中选择 PNG、WAVE、PCAP、常见 MP4 / ISO BMFF 或 DNS 文件即可查看结构；文件只在本地浏览器处理，不会上传。
 
 本地开发时，Wasm 二进制由源码构建生成，仓库不再提交 `web/binschema.wasm`：
 
@@ -163,7 +165,7 @@ Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
 ├─ codec.mbt / decoder.mbt / encoder.mbt  # 安全组合子核心
 ├─ schema.mbt / lint.mbt                  # Schema 元数据与静态检查
 ├─ primitives.mbt / varint.mbt            # 定长与变长基础类型
-├─ formats/                               # PNG / WAVE / PCAP / ISO BMFF
+├─ formats/                               # PNG / WAVE / PCAP / ISO BMFF / DNS
 ├─ cmd/main/                              # 原生 CLI
 ├─ web/                                   # Wasm-GC 桥接与浏览器检查器
 ├─ examples/custom_packet/                # 最小自定义协议示例
