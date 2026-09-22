@@ -21,6 +21,8 @@ bounded Decoder ──► Codec[T] ──► typed value
              ┌───────────────┴──────────────┐
              ▼                              ▼
        roundtrip check                Inspector / tooling
+                                             │
+                                             └─ Schema Linter
 ```
 
 ## 核心不变量
@@ -39,3 +41,8 @@ bounded Decoder ──► Codec[T] ──► typed value
 格式包可直接组合基础 codec，也可用 `Codec::make` 实现依赖前序字段的协议。`count_prefixed` 处理显式计数数组，`until_eof` 处理消费到区域结尾的序列，`tagged` 处理标签联合；大 payload 应优先使用 `bytes_view_fixed` / `remaining_view`。复杂格式应先验证 magic，再验证长度；先创建有界子解码器，再解析内容；最后验证校验和或结构终止符。
 
 Web 桥接只导出字符串接口 `inspect_hex` 与 `sample_hex`，避免将 MoonBit GC 引用泄漏到 JavaScript。浏览器使用 JS String Builtins，解析逻辑本身仍由同一份 MoonBit 格式代码执行。
+
+
+## Schema Linter
+
+`lint_schema` 只分析 `SchemaNode`，不执行解码，因此可以在没有样本文件的情况下检查协议结构。首版规则将缺失的局部 `max_length` / `max_count` / 固定边界视为错误，将动态 tagged 分支、`until_eof`、`remaining_*` 与同级重名视为警告。规则输出稳定的 `code`、`severity`、`path` 与 `message`，便于 CLI、CI 和未来的 Web 工具复用。
