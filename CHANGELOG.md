@@ -2,24 +2,17 @@
 
 ## Unreleased
 
+## 0.3.0 — 2026-09-22
+
 - 新增 ELF32/ELF64 字节保真结构检查：支持双端序、program/section header table 边界验证、扩展 section numbering 与 section-name string table 解析，并贯通 Inspector、CLI 与 Web。
-
 - 新增 DNS 报文格式支持：解析 header/question/RR，保留 raw RDATA 与压缩域名 wire；压缩 pointer 强制包内向后引用并受 `max_depth` 限制，section count/label/展开域名均受资源边界约束，并贯通 CLI、Web Inspector、Schema 与 mutation 回归。
-
 - Decoder 新增 `view_at(offset, count)` 非消费有界随机读取与 `max_depth()` 预算查询，为 DNS 压缩指针、offset table 等引用型协议提供安全基础。
-
 - 新增 ISO BMFF / MP4 box 格式支持：保留未知 box payload，支持普通 32-bit size、64-bit `largesize`、`size=0`、`uuid` user type，并贯通 CLI、Web Inspector、Schema 与 mutation 回归。
-
 - 新增基于 Schema/Trace 的确定性 mutation 安全回归：覆盖字段边界截断、长度字段膨胀、PNG CRC 损坏和字段首字节翻转，并在四后端执行一致性验证。
-
 - 新增前缀与增量解码：`decode_prefix*`、`probe_decode*` 和 `IncrementalDecoder` 可区分完整 frame、需要更多数据与真实格式错误，并保留未消费尾部用于后续 frame。
-
 - 新增 Schema Linter：可检查缺失的局部长度/计数上限、动态 tagged 分支、until-eof/remaining 区域依赖和同级字段重名；CLI 新增 `lint <format> [--json]`。
-
-- Inspector 结果现包含协议 Schema 树，PNG/WAVE/PCAP 提供静态结构描述，Web Inspector 可直接浏览协议层级与约束。
-
+- Inspector 结果现包含协议 Schema 树，内置格式提供静态结构描述，Web Inspector 可直接浏览协议层级与约束。
 - `Codec[T]` 现携带可检查的 Schema 元数据树，可导出名称、组合结构与约束，并支持稳定文本描述。
-
 - 新增零填充、字节边界对齐与 NUL 终止字节串 codec，补齐常见二进制布局基础能力。
 
 ## 0.2.0 — 2026-09-22
