@@ -301,7 +301,6 @@ fn inspect_dns(input : Bytes) -> Result[Inspection, @bin.BinError] {
   })
 }
 
-
 ///|
 fn inspect_elf(input : Bytes) -> Result[Inspection, @bin.BinError] {
   let decoded = match @bin.decode(elf_codec().named("elf"), input) {
