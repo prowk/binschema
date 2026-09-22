@@ -237,7 +237,9 @@ fn sample_bytes(name : String) -> Result[Bytes, CliError] {
 ///|
 fn sample_command(args : Array[String]) -> Result[String, CliError] {
   if args.length() != 4 {
-    return Err(Usage("用法: binschema sample <png|wav|pcap|bmff|dns> <output>"))
+    return Err(
+      Usage("用法: binschema sample <png|wav|pcap|bmff|dns> <output>"),
+    )
   }
   let bytes = match sample_bytes(args[2]) {
     Ok(value) => value
