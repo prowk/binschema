@@ -89,7 +89,9 @@ fn trace_truncations_are_structured(
     let inside_end = entry.end - 1
     if entry.end > entry.start && inside_end > 0 && inside_end < input.length() {
       cases += 1
-      if format == @formats.Bmff && entry.path.contains(".payload") {
+      if
+        format == @formats.Bmff &&
+        (entry.path == "bmff" || entry.path.contains(".payload")) {
         match
           structured_mutation_result(mutation_prefix(input, inside_end), format) {
           Ok(_) => ()
