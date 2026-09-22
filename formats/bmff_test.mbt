@@ -27,7 +27,8 @@ test "ISO BMFF rejects boxes smaller than their headers" {
     @bin.decode(
       @formats.bmff_codec(),
       b"\x00\x00\x00\x01free\x00\x00\x00\x00\x00\x00\x00\x08",
-    ) is Err({ kind: @bin.InvalidValue, .. }),
+    )
+    is Err({ kind: @bin.InvalidValue, .. }),
   )
 }
 
@@ -37,7 +38,8 @@ test "ISO BMFF rejects runtime-oversized extended boxes before allocation" {
     @bin.decode(
       @formats.bmff_codec(),
       b"\x00\x00\x00\x01free\x00\x00\x00\x01\x00\x00\x00\x00",
-    ) is Err({ kind: @bin.LimitExceeded, .. }),
+    )
+    is Err({ kind: @bin.LimitExceeded, .. }),
   )
 }
 
