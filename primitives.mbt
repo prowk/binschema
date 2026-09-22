@@ -92,6 +92,8 @@ fn signed_codec(width : Int, endian : Endian) -> Codec[Int] {
     fn(value) {
       if width == 2 && (value < -32768 || value > 32767) {
         Err("i16 value out of range")
+      } else if width == 2 {
+        Ok(value.reinterpret_as_uint() & 0xffffU)
       } else {
         Ok(value.reinterpret_as_uint())
       }
