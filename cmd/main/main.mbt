@@ -3,10 +3,10 @@ let help_text =
   #|BinSchema — 安全的二进制协议检查器
   #|
   #|用法:
-  #|  binschema inspect <file> [--format auto|png|wav|pcap] [--json]
-  #|  binschema verify  <file> [--format auto|png|wav|pcap]
-  #|  binschema sample  <png|wav|pcap> <output>
-  #|  binschema lint    <png|wav|pcap> [--json]
+  #|  binschema inspect <file> [--format auto|png|wav|pcap|bmff] [--json]
+  #|  binschema verify  <file> [--format auto|png|wav|pcap|bmff]
+  #|  binschema sample  <png|wav|pcap|bmff> <output>
+  #|  binschema lint    <png|wav|pcap|bmff> [--json]
   #|  binschema formats
   #|  binschema --version
 
@@ -168,6 +168,7 @@ fn schema_for_format(
     @formats.Png => Ok(@formats.png_codec().schema_node())
     @formats.Wav => Ok(@formats.wav_codec().schema_node())
     @formats.Pcap => Ok(@formats.pcap_codec().schema_node())
+    @formats.Bmff => Ok(@formats.bmff_codec().schema_node())
     @formats.Auto => Err(Usage("lint 不支持 auto 格式"))
   }
 }
@@ -211,7 +212,7 @@ fn lint_format(name : String, json : Bool) -> Result[String, CliError] {
 ///|
 fn lint_command(args : Array[String]) -> Result[String, CliError] {
   if args.length() < 3 || args.length() > 4 {
-    return Err(Usage("用法: binschema lint <png|wav|pcap> [--json]"))
+    return Err(Usage("用法: binschema lint <png|wav|pcap|bmff> [--json]"))
   }
   if args.length() == 4 && args[3] != "--json" {
     return Err(Usage("未知参数: " + args[3]))
@@ -225,6 +226,7 @@ fn sample_bytes(name : String) -> Result[Bytes, CliError] {
     Ok(@formats.Png) => Ok(@formats.sample_png())
     Ok(@formats.Wav) => Ok(@formats.sample_wav())
     Ok(@formats.Pcap) => Ok(@formats.sample_pcap())
+    Ok(@formats.Bmff) => Ok(@formats.sample_bmff())
     Ok(@formats.Auto) => Err(Usage("sample 不支持 auto 格式"))
     Err(message) => Err(Usage(message))
   }
@@ -233,7 +235,7 @@ fn sample_bytes(name : String) -> Result[Bytes, CliError] {
 ///|
 fn sample_command(args : Array[String]) -> Result[String, CliError] {
   if args.length() != 4 {
-    return Err(Usage("用法: binschema sample <png|wav|pcap> <output>"))
+    return Err(Usage("用法: binschema sample <png|wav|pcap|bmff> <output>"))
   }
   let bytes = match sample_bytes(args[2]) {
     Ok(value) => value
@@ -258,7 +260,7 @@ fn run(args : Array[String]) -> Result[String, CliError] {
     "verify" => inspect_command(args, true)
     "sample" => sample_command(args)
     "lint" => lint_command(args)
-    "formats" => Ok("支持格式: PNG, WAVE, PCAP")
+    "formats" => Ok("支持格式: PNG, WAVE, PCAP, ISO BMFF")
     "--version" | "-V" => Ok("binschema " + @bin.VERSION)
     "--help" | "-h" | "help" => Ok(help_text)
     command => Err(Usage("未知命令: " + command + "\n\n" + help_text))
