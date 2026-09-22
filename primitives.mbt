@@ -350,11 +350,7 @@ pub fn padding(count : Int) -> Codec[Unit] {
           ),
         )
       }
-      let bytes : Array[Byte] = []
-      for _ in 0..<count {
-        bytes.push(0U.to_byte())
-      }
-      encoder.write_bytes(Bytes::from_array(bytes)[:])
+      encoder.write_zeroes(count)
     },
     kind="padding[\{count}]",
     render=fn(_) { "padding(\{count})" },
