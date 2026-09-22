@@ -15,11 +15,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install MoonBit 0.10.14
+      - name: Install release MoonBit toolchain
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash -s 0.10.14
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
-          "$HOME/.moon/bin/moon" version --all
+          version_output="$("$HOME/.moon/bin/moon" version --all)"
+          echo "$version_output"
+          echo "$version_output" | grep -q "0.10.14" || {
+            echo "expected MoonBit 0.10.14 release line; review before updating"
+            exit 1
+          }
       - name: Restore dependencies
         run: moon update
       - name: Verify generated interfaces are committed
