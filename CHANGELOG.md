@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Decoder 新增 `view_at(offset, count)` 非消费有界随机读取与 `max_depth()` 预算查询，为 DNS 压缩指针、offset table 等引用型协议提供安全基础。
+
 - 新增 ISO BMFF / MP4 box 格式支持：保留未知 box payload，支持普通 32-bit size、64-bit `largesize`、`size=0`、`uuid` user type，并贯通 CLI、Web Inspector、Schema 与 mutation 回归。
 
 - 新增基于 Schema/Trace 的确定性 mutation 安全回归：覆盖字段边界截断、长度字段膨胀、PNG CRC 损坏和字段首字节翻转，并在四后端执行一致性验证。
