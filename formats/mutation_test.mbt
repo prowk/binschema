@@ -109,6 +109,7 @@ fn is_allocation_length_field(format : @formats.Format, path : String) -> Bool {
     @formats.Png => path.contains(".length")
     @formats.Wav => path.contains(".size")
     @formats.Pcap => path.contains(".included_length")
+    @formats.Bmff => path.contains(".size") || path.contains(".largesize")
     @formats.Auto => false
   }
 }
@@ -151,6 +152,7 @@ test "mutation: field-boundary truncations stay structured on all formats" {
       (@formats.sample_png(), @formats.Png),
       (@formats.sample_wav(), @formats.Wav),
       (@formats.sample_pcap(), @formats.Pcap),
+      (@formats.sample_bmff(), @formats.Bmff),
     ] {
     match trace_truncations_are_structured(input, format) {
       Ok(_) => ()
@@ -166,6 +168,7 @@ test "mutation: allocation length inflation stays rejected" {
       (@formats.sample_png(), @formats.Png),
       (@formats.sample_wav(), @formats.Wav),
       (@formats.sample_pcap(), @formats.Pcap),
+      (@formats.sample_bmff(), @formats.Bmff),
     ] {
     match length_expansion_is_rejected(input, format) {
       Ok(_) => ()
@@ -206,6 +209,7 @@ test "mutation: first-byte field flips never escape structured outcomes" {
       (@formats.sample_png(), @formats.Png),
       (@formats.sample_wav(), @formats.Wav),
       (@formats.sample_pcap(), @formats.Pcap),
+      (@formats.sample_bmff(), @formats.Bmff),
     ] {
     let report = match mutation_report(input, format) {
       Ok(value) => value
