@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 新增前缀与增量解码：`decode_prefix*`、`probe_decode*` 和 `IncrementalDecoder` 可区分完整 frame、需要更多数据与真实格式错误，并保留未消费尾部用于后续 frame。
+
 - 新增 Schema Linter：可检查缺失的局部长度/计数上限、动态 tagged 分支、until-eof/remaining 区域依赖和同级字段重名；CLI 新增 `lint <format> [--json]`。
 
 - Inspector 结果现包含协议 Schema 树，PNG/WAVE/PCAP 提供静态结构描述，Web Inspector 可直接浏览协议层级与约束。
