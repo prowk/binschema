@@ -126,6 +126,7 @@ fn png_schema() -> @bin.SchemaNode {
     constraints=["signature=PNG", "IHDR-first", "IEND-last"],
   )
 }
+
 ///|
 pub fn png_codec() -> @bin.Codec[PngFile] {
   @bin.Codec::make(
