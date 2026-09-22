@@ -17,7 +17,7 @@ inspector, and real ELF, PNG, WAVE, PCAP, ISO BMFF, and DNS format implementatio
 - canonical ULEB128/SLEB128 support;
 - higher-level `count_prefixed`, `until_eof`, and `tagged` combinators;
 - zero-copy `BytesView` APIs including `decode_view`, `bytes_view_fixed`, and `remaining_view`;
-- prefix/incremental framing with `decode_prefix`, `probe_decode`, and `IncrementalDecoder`;
+- buffered/retry incremental framing with `decode_prefix`, `probe_decode`, and `IncrementalDecoder`;
 - deterministic property-style tests and a fixed malformed/valid binary corpus;
 - validated Wasm, Wasm-GC, JavaScript, and Native library backends;
 - deterministic Schema/Trace-guided mutation regression for truncation, length inflation, checksum damage, and field-boundary flips;
@@ -39,6 +39,14 @@ import {
 }
 ```
 
+Built-in real-format codecs live in a separate package and are imported only when needed:
+
+```text
+import {
+  "prowk/binschema/formats" @formats,
+}
+```
+
 A minimal codec:
 
 ```moonbit
@@ -51,13 +59,30 @@ let schema_text = packet.describe()
 let issues = packet.lint()
 ```
 
-The native CLI also supports `binschema lint <png|wav|pcap|bmff|dns|elf> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory.\n\nFor fragmented network or stream input, `probe_decode` distinguishes `NeedMore` from real decode failures, while `IncrementalDecoder` retains unconsumed trailing bytes for the next frame. Protocols using `until_eof` or `remaining_*` should first establish an explicit bounded region.\n\nFor a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
+The native CLI also supports `binschema lint <png|wav|pcap|bmff|dns|elf> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory. The linter checks declared `SchemaNode` metadata; it does not analyze arbitrary `Codec::make` closures or prove that a custom closure matches its declared schema.
+
+For fragmented network or stream input, `probe_decode` distinguishes `NeedMore` from real decode failures, while `IncrementalDecoder` retains unconsumed trailing bytes for the next frame. The generic incremental decoder retries the codec from the start of the buffered frame on each `poll()`; it is not a continuation-based streaming parser. For many tiny chunks, batch them with `append()` before polling. Protocols using `until_eof` or `remaining_*` should first establish an explicit bounded region.
+
+For a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
 
 See the canonical executable documentation in [README.mbt.md](README.mbt.md), architecture notes
 in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
 [docs/SECURITY.md](docs/SECURITY.md), compatibility policy in
 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and the release checklist in
 [docs/RELEASING.md](docs/RELEASING.md).
+
+## Real-format support scope
+
+The `formats` package is primarily a set of reference implementations and architecture stress cases, not six complete domain libraries.
+
+- PNG validates signatures, chunk structure/order, CRCs, and core IHDR rules.
+- WAVE validates RIFF sizing, chunk/padding structure, and basic `fmt ` / `data` consistency.
+- PCAP validates global headers, byte order, packet lengths, timestamp ranges, and snapshot bounds.
+- ISO BMFF validates box framing, 32/64-bit sizes, `size=0`, `uuid`, and preserves unknown payloads.
+- DNS validates message framing and bounded compression pointers; RDATA remains raw bytes.
+- ELF validates ELF32/ELF64 headers, byte order, table bounds, extended section numbering, and section names; symbols, relocations, DWARF, and dynamic-linking semantics are out of scope.
+
+CLI `verify` therefore means that the input satisfies BinSchema's currently implemented structural rules and round-trips byte-for-byte. It is **not** a complete standards-conformance certification.
 
 ## Browser inspector
 
