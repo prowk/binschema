@@ -15,6 +15,8 @@ pub fn dns_codec() -> @binschema.Codec[DnsMessage]
 
 pub fn dns_name_uncompressed(Array[Bytes]) -> Result[DnsName, String]
 
+pub fn elf_codec() -> @binschema.Codec[ElfFile]
+
 pub fn inspect(Bytes, format? : Format) -> Result[Inspection, @binschema.BinError]
 
 pub fn pcap_codec() -> @binschema.Codec[PcapFile]
@@ -24,6 +26,8 @@ pub fn png_codec() -> @binschema.Codec[PngFile]
 pub fn sample_bmff() -> Bytes
 
 pub fn sample_dns() -> Bytes
+
+pub fn sample_elf() -> Bytes
 
 pub fn sample_pcap() -> Bytes
 
@@ -102,6 +106,60 @@ pub fn DnsRecord::not_equal(Self, Self) -> Bool
 pub fn DnsRecord::to_json(Self) -> Json
 pub fn DnsRecord::to_repr(Self) -> @debug.Repr
 
+pub(all) enum ElfClass {
+  Elf32
+  Elf64
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ElfClass::equal(Self, Self) -> Bool
+pub fn ElfClass::name(Self) -> String
+pub fn ElfClass::not_equal(Self, Self) -> Bool
+pub fn ElfClass::to_json(Self) -> Json
+pub fn ElfClass::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ElfFile {
+  class : ElfClass
+  endian : @binschema.Endian
+  os_abi : UInt
+  abi_version : UInt
+  file_type : UInt
+  machine : UInt
+  version : UInt
+  entry : UInt64
+  program_header_offset : UInt64
+  section_header_offset : UInt64
+  flags : UInt
+  header_size : Int
+  program_header_entry_size : Int
+  program_header_count : Int
+  section_header_entry_size : Int
+  section_header_count : Int
+  section_name_index : Int
+  sections : Array[ElfSection]
+  raw : Bytes
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ElfFile::equal(Self, Self) -> Bool
+pub fn ElfFile::not_equal(Self, Self) -> Bool
+pub fn ElfFile::to_json(Self) -> Json
+pub fn ElfFile::to_repr(Self) -> @debug.Repr
+
+pub(all) struct ElfSection {
+  name : String
+  name_offset : UInt
+  section_type : UInt
+  flags : UInt64
+  address : UInt64
+  offset : UInt64
+  size : UInt64
+  link : UInt
+  info : UInt
+  alignment : UInt64
+  entry_size : UInt64
+} derive(Eq, ToJson, @debug.Debug)
+pub fn ElfSection::equal(Self, Self) -> Bool
+pub fn ElfSection::not_equal(Self, Self) -> Bool
+pub fn ElfSection::to_json(Self) -> Json
+pub fn ElfSection::to_repr(Self) -> @debug.Repr
+
 pub(all) enum Format {
   Auto
   Png
@@ -109,6 +167,7 @@ pub(all) enum Format {
   Pcap
   Bmff
   Dns
+  Elf
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Format::equal(Self, Self) -> Bool
 pub fn Format::name(Self) -> String
