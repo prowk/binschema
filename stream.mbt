@@ -41,19 +41,15 @@ pub fn[T] decode_prefix_view_with_options(
   input : BytesView,
   options : DecodeOptions,
 ) -> Result[Decoded[T], BinError] {
-  decode_view_with_options(
-    codec,
-    input,
-    { limits: options.limits, require_eof: false, },
-  )
+  decode_view_with_options(codec, input, {
+    limits: options.limits,
+    require_eof: false,
+  })
 }
 
 ///|
 /// 将 UnexpectedEof 解释为“需要更多数据”，其余错误保持为 Failed。
-pub fn[T] probe_decode(
-  codec : Codec[T],
-  input : Bytes,
-) -> DecodeStep[T] {
+pub fn[T] probe_decode(codec : Codec[T], input : Bytes) -> DecodeStep[T] {
   probe_decode_with_options(codec, input, DecodeOptions::default())
 }
 
@@ -119,11 +115,11 @@ pub fn[T] IncrementalDecoder::poll(
   self : IncrementalDecoder[T],
 ) -> DecodeStep[T] {
   let bytes = Bytes::from_array(self.buffer.copy())
-  match probe_decode_with_options(
-    self.codec,
-    bytes,
-    { limits: self.limits, require_eof: false, },
-  ) {
+  match
+    probe_decode_with_options(self.codec, bytes, {
+      limits: self.limits,
+      require_eof: false,
+    }) {
     Done(decoded) => {
       self.drop_prefix(decoded.consumed)
       Done(decoded)
