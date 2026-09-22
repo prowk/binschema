@@ -4,6 +4,7 @@ import {
   "prowk/binschema" @bin,
   "prowk/binschema/formats",
   "moonbitlang/core/env",
+  "moonbitlang/core/json",
   "moonbitlang/x/fs",
   "moonbitlang/x/sys",
 }
