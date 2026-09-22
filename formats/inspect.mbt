@@ -5,6 +5,7 @@ pub(all) enum Format {
   Png
   Wav
   Pcap
+  Bmff
 } derive(Eq, Debug, ToJson)
 
 ///|
@@ -58,6 +59,7 @@ pub fn Format::parse(name : String) -> Result[Format, String] {
     "png" => Ok(Png)
     "wav" | "wave" => Ok(Wav)
     "pcap" => Ok(Pcap)
+    "bmff" | "isobmff" | "mp4" => Ok(Bmff)
     other => Err("unsupported format: " + other)
   }
 }
@@ -69,6 +71,7 @@ pub fn Format::name(self : Format) -> String {
     Png => "png"
     Wav => "wav"
     Pcap => "pcap"
+    Bmff => "bmff"
   }
 }
 
@@ -96,6 +99,9 @@ pub fn detect_format(input : Bytes) -> Result[Format, @bin.BinError] {
     input[10] == b'V' &&
     input[11] == b'E' {
     Ok(Wav)
+  } else if input.length() >= 8 &&
+    (input[4:8].to_owned() == b"ftyp" || input[4:8].to_owned() == b"styp") {
+    Ok(Bmff)
   } else if starts_with(input, b"\xd4\xc3\xb2\xa1") ||
     starts_with(input, b"\xa1\xb2\xc3\xd4") ||
     starts_with(input, b"\x4d\x3c\xb2\xa1") ||
@@ -107,7 +113,7 @@ pub fn detect_format(input : Bytes) -> Result[Format, @bin.BinError] {
         @bin.Unsupported,
         0,
         "format",
-        "input does not match PNG, WAVE, or PCAP magic bytes",
+        "input does not match PNG, WAVE, PCAP, or a common ISO BMFF signature",
       ),
     )
   }
@@ -221,6 +227,42 @@ fn inspect_pcap(input : Bytes) -> Result[Inspection, @bin.BinError] {
 }
 
 ///|
+fn inspect_bmff(input : Bytes) -> Result[Inspection, @bin.BinError] {
+  let decoded = match @bin.decode(bmff_codec().named("bmff"), input) {
+    Err(error) => return Err(error)
+    Ok(value) => value
+  }
+  let encoded = match @bin.encode(bmff_codec(), decoded.value) {
+    Err(error) => return Err(error)
+    Ok(value) => value
+  }
+  let types : Array[String] = []
+  for box in decoded.value.boxes {
+    if types.length() < 8 {
+      types.push(box.type_name())
+    }
+  }
+  let summary = [
+    item("boxes", decoded.value.boxes.length().to_string()),
+    item("types", types.join(", ")),
+  ]
+  if decoded.value.boxes.length() > 0 {
+    let box = decoded.value.boxes[0]
+    if box.kind == b"ftyp" && box.payload.length() >= 4 {
+      summary.push(item("major_brand", @utf8.decode_lossy(box.payload[0:4])))
+    }
+  }
+  Ok({
+    format: "ISO BMFF",
+    size: input.length(),
+    roundtrip_equal: encoded == input,
+    summary,
+    schema: bmff_codec().named("bmff").schema_node(),
+    trace: decoded.trace,
+  })
+}
+
+///|
 pub fn inspect(
   input : Bytes,
   format? : Format = Auto,
@@ -246,6 +288,7 @@ pub fn inspect(
     Png => inspect_png(input)
     Wav => inspect_wav(input)
     Pcap => inspect_pcap(input)
+    Bmff => inspect_bmff(input)
   }
 }
 

@@ -140,7 +140,7 @@ async function init() {
   document.querySelectorAll(".sample").forEach((button) => button.addEventListener("click", () => {
     const format = button.dataset.format;
     $("#format").value = format;
-    inspectBytes(fromHex(state.wasm.sample_hex(format)), `sample.${format === "wav" ? "wav" : format}`);
+    inspectBytes(fromHex(state.wasm.sample_hex(format)), `sample.${format === "wav" ? "wav" : format === "bmff" ? "mp4" : format}`);
   }));
   $("#format").addEventListener("change", () => state.bytes && inspectBytes(state.bytes, state.name));
   inspectBytes(fromHex(state.wasm.sample_hex("png")), "sample.png");

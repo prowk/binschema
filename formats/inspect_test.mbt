@@ -5,6 +5,7 @@ test "detect and inspect all built-in formats" {
       (@formats.sample_png(), @formats.Png),
       (@formats.sample_wav(), @formats.Wav),
       (@formats.sample_pcap(), @formats.Pcap),
+      (@formats.sample_bmff(), @formats.Bmff),
     ] {
     assert_eq(@formats.detect_format(bytes), Ok(expected))
     let report = match @formats.inspect(bytes) {
