@@ -376,6 +376,7 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
       }
       let mut saw_format = false
       let mut saw_data = false
+      let mut encoded_format : WavFormat? = None
       for index, chunk in value.chunks {
         if chunk.id == "fmt " {
           if saw_format || saw_data {
@@ -402,7 +403,24 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
                   message,
                 ),
               )
-            Ok(_) => saw_format = true
+            Ok(_) => {
+              match value.format {
+                Some(expected) =>
+                  if expected != parsed {
+                    return Err(
+                      @bin.BinError::new(
+                        @bin.InvalidValue,
+                        encoder.length(),
+                        "format",
+                        "WAVE format metadata does not match the fmt chunk",
+                      ),
+                    )
+                  }
+                None => ()
+              }
+              encoded_format = Some(parsed)
+              saw_format = true
+            }
           }
         } else if chunk.id == "data" {
           if !saw_format {
@@ -418,13 +436,17 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
           saw_data = true
         }
         let id_bytes = @utf8.encode(chunk.id[:])
-        if id_bytes.length() != 4 {
+        match ascii_id(id_bytes, "chunks.\{index}.id", encoder.length()) {
+          Err(error) => return Err(error)
+          Ok(_) => ()
+        }
+        if chunk.data.length() % 2 == 0 && chunk.padding is Some(_) {
           return Err(
             @bin.BinError::new(
               @bin.InvalidValue,
               encoder.length(),
-              "chunk.id",
-              "WAVE chunk id must contain four ASCII bytes",
+              "chunks.\{index}.padding",
+              "even-sized WAVE chunks must not carry a padding byte",
             ),
           )
         }
@@ -471,6 +493,29 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
         Err(error) => return Err(error)
         Ok(bytes) => bytes
       }
+      let actual_riff_size = body_bytes.length().reinterpret_as_uint()
+      if value.riff_size != 0U && value.riff_size != actual_riff_size {
+        return Err(
+          @bin.BinError::new(
+            @bin.InvalidValue,
+            encoder.length(),
+            "riff_size",
+            "WAVE riff_size metadata does not match encoded chunks",
+          ),
+        )
+      }
+      match encoded_format {
+        None =>
+          return Err(
+            @bin.BinError::new(
+              @bin.InvalidValue,
+              encoder.length(),
+              "format",
+              "WAVE fmt metadata was not resolved during encoding",
+            ),
+          )
+        Some(_) => ()
+      }
       match @bin.magic(b"RIFF").encode_into(encoder, ()) {
         Err(error) => return Err(error)
         Ok(_) => ()
@@ -478,7 +523,7 @@ pub fn wav_codec() -> @bin.Codec[WavFile] {
       match
         @bin.u32_le().encode_into(
           encoder,
-          body_bytes.length().reinterpret_as_uint(),
+          actual_riff_size,
         ) {
         Err(error) => return Err(error)
         Ok(_) => encoder.write_bytes(body_bytes[:])
