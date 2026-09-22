@@ -75,8 +75,7 @@ fn bmff_schema() -> @bin.SchemaNode {
               ),
             ],
             constraints=[
-              "size=0 extends to current region eof",
-              "size=1 uses 64-bit largesize",
+              "size=0 extends to current region eof", "size=1 uses 64-bit largesize",
               "uuid adds 16-byte user type",
             ],
           ),
@@ -185,22 +184,26 @@ pub fn bmff_codec() -> @bin.Codec[BmffFile] {
         let index = boxes.length()
         let prefix = "boxes.\{index}"
         let box_start = decoder.absolute_offset()
-        let size32 = match @bin.u32_be().named(prefix + ".size").decode_from(decoder) {
+        let size32 = match
+          @bin.u32_be().named(prefix + ".size").decode_from(decoder) {
           Err(error) => return Err(error)
           Ok(value) => value
         }
-        let kind = match @bin.bytes_fixed(4).named(prefix + ".type").decode_from(decoder) {
+        let kind = match
+          @bin.bytes_fixed(4).named(prefix + ".type").decode_from(decoder) {
           Err(error) => return Err(error)
           Ok(value) => value
         }
         let extended = size32 == 1U
         let uuid = kind == b"uuid"
         let total_size = if extended {
-          let high = match @bin.u32_be().named(prefix + ".largesize_hi").decode_from(decoder) {
+          let high = match
+            @bin.u32_be().named(prefix + ".largesize_hi").decode_from(decoder) {
             Err(error) => return Err(error)
             Ok(value) => value
           }
-          let low = match @bin.u32_be().named(prefix + ".largesize_lo").decode_from(decoder) {
+          let low = match
+            @bin.u32_be().named(prefix + ".largesize_lo").decode_from(decoder) {
             Err(error) => return Err(error)
             Ok(value) => value
           }
@@ -231,7 +234,10 @@ pub fn bmff_codec() -> @bin.Codec[BmffFile] {
           size32.reinterpret_as_int()
         }
         let user_type = if uuid {
-          match @bin.bytes_fixed(16).named(prefix + ".user_type").decode_from(decoder) {
+          match
+            @bin.bytes_fixed(16)
+            .named(prefix + ".user_type")
+            .decode_from(decoder) {
             Err(error) => return Err(error)
             Ok(value) => Some(value)
           }
@@ -265,7 +271,9 @@ pub fn bmff_codec() -> @bin.Codec[BmffFile] {
           )
         }
         let payload = match
-          @bin.bytes_fixed(payload_length).named(prefix + ".payload").decode_from(decoder) {
+          @bin.bytes_fixed(payload_length)
+          .named(prefix + ".payload")
+          .decode_from(decoder) {
           Err(error) => return Err(error)
           Ok(value) => value
         }
@@ -291,12 +299,13 @@ pub fn bmff_codec() -> @bin.Codec[BmffFile] {
         )
       }
       for index, box in value.boxes {
-        match validate_bmff_box_for_encode(
-          box,
-          index,
-          value.boxes.length(),
-          encoder.length(),
-        ) {
+        match
+          validate_bmff_box_for_encode(
+            box,
+            index,
+            value.boxes.length(),
+            encoder.length(),
+          ) {
           Err(error) => return Err(error)
           Ok(_) => ()
         }
@@ -314,7 +323,8 @@ pub fn bmff_codec() -> @bin.Codec[BmffFile] {
             Ok(_) => ()
           }
         } else {
-          match @bin.u32_be().encode_into(encoder, total_size.reinterpret_as_uint()) {
+          match
+            @bin.u32_be().encode_into(encoder, total_size.reinterpret_as_uint()) {
             Err(error) => return Err(error)
             Ok(_) => ()
           }
@@ -328,10 +338,8 @@ pub fn bmff_codec() -> @bin.Codec[BmffFile] {
             Err(error) => return Err(error)
             Ok(_) => ()
           }
-          match @bin.u32_be().encode_into(
-            encoder,
-            total_size.reinterpret_as_uint(),
-          ) {
+          match
+            @bin.u32_be().encode_into(encoder, total_size.reinterpret_as_uint()) {
             Err(error) => return Err(error)
             Ok(_) => ()
           }
@@ -344,7 +352,11 @@ pub fn bmff_codec() -> @bin.Codec[BmffFile] {
             }
           None => ()
         }
-        match @bin.bytes_fixed(box.payload.length()).encode_into(encoder, box.payload) {
+        match
+          @bin.bytes_fixed(box.payload.length()).encode_into(
+            encoder,
+            box.payload,
+          ) {
           Err(error) => return Err(error)
           Ok(_) => ()
         }
