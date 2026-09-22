@@ -97,7 +97,6 @@ test "CLI verification rejects non-canonical round trips" {
   assert_true(verify_report(report) is Err(Data(_)))
 }
 
-
 ///|
 test "CLI schema lint supports text JSON and validation" {
   match lint_format("png", false) {
