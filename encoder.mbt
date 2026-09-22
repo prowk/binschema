@@ -71,10 +71,7 @@ fn Encoder::ensure_capacity(
 }
 
 ///|
-fn Encoder::write_zeroes(
-  self : Encoder,
-  count : Int,
-) -> Result[Unit, BinError] {
+fn Encoder::write_zeroes(self : Encoder, count : Int) -> Result[Unit, BinError] {
   if self.bit_count != 0 {
     return Err(self.error(Misaligned, "operation requires byte alignment"))
   }
@@ -116,8 +113,7 @@ pub fn Encoder::write_uint(
   guard width == 1 || width == 2 || width == 4 else {
     return Err(self.error(Unsupported, "UInt width must be 1, 2, or 4"))
   }
-  if (width == 1 && value > 0xffU) ||
-    (width == 2 && value > 0xffffU) {
+  if (width == 1 && value > 0xffU) || (width == 2 && value > 0xffffU) {
     return Err(
       self.error(InvalidValue, "unsigned value does not fit requested width"),
     )
