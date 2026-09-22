@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 新增基于 Schema/Trace 的确定性 mutation 安全回归：覆盖字段边界截断、长度字段膨胀、PNG CRC 损坏和字段首字节翻转，并在四后端执行一致性验证。
+
 - 新增前缀与增量解码：`decode_prefix*`、`probe_decode*` 和 `IncrementalDecoder` 可区分完整 frame、需要更多数据与真实格式错误，并保留未消费尾部用于后续 frame。
 
 - 新增 Schema Linter：可检查缺失的局部长度/计数上限、动态 tagged 分支、until-eof/remaining 区域依赖和同级字段重名；CLI 新增 `lint <format> [--json]`。
