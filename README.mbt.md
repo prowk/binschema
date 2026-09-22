@@ -16,6 +16,7 @@ BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。�
 - **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
 - **高级组合**：提供 `count_prefixed`、`until_eof` 与 `tagged`，覆盖计数数组、流式尾读和标签联合。
 - **零拷贝解码**：`decode_view`、`bytes_view_fixed`、`remaining_view` 与 `checksum_suffix_view` 可直接借用 `BytesView`，有需要时再显式转成拥有型 `Bytes`。
+- **增量帧解析**：`decode_prefix`、`probe_decode` 与 `IncrementalDecoder` 支持分块输入、`NeedMore` 判定和多 frame 尾部保留。
 - **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
 - **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序、长度及时间戳。
 
@@ -65,6 +66,26 @@ test "README quick start" {
 ```
 
 基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`count_prefixed`、`until_eof`、`tagged`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if`、`checksum_suffix` 与零拷贝 `checksum_suffix_view`。对于大输入，可用 `decode_view` + `bytes_view_fixed` / `remaining_view` 避免不必要的字节复制。
+
+## 增量 / 流式输入
+
+对于 TCP、串口或其他分块输入，可以先用 `probe_decode` 判断当前缓冲区是否足够，或直接使用 `IncrementalDecoder` 累积 chunk。成功解析一个 frame 后，未消费尾部会保留给下一帧：
+
+```mbt check
+///|
+test "README incremental decode" {
+  let codec = @binschema.pair(@binschema.u16_be(), @binschema.u8())
+  let stream = @binschema.IncrementalDecoder::new(codec)
+  assert_true(stream.feed(b"\x12") is @binschema.NeedMore)
+  match stream.feed(b"\x34\x56\xaa") {
+    @binschema.Done(decoded) => assert_eq(decoded.value, (0x1234U, 0x56U))
+    _ => fail("expected one complete frame")
+  }
+  assert_eq(stream.buffered_bytes(), 1)
+}
+```
+
+只有 `UnexpectedEof` 会被视为 `NeedMore`；校验失败、非法枚举值等错误会立即返回 `Failed`。依赖当前区域结尾的 `until_eof` / `remaining_*` 应先放进协议定义的有界区域，再用于流式场景。
 
 ## 可复现的自定义协议示例
 

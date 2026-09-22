@@ -17,6 +17,7 @@ inspector, and real PNG, WAVE, and PCAP format implementations.
 - canonical ULEB128/SLEB128 support;
 - higher-level `count_prefixed`, `until_eof`, and `tagged` combinators;
 - zero-copy `BytesView` APIs including `decode_view`, `bytes_view_fixed`, and `remaining_view`;
+- prefix/incremental framing with `decode_prefix`, `probe_decode`, and `IncrementalDecoder`;
 - deterministic property-style tests and a fixed malformed/valid binary corpus;
 - validated Wasm, Wasm-GC, JavaScript, and Native library backends.
 
@@ -46,7 +47,7 @@ let schema_text = packet.describe()
 let issues = packet.lint()
 ```
 
-The native CLI also supports `binschema lint <png|wav|pcap> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory.\n\nFor a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
+The native CLI also supports `binschema lint <png|wav|pcap> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory.\n\nFor fragmented network or stream input, `probe_decode` distinguishes `NeedMore` from real decode failures, while `IncrementalDecoder` retains unconsumed trailing bytes for the next frame. Protocols using `until_eof` or `remaining_*` should first establish an explicit bounded region.\n\nFor a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
 
 See the canonical executable documentation in [README.mbt.md](README.mbt.md), architecture notes
 in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
