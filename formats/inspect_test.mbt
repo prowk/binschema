@@ -25,3 +25,18 @@ test "unknown input returns Unsupported" {
   let result = @formats.inspect(b"not a binary format")
   assert_true(result is Err({ kind: @bin.Unsupported, .. }))
 }
+
+
+///|
+test "DNS inspection is explicit and round-trip stable" {
+  let input = @formats.sample_dns()
+  assert_true(@formats.detect_format(input) is Err({ kind: @bin.Unsupported, .. }))
+  let report = match @formats.inspect(input, format=@formats.Dns) {
+    Ok(value) => value
+    Err(error) => fail(error.render())
+  }
+  assert_eq(report.format, "DNS")
+  assert_true(report.roundtrip_equal)
+  assert_true(report.summary.any(fn(entry) { entry.key == "qname" }))
+  assert_true(report.trace.length() > 0)
+}
