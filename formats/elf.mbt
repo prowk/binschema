@@ -347,7 +347,7 @@ fn elf_string_at(
   offset : UInt,
   file_offset : Int,
 ) -> Result[String, @bin.BinError] {
-  let start = offset.to_int()
+  let start = offset.reinterpret_as_int()
   if start < 0 || start >= table.length() {
     return Err(
       elf_error(
@@ -466,14 +466,14 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
     Err(error) => return Err(error)
   }
   let header_size = match elf_u16_at(input, header_size_offset, endian, "header_size") {
-    Ok(value) => value.to_int()
+    Ok(value) => value.reinterpret_as_int()
     Err(error) => return Err(error)
   }
   if header_size < minimum_header || header_size > input.length() {
     return Err(elf_error(@bin.InvalidValue, header_size_offset, "header_size", "ELF header size is inconsistent with class or file length"))
   }
   let program_header_entry_size = match elf_u16_at(input, header_size_offset + 2, endian, "program_header_entry_size") {
-    Ok(value) => value.to_int()
+    Ok(value) => value.reinterpret_as_int()
     Err(error) => return Err(error)
   }
   let raw_program_header_count = match elf_u16_at(input, header_size_offset + 4, endian, "program_header_count") {
@@ -481,7 +481,7 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
     Err(error) => return Err(error)
   }
   let section_header_entry_size = match elf_u16_at(input, header_size_offset + 6, endian, "section_header_entry_size") {
-    Ok(value) => value.to_int()
+    Ok(value) => value.reinterpret_as_int()
     Err(error) => return Err(error)
   }
   let raw_section_header_count = match elf_u16_at(input, header_size_offset + 8, endian, "section_header_count") {
@@ -504,7 +504,7 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
   let sections : Array[ElfSection] = []
   let mut section_zero : ElfSection? = None
   let mut section_header_count = 0
-  let mut section_name_index = raw_section_name_index.to_int()
+  let mut section_name_index = raw_section_name_index.reinterpret_as_int()
 
   if section_header_offset == 0UL {
     if raw_section_header_count != 0U || raw_section_name_index != 0U {
@@ -533,7 +533,7 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
         Err(error) => return Err(error)
       }
     } else {
-      raw_section_header_count.to_int()
+      raw_section_header_count.reinterpret_as_int()
     }
     if section_header_count <= 0 {
       return Err(elf_error(@bin.InvalidValue, table_offset, "section_header_count", "ELF section table must contain section zero"))
@@ -559,7 +559,7 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
       sections.push(section)
     }
     if raw_section_name_index == 0xffffU {
-      section_name_index = zero.link.to_int()
+      section_name_index = zero.link.reinterpret_as_int()
     }
     if section_name_index < 0 || section_name_index >= section_header_count {
       return Err(elf_error(@bin.InvalidValue, table_offset, "section_name_index", "ELF section-name string table index is outside the section table"))
@@ -611,12 +611,12 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
 
   let program_header_count = if raw_program_header_count == 0xffffU {
     match section_zero {
-      Some(zero) => zero.info.to_int()
+      Some(zero) => zero.info.reinterpret_as_int()
       None =>
         return Err(elf_error(@bin.InvalidValue, header_size_offset + 4, "program_header_count", "extended ELF program-header count requires section header zero"))
     }
   } else {
-    raw_program_header_count.to_int()
+    raw_program_header_count.reinterpret_as_int()
   }
   if program_header_count > max_sections {
     return Err(elf_error(@bin.LimitExceeded, header_size_offset + 4, "program_headers", "ELF program-header count exceeds configured collection limit"))
