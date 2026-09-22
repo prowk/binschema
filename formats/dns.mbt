@@ -226,8 +226,7 @@ fn decode_dns_name(decoder : @bin.Decoder) -> Result[DnsName, @bin.BinError] {
         Err(error) => return Err(error)
       }
       wire.push(second_byte)
-      let target = (((first & 0x3fU) << 8) | second_byte.to_uint())
-        .reinterpret_as_int()
+      let target = (((first & 0x3fU) << 8) | second_byte.to_uint()).reinterpret_as_int()
       if target >= pointer_position {
         return Err(
           dns_error(
@@ -308,10 +307,11 @@ fn validate_dns_name_wire(
       if position + 2 != wire.length() {
         return Err("DNS compression pointer must terminate the encoded name")
       }
-      let target = (((first & 0x3fU) << 8) | wire[position + 1].to_uint())
-        .reinterpret_as_int()
+      let target = (((first & 0x3fU) << 8) | wire[position + 1].to_uint()).reinterpret_as_int()
       if target >= absolute_start + position {
-        return Err("DNS compression pointer must reference earlier message bytes")
+        return Err(
+          "DNS compression pointer must reference earlier message bytes",
+        )
       }
       return Ok(())
     }
@@ -358,9 +358,7 @@ fn dns_name_codec() -> @bin.Codec[DnsName] {
       "dns-name",
       [@bin.SchemaNode::leaf("labels-or-compression-pointer")],
       constraints=[
-        "label_length<=63",
-        "expanded_length<=255",
-        "compression_pointer=backward-and-bounded",
+        "label_length<=63", "expanded_length<=255", "compression_pointer=backward-and-bounded",
       ],
     ),
   )
@@ -444,7 +442,8 @@ fn decode_dns_question(
   decoder : @bin.Decoder,
   prefix : String,
 ) -> Result[DnsQuestion, @bin.BinError] {
-  let name = match dns_name_codec().named(prefix + ".name").decode_from(decoder) {
+  let name = match
+    dns_name_codec().named(prefix + ".name").decode_from(decoder) {
     Ok(value) => value
     Err(error) => return Err(error)
   }
@@ -452,7 +451,8 @@ fn decode_dns_question(
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let qclass = match @bin.u16_be().named(prefix + ".class").decode_from(decoder) {
+  let qclass = match
+    @bin.u16_be().named(prefix + ".class").decode_from(decoder) {
     Ok(value) => value
     Err(error) => return Err(error)
   }
@@ -468,11 +468,13 @@ fn decode_dns_record(
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let rr_type = match @bin.u16_be().named(prefix + ".type").decode_from(decoder) {
+  let rr_type = match
+    @bin.u16_be().named(prefix + ".type").decode_from(decoder) {
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let rr_class = match @bin.u16_be().named(prefix + ".class").decode_from(decoder) {
+  let rr_class = match
+    @bin.u16_be().named(prefix + ".class").decode_from(decoder) {
     Ok(value) => value
     Err(error) => return Err(error)
   }
@@ -480,7 +482,8 @@ fn decode_dns_record(
     Ok(value) => value
     Err(error) => return Err(error)
   }
-  let rdlength = match @bin.u16_be().named(prefix + ".rdlength").decode_from(decoder) {
+  let rdlength = match
+    @bin.u16_be().named(prefix + ".rdlength").decode_from(decoder) {
     Ok(value) => value
     Err(error) => return Err(error)
   }
@@ -529,15 +532,16 @@ fn encode_dns_record(
     Err(error) => return Err(error)
     Ok(_) => ()
   }
-  for result in [
-    @bin.u16_be().encode_into(encoder, value.rr_type),
-    @bin.u16_be().encode_into(encoder, value.rr_class),
-    @bin.u32_be().encode_into(encoder, value.ttl),
-    @bin.u16_be().encode_into(
-      encoder,
-      value.rdata.length().reinterpret_as_uint(),
-    ),
-  ] {
+  for
+    result in [
+      @bin.u16_be().encode_into(encoder, value.rr_type),
+      @bin.u16_be().encode_into(encoder, value.rr_class),
+      @bin.u32_be().encode_into(encoder, value.ttl),
+      @bin.u16_be().encode_into(
+        encoder,
+        value.rdata.length().reinterpret_as_uint(),
+      ),
+    ] {
     match result {
       Err(error) => return Err(error)
       Ok(_) => ()
@@ -548,59 +552,42 @@ fn encode_dns_record(
 
 ///|
 fn dns_schema() -> @bin.SchemaNode {
-  let question = @bin.SchemaNode::node(
-    "question",
-    [
-      dns_name_codec().schema_node().with_name("name"),
-      @bin.SchemaNode::leaf("u16be").with_name("type"),
-      @bin.SchemaNode::leaf("u16be").with_name("class"),
-    ],
-  )
-  let record = @bin.SchemaNode::node(
-    "resource-record",
-    [
-      dns_name_codec().schema_node().with_name("name"),
-      @bin.SchemaNode::leaf("u16be").with_name("type"),
-      @bin.SchemaNode::leaf("u16be").with_name("class"),
-      @bin.SchemaNode::leaf("u32be").with_name("ttl"),
-      @bin.SchemaNode::leaf("u16be").with_name("rdlength"),
-      @bin.SchemaNode::leaf("bytes[rdlength]").with_name("rdata"),
-    ],
-  )
+  let question = @bin.SchemaNode::node("question", [
+    dns_name_codec().schema_node().with_name("name"),
+    @bin.SchemaNode::leaf("u16be").with_name("type"),
+    @bin.SchemaNode::leaf("u16be").with_name("class"),
+  ])
+  let record = @bin.SchemaNode::node("resource-record", [
+    dns_name_codec().schema_node().with_name("name"),
+    @bin.SchemaNode::leaf("u16be").with_name("type"),
+    @bin.SchemaNode::leaf("u16be").with_name("class"),
+    @bin.SchemaNode::leaf("u32be").with_name("ttl"),
+    @bin.SchemaNode::leaf("u16be").with_name("rdlength"),
+    @bin.SchemaNode::leaf("bytes[rdlength]").with_name("rdata"),
+  ])
   @bin.SchemaNode::node(
     "dns",
     [
-      @bin.SchemaNode::node(
-        "header",
-        [
-          @bin.SchemaNode::leaf("u16be").with_name("id"),
-          @bin.SchemaNode::leaf("u16be").with_name("flags"),
-          @bin.SchemaNode::leaf("u16be").with_name("qdcount"),
-          @bin.SchemaNode::leaf("u16be").with_name("ancount"),
-          @bin.SchemaNode::leaf("u16be").with_name("nscount"),
-          @bin.SchemaNode::leaf("u16be").with_name("arcount"),
-        ],
-      ),
-      @bin.SchemaNode::node(
-        "questions",
-        [question],
-        constraints=["count=qdcount", "max_count=runtime-limit"],
-      ),
-      @bin.SchemaNode::node(
-        "answers",
-        [record],
-        constraints=["count=ancount", "max_count=runtime-limit"],
-      ),
-      @bin.SchemaNode::node(
-        "authorities",
-        [record],
-        constraints=["count=nscount", "max_count=runtime-limit"],
-      ),
-      @bin.SchemaNode::node(
-        "additionals",
-        [record],
-        constraints=["count=arcount", "max_count=runtime-limit"],
-      ),
+      @bin.SchemaNode::node("header", [
+        @bin.SchemaNode::leaf("u16be").with_name("id"),
+        @bin.SchemaNode::leaf("u16be").with_name("flags"),
+        @bin.SchemaNode::leaf("u16be").with_name("qdcount"),
+        @bin.SchemaNode::leaf("u16be").with_name("ancount"),
+        @bin.SchemaNode::leaf("u16be").with_name("nscount"),
+        @bin.SchemaNode::leaf("u16be").with_name("arcount"),
+      ]),
+      @bin.SchemaNode::node("questions", [question], constraints=[
+        "count=qdcount", "max_count=runtime-limit",
+      ]),
+      @bin.SchemaNode::node("answers", [record], constraints=[
+        "count=ancount", "max_count=runtime-limit",
+      ]),
+      @bin.SchemaNode::node("authorities", [record], constraints=[
+        "count=nscount", "max_count=runtime-limit",
+      ]),
+      @bin.SchemaNode::node("additionals", [record], constraints=[
+        "count=arcount", "max_count=runtime-limit",
+      ]),
     ],
     constraints=["compression-pointer=backward-bounded-depth-limited"],
   )
@@ -654,7 +641,8 @@ pub fn dns_codec() -> @bin.Codec[DnsMessage] {
         Ok(value) => value
         Err(error) => return Err(error)
       }
-      let question_count = match dns_section_limit(qdcount, decoder, "questions") {
+      let question_count = match
+        dns_section_limit(qdcount, decoder, "questions") {
         Ok(value) => value
         Err(error) => return Err(error)
       }
@@ -662,11 +650,13 @@ pub fn dns_codec() -> @bin.Codec[DnsMessage] {
         Ok(value) => value
         Err(error) => return Err(error)
       }
-      let authority_count = match dns_section_limit(nscount, decoder, "authorities") {
+      let authority_count = match
+        dns_section_limit(nscount, decoder, "authorities") {
         Ok(value) => value
         Err(error) => return Err(error)
       }
-      let additional_count = match dns_section_limit(arcount, decoder, "additionals") {
+      let additional_count = match
+        dns_section_limit(arcount, decoder, "additionals") {
         Ok(value) => value
         Err(error) => return Err(error)
       }
@@ -701,37 +691,39 @@ pub fn dns_codec() -> @bin.Codec[DnsMessage] {
       Ok({ id, flags, questions, answers, authorities, additionals, })
     },
     fn(encoder, value) {
-      for (count, path) in [
-        (value.questions.length(), "questions"),
-        (value.answers.length(), "answers"),
-        (value.authorities.length(), "authorities"),
-        (value.additionals.length(), "additionals"),
-      ] {
+      for
+        (count, path) in [
+          (value.questions.length(), "questions"),
+          (value.answers.length(), "answers"),
+          (value.authorities.length(), "authorities"),
+          (value.additionals.length(), "additionals"),
+        ] {
         match check_dns_encode_count(encoder, count, path) {
           Err(error) => return Err(error)
           Ok(_) => ()
         }
       }
-      for result in [
-        @bin.u16_be().encode_into(encoder, value.id),
-        @bin.u16_be().encode_into(encoder, value.flags),
-        @bin.u16_be().encode_into(
-          encoder,
-          value.questions.length().reinterpret_as_uint(),
-        ),
-        @bin.u16_be().encode_into(
-          encoder,
-          value.answers.length().reinterpret_as_uint(),
-        ),
-        @bin.u16_be().encode_into(
-          encoder,
-          value.authorities.length().reinterpret_as_uint(),
-        ),
-        @bin.u16_be().encode_into(
-          encoder,
-          value.additionals.length().reinterpret_as_uint(),
-        ),
-      ] {
+      for
+        result in [
+          @bin.u16_be().encode_into(encoder, value.id),
+          @bin.u16_be().encode_into(encoder, value.flags),
+          @bin.u16_be().encode_into(
+            encoder,
+            value.questions.length().reinterpret_as_uint(),
+          ),
+          @bin.u16_be().encode_into(
+            encoder,
+            value.answers.length().reinterpret_as_uint(),
+          ),
+          @bin.u16_be().encode_into(
+            encoder,
+            value.authorities.length().reinterpret_as_uint(),
+          ),
+          @bin.u16_be().encode_into(
+            encoder,
+            value.additionals.length().reinterpret_as_uint(),
+          ),
+        ] {
         match result {
           Err(error) => return Err(error)
           Ok(_) => ()
