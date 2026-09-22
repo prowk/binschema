@@ -265,7 +265,6 @@ fn inspect_bmff(input : Bytes) -> Result[Inspection, @bin.BinError] {
   })
 }
 
-
 ///|
 fn inspect_dns(input : Bytes) -> Result[Inspection, @bin.BinError] {
   let decoded = match @bin.decode(dns_codec().named("dns"), input) {
