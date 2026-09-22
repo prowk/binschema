@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 新增 ELF32/ELF64 字节保真结构检查：支持双端序、program/section header table 边界验证、扩展 section numbering 与 section-name string table 解析，并贯通 Inspector、CLI 与 Web。
+
 - 新增 DNS 报文格式支持：解析 header/question/RR，保留 raw RDATA 与压缩域名 wire；压缩 pointer 强制包内向后引用并受 `max_depth` 限制，section count/label/展开域名均受资源边界约束，并贯通 CLI、Web Inspector、Schema 与 mutation 回归。
 
 - Decoder 新增 `view_at(offset, count)` 非消费有界随机读取与 `max_depth()` 预算查询，为 DNS 压缩指针、offset table 等引用型协议提供安全基础。
