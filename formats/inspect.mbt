@@ -6,6 +6,7 @@ pub(all) enum Format {
   Wav
   Pcap
   Bmff
+  Dns
 } derive(Eq, Debug, ToJson)
 
 ///|
@@ -60,6 +61,7 @@ pub fn Format::parse(name : String) -> Result[Format, String] {
     "wav" | "wave" => Ok(Wav)
     "pcap" => Ok(Pcap)
     "bmff" | "isobmff" | "mp4" => Ok(Bmff)
+    "dns" => Ok(Dns)
     other => Err("unsupported format: " + other)
   }
 }
@@ -72,6 +74,7 @@ pub fn Format::name(self : Format) -> String {
     Wav => "wav"
     Pcap => "pcap"
     Bmff => "bmff"
+    Dns => "dns"
   }
 }
 
@@ -113,7 +116,7 @@ pub fn detect_format(input : Bytes) -> Result[Format, @bin.BinError] {
         @bin.Unsupported,
         0,
         "format",
-        "input does not match PNG, WAVE, PCAP, or a common ISO BMFF signature",
+        "input does not match an auto-detectable PNG, WAVE, PCAP, or ISO BMFF signature; DNS requires --format dns",
       ),
     )
   }
@@ -262,6 +265,38 @@ fn inspect_bmff(input : Bytes) -> Result[Inspection, @bin.BinError] {
   })
 }
 
+
+///|
+fn inspect_dns(input : Bytes) -> Result[Inspection, @bin.BinError] {
+  let decoded = match @bin.decode(dns_codec().named("dns"), input) {
+    Err(error) => return Err(error)
+    Ok(value) => value
+  }
+  let encoded = match @bin.encode(dns_codec(), decoded.value) {
+    Err(error) => return Err(error)
+    Ok(value) => value
+  }
+  let value = decoded.value
+  let summary = [
+    item("id", value.id.to_string()),
+    item("questions", value.questions.length().to_string()),
+    item("answers", value.answers.length().to_string()),
+    item("authorities", value.authorities.length().to_string()),
+    item("additionals", value.additionals.length().to_string()),
+  ]
+  if value.questions.length() > 0 {
+    summary.push(item("qname", value.questions[0].name.display()))
+  }
+  Ok({
+    format: "DNS",
+    size: input.length(),
+    roundtrip_equal: encoded == input,
+    summary,
+    schema: dns_codec().named("dns").schema_node(),
+    trace: decoded.trace,
+  })
+}
+
 ///|
 pub fn inspect(
   input : Bytes,
@@ -289,6 +324,7 @@ pub fn inspect(
     Wav => inspect_wav(input)
     Pcap => inspect_pcap(input)
     Bmff => inspect_bmff(input)
+    Dns => inspect_dns(input)
   }
 }
 
