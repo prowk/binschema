@@ -80,7 +80,8 @@ fn trace_truncations_are_structured(
   for entry in report.trace {
     if entry.start > 0 && entry.start < input.length() {
       cases += 1
-      match structured_mutation_result(mutation_prefix(input, entry.start), format) {
+      match
+        structured_mutation_result(mutation_prefix(input, entry.start), format) {
         Ok(_) => ()
         Err(message) => return Err(message)
       }
@@ -89,7 +90,9 @@ fn trace_truncations_are_structured(
     if entry.end > entry.start && inside_end > 0 && inside_end < input.length() {
       cases += 1
       if @formats.inspect(mutation_prefix(input, inside_end), format~) is Ok(_) {
-        return Err("truncation inside field must not parse successfully: " + entry.path)
+        return Err(
+          "truncation inside field must not parse successfully: " + entry.path,
+        )
       }
     }
   }
@@ -143,11 +146,12 @@ fn length_expansion_is_rejected(
 
 ///|
 test "mutation: field-boundary truncations stay structured on all formats" {
-  for (input, format) in [
-    (@formats.sample_png(), @formats.Png),
-    (@formats.sample_wav(), @formats.Wav),
-    (@formats.sample_pcap(), @formats.Pcap),
-  ] {
+  for
+    (input, format) in [
+      (@formats.sample_png(), @formats.Png),
+      (@formats.sample_wav(), @formats.Wav),
+      (@formats.sample_pcap(), @formats.Pcap),
+    ] {
     match trace_truncations_are_structured(input, format) {
       Ok(_) => ()
       Err(message) => fail(message)
@@ -157,11 +161,12 @@ test "mutation: field-boundary truncations stay structured on all formats" {
 
 ///|
 test "mutation: allocation length inflation stays rejected" {
-  for (input, format) in [
-    (@formats.sample_png(), @formats.Png),
-    (@formats.sample_wav(), @formats.Wav),
-    (@formats.sample_pcap(), @formats.Pcap),
-  ] {
+  for
+    (input, format) in [
+      (@formats.sample_png(), @formats.Png),
+      (@formats.sample_wav(), @formats.Wav),
+      (@formats.sample_pcap(), @formats.Pcap),
+    ] {
     match length_expansion_is_rejected(input, format) {
       Ok(_) => ()
       Err(message) => fail(message)
@@ -196,11 +201,12 @@ test "mutation: PNG CRC damage reports checksum mismatch" {
 
 ///|
 test "mutation: first-byte field flips never escape structured outcomes" {
-  for (input, format) in [
-    (@formats.sample_png(), @formats.Png),
-    (@formats.sample_wav(), @formats.Wav),
-    (@formats.sample_pcap(), @formats.Pcap),
-  ] {
+  for
+    (input, format) in [
+      (@formats.sample_png(), @formats.Png),
+      (@formats.sample_wav(), @formats.Wav),
+      (@formats.sample_pcap(), @formats.Pcap),
+    ] {
     let report = match mutation_report(input, format) {
       Ok(value) => value
       Err(message) => fail(message)
