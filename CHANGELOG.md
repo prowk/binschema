@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 新增 DNS 报文格式支持：解析 header/question/RR，保留 raw RDATA 与压缩域名 wire；压缩 pointer 强制包内向后引用并受 `max_depth` 限制，section count/label/展开域名均受资源边界约束，并贯通 CLI、Web Inspector、Schema 与 mutation 回归。
+
 - Decoder 新增 `view_at(offset, count)` 非消费有界随机读取与 `max_depth()` 预算查询，为 DNS 压缩指针、offset table 等引用型协议提供安全基础。
 
 - 新增 ISO BMFF / MP4 box 格式支持：保留未知 box payload，支持普通 32-bit size、64-bit `largesize`、`size=0`、`uuid` user type，并贯通 CLI、Web Inspector、Schema 与 mutation 回归。

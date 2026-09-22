@@ -27,3 +27,13 @@ test "exported bridge returns structured errors" {
   assert_true(inspect_hex("auto", "").contains("\"error\""))
   assert_true(sample_hex("auto").contains("\"error\""))
 }
+
+///|
+test "DNS bridge inspection uses explicit format selection" {
+  let hex = sample_hex("dns")
+  assert_true(!hex.contains(" "))
+  assert_true(inspect_hex("auto", hex).contains("\"error\""))
+  let report = inspect_hex("dns", hex)
+  assert_true(report.contains("\"roundtrip_equal\":true"))
+  assert_true(report.contains("\"format\":\"DNS\""))
+}
