@@ -428,3 +428,77 @@ test "schema linter warns about dynamic and ambiguous protocol shapes" {
     remaining_issues.any(fn(issue) { issue.code == "remaining-region" }),
   )
 }
+
+
+///|
+test "prefix decoding consumes one frame and preserves trailing input" {
+  let codec = @binschema.pair(@binschema.u16_be(), @binschema.u8())
+  match @binschema.decode_prefix(codec, b"\x12\x34\x56\xff") {
+    Ok(decoded) => {
+      assert_eq(decoded.value, (0x1234U, 0x56U))
+      assert_eq(decoded.consumed, 3)
+    }
+    Err(error) => fail(error.render())
+  }
+}
+
+///|
+test "probe decode distinguishes incomplete invalid and complete inputs" {
+  let codec = @binschema.pair(@binschema.u16_be(), @binschema.u8())
+  match @binschema.probe_decode(codec, b"\x12") {
+    @binschema.NeedMore => ()
+    _ => fail("truncated prefix must request more data")
+  }
+  match @binschema.probe_decode(codec, b"\x12\x34\x56") {
+    @binschema.Done(decoded) => assert_eq(decoded.value, (0x1234U, 0x56U))
+    _ => fail("complete frame must decode")
+  }
+  match @binschema.probe_decode(@binschema.bool8(), b"\x02") {
+    @binschema.Failed(error) => assert_eq(error.kind, @binschema.InvalidValue)
+    _ => fail("invalid value must not be treated as incomplete")
+  }
+}
+
+///|
+test "incremental decoder retains unconsumed frames across chunks" {
+  let codec = @binschema.pair(@binschema.u16_be(), @binschema.u8())
+  let stream = @binschema.IncrementalDecoder::new(codec)
+  match stream.feed(b"\x12") {
+    @binschema.NeedMore => ()
+    _ => fail("first fragment must be incomplete")
+  }
+  match stream.feed(b"\x34\x56\xaa") {
+    @binschema.Done(decoded) => assert_eq(decoded.value, (0x1234U, 0x56U))
+    _ => fail("second fragment must complete the first frame")
+  }
+  assert_eq(stream.buffered_bytes(), 1)
+  match stream.poll() {
+    @binschema.NeedMore => ()
+    _ => fail("one trailing byte is not a complete frame")
+  }
+  match stream.feed(b"\xbb\xcc") {
+    @binschema.Done(decoded) => assert_eq(decoded.value, (0xaabbU, 0xccU))
+    _ => fail("trailing bytes plus next chunk must form the second frame")
+  }
+  assert_eq(stream.buffered_bytes(), 0)
+}
+
+///|
+test "incremental decoder enforces buffer limits before appending" {
+  let limits = @binschema.Limits::new(
+    max_input_bytes=2,
+    max_collection_length=16,
+    max_depth=4,
+    max_output_bytes=16,
+  )
+  let stream = @binschema.IncrementalDecoder::new(@binschema.u32_be(), limits~)
+  match stream.feed(b"\x00\x01") {
+    @binschema.NeedMore => ()
+    _ => fail("two bytes are not enough for u32")
+  }
+  match stream.feed(b"\x02") {
+    @binschema.Failed(error) => assert_eq(error.kind, @binschema.LimitExceeded)
+    _ => fail("buffer growth beyond max_input_bytes must fail")
+  }
+  assert_eq(stream.buffered_bytes(), 2)
+}
