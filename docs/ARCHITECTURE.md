@@ -5,9 +5,9 @@
 BinSchema 将协议处理划分为四层：
 
 1. `Decoder` / `Encoder` 管理游标、位偏移、缓冲区和资源预算；Decoder 内部持有 `BytesView`，有界子区域默认借用原输入。
-2. `Codec[T]` 封装双向规则，组合子负责复用与校验。
-3. `formats` 使用同一套公开 API 实现 PNG、WAVE、PCAP，并提供格式自动检测。
-4. CLI 与 Wasm Web 只依赖统一的 `Inspection`，因此输出语义一致。
+2. `Codec[T]` 封装双向规则，同时携带只读 `SchemaNode` 元数据；组合子会同步组合运行时规则和协议结构。
+3. `formats` 使用同一套公开 API 实现 PNG、WAVE、PCAP，并为手写动态解析器提供显式 Schema 结构描述。
+4. CLI 与 Wasm Web 只依赖统一的 `Inspection`；其中同时包含 `SchemaNode`（静态结构）与 `TraceEntry[]`（本次输入的动态字节轨迹）。
 
 ```text
 Binary input
@@ -15,10 +15,12 @@ Binary input
     ▼
 bounded Decoder ──► Codec[T] ──► typed value
     │                   │             │
-    └─ TraceEntry[]     └─ Encoder ◄──┘
-                              │
-                              ▼
-                        roundtrip check
+    └─ TraceEntry[]     ├─ SchemaNode │
+                        └─ Encoder ◄──┘
+                             │
+             ┌───────────────┴──────────────┐
+             ▼                              ▼
+       roundtrip check                Inspector / tooling
 ```
 
 ## 核心不变量

@@ -101,6 +101,33 @@ fn validate_png_file(value : PngFile) -> Result[Unit, String] {
 }
 
 ///|
+fn png_schema() -> @bin.SchemaNode {
+  @bin.SchemaNode::node(
+    "png",
+    [
+      @bin.SchemaNode::leaf("bytes[8]").with_name("signature"),
+      @bin.SchemaNode::node(
+        "chunks",
+        [
+          @bin.SchemaNode::node(
+            "chunk",
+            [
+              @bin.SchemaNode::leaf("u32be").with_name("length"),
+              @bin.SchemaNode::leaf("bytes[4]").with_name("type"),
+              @bin.SchemaNode::leaf("bytes[length]").with_name("data"),
+              @bin.SchemaNode::leaf("u32be").with_name("crc"),
+            ],
+            constraints=["crc32(type+data)"],
+          ),
+        ],
+        constraints=["repeat=until-IEND", "max_count=runtime-limit"],
+      ),
+    ],
+    constraints=["signature=PNG", "IHDR-first", "IEND-last"],
+  )
+}
+
+///|
 pub fn png_codec() -> @bin.Codec[PngFile] {
   @bin.Codec::make(
     fn(decoder) {
@@ -268,6 +295,7 @@ pub fn png_codec() -> @bin.Codec[PngFile] {
     },
     kind="png",
     render=fn(value) { "PNG with \{value.chunks.length()} chunks" },
+    schema=png_schema(),
   )
 }
 

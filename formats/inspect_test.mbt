@@ -13,7 +13,9 @@ test "detect and inspect all built-in formats" {
     }
     assert_true(report.roundtrip_equal)
     assert_true(report.trace.length() > 0)
+    assert_true(report.schema.children.length() > 0)
     assert_true(report.to_json_string().contains("roundtrip_equal"))
+    assert_true(report.to_json_string().contains("schema"))
   }
 }
 

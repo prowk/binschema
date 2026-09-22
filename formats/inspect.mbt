@@ -38,6 +38,7 @@ pub(all) struct Inspection {
   size : Int
   roundtrip_equal : Bool
   summary : Array[SummaryItem]
+  schema : @bin.SchemaNode
   trace : Array[@bin.TraceEntry]
 } derive(Eq, Debug, ToJson)
 
@@ -148,6 +149,7 @@ fn inspect_png(input : Bytes) -> Result[Inspection, @bin.BinError] {
     size: input.length(),
     roundtrip_equal: encoded == input,
     summary,
+    schema: png_codec().named("png").schema_node(),
     trace: decoded.trace,
   })
 }
@@ -176,6 +178,7 @@ fn inspect_wav(input : Bytes) -> Result[Inspection, @bin.BinError] {
     size: input.length(),
     roundtrip_equal: encoded == input,
     summary,
+    schema: wav_codec().named("wav").schema_node(),
     trace: decoded.trace,
   })
 }
@@ -212,6 +215,7 @@ fn inspect_pcap(input : Bytes) -> Result[Inspection, @bin.BinError] {
     size: input.length(),
     roundtrip_equal: encoded == input,
     summary,
+    schema: pcap_codec().named("pcap").schema_node(),
     trace: decoded.trace,
   })
 }
