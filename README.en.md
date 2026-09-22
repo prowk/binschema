@@ -6,7 +6,7 @@
 
 BinSchema is a MoonBit binary protocol codec library focused on safe defaults, composability,
 diagnostics, and cross-backend consistency. It includes a native CLI, a Wasm-GC browser
-inspector, and real PNG, WAVE, PCAP, and ISO BMFF format implementations.
+inspector, and real PNG, WAVE, PCAP, ISO BMFF, and DNS format implementations.
 
 ## Highlights
 
@@ -21,7 +21,8 @@ inspector, and real PNG, WAVE, PCAP, and ISO BMFF format implementations.
 - deterministic property-style tests and a fixed malformed/valid binary corpus;
 - validated Wasm, Wasm-GC, JavaScript, and Native library backends;
 - deterministic Schema/Trace-guided mutation regression for truncation, length inflation, checksum damage, and field-boundary flips;
-- byte-exact ISO BMFF box parsing with 32-bit size, 64-bit `largesize`, `size=0`, `uuid` user types, and unknown-payload preservation.
+- byte-exact ISO BMFF box parsing with 32-bit size, 64-bit `largesize`, `size=0`, `uuid` user types, and unknown-payload preservation;
+- DNS message parsing with bounded section counts, 63-octet labels, byte-exact compressed names, backward-only bounded compression pointers, and depth limits.
 
 ## Install
 
@@ -49,7 +50,7 @@ let schema_text = packet.describe()
 let issues = packet.lint()
 ```
 
-The native CLI also supports `binschema lint <png|wav|pcap|bmff> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory.\n\nFor fragmented network or stream input, `probe_decode` distinguishes `NeedMore` from real decode failures, while `IncrementalDecoder` retains unconsumed trailing bytes for the next frame. Protocols using `until_eof` or `remaining_*` should first establish an explicit bounded region.\n\nFor a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
+The native CLI also supports `binschema lint <png|wav|pcap|bmff|dns> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory.\n\nFor fragmented network or stream input, `probe_decode` distinguishes `NeedMore` from real decode failures, while `IncrementalDecoder` retains unconsumed trailing bytes for the next frame. Protocols using `until_eof` or `remaining_*` should first establish an explicit bounded region.\n\nFor a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
 
 See the canonical executable documentation in [README.mbt.md](README.mbt.md), architecture notes
 in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
@@ -61,7 +62,7 @@ in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
 
 **Try it online:** [https://prowk.github.io/binschema/](https://prowk.github.io/binschema/)
 
-No MoonBit installation is required. Pick a PNG, WAVE, PCAP, or common MP4 / ISO BMFF file in the browser; the file is processed locally and is not uploaded.
+No MoonBit installation is required. Pick a PNG, WAVE, PCAP, common MP4 / ISO BMFF, or DNS file in the browser; the file is processed locally and is not uploaded. DNS has no reliable fixed magic, so DNS inspection is selected explicitly rather than auto-detected.
 
 For local development, the Wasm binary is generated from source and is not committed to the repository.
 
