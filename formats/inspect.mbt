@@ -246,12 +246,11 @@ fn inspect_bmff(input : Bytes) -> Result[Inspection, @bin.BinError] {
     item("boxes", decoded.value.boxes.length().to_string()),
     item("types", types.join(", ")),
   ]
-  match decoded.value.boxes.first() {
-    Some(box) =>
-      if box.kind == b"ftyp" && box.payload.length() >= 4 {
-        summary.push(item("major_brand", @utf8.decode_lossy(box.payload[0:4])))
-      }
-    None => ()
+  if decoded.value.boxes.length() > 0 {
+    let box = decoded.value.boxes[0]
+    if box.kind == b"ftyp" && box.payload.length() >= 4 {
+      summary.push(item("major_brand", @utf8.decode_lossy(box.payload[0:4])))
+    }
   }
   Ok({
     format: "ISO BMFF",
