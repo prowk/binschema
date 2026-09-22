@@ -464,7 +464,8 @@ fn decode_dns_record(
   decoder : @bin.Decoder,
   prefix : String,
 ) -> Result[DnsRecord, @bin.BinError] {
-  let name = match dns_name_codec().named(prefix + ".name").decode_from(decoder) {
+  let name = match
+    dns_name_codec().named(prefix + ".name").decode_from(decoder) {
     Ok(value) => value
     Err(error) => return Err(error)
   }
