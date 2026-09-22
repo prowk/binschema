@@ -182,6 +182,7 @@ pub fn Decoder::absolute_offset(Self) -> Int
 pub fn Decoder::align_byte(Self) -> Unit
 pub fn Decoder::depth(Self) -> Int
 pub fn Decoder::max_collection_length(Self) -> Int
+pub fn Decoder::max_depth(Self) -> Int
 pub fn Decoder::new(Bytes, Limits) -> Self
 pub fn Decoder::new_view(BytesView, Limits) -> Self
 pub fn Decoder::offset(Self) -> Int
@@ -195,6 +196,7 @@ pub fn Decoder::take_bytes(Self, Int) -> Result[Bytes, BinError]
 pub fn Decoder::take_view(Self, Int) -> Result[BytesView, BinError]
 pub fn Decoder::total_length(Self) -> Int
 pub fn Decoder::trace(Self) -> Array[TraceEntry]
+pub fn Decoder::view_at(Self, Int, Int) -> Result[BytesView, BinError]
 
 pub(all) struct EncodeOptions {
   limits : Limits
