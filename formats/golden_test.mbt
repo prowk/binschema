@@ -35,7 +35,7 @@ test "golden wire fixtures decode and round-trip independently" {
   match @formats.inspect(dns, format=@formats.Dns) {
     Ok(report) => {
       assert_true(report.roundtrip_equal)
-      assert_true(report.summary.any(fn(item) { item.value == "example.com" }))
+      assert_true(report.summary.any(fn(item) { item.value == "example.com." }))
     }
     Err(error) => fail(error.render())
   }
