@@ -69,7 +69,7 @@ pub fn[T] Codec::named(self : Codec[T], name : String) -> Codec[T] {
                 full_path,
                 inner.kind,
                 start,
-                decoder.absolute_offset(),
+                decoder.trace_end_offset(),
                 fn() { (inner.render)(value) },
               ) {
               Err(error) => Err(error)
@@ -306,22 +306,18 @@ pub fn[T] bounded(
           )
           match body.decode_from(child) {
             Err(error) => Err(error)
-            Ok(value) =>
-              if require_eof && child.remaining() != 0 {
-                Err(
-                  BinError::new(
-                    TrailingBytes,
-                    child.absolute_offset(),
-                    child.path(),
-                    "trailing bytes in bounded field",
-                  ),
-                )
-              } else {
-                match decoder.append_trace(child.trace()) {
-                  Err(error) => Err(error)
-                  Ok(_) => Ok(value)
+            Ok(value) => {
+              if require_eof {
+                match child.finish_decode(true) {
+                  Err(error) => return Err(error)
+                  Ok(_) => ()
                 }
               }
+              match decoder.append_trace(child.trace()) {
+                Err(error) => Err(error)
+                Ok(_) => Ok(value)
+              }
+            }
           }
         }
       }
