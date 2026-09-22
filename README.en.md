@@ -13,6 +13,7 @@ inspector, and real PNG, WAVE, and PCAP format implementations.
 - bounded input/output, collection, nesting, and trace budgets;
 - one `Codec[T]` for both decoding and encoding;
 - offset/path-aware structured errors and named-field traces;
+- inspectable `SchemaNode` metadata plus deterministic schema linting;
 - canonical ULEB128/SLEB128 support;
 - higher-level `count_prefixed`, `until_eof`, and `tagged` combinators;
 - zero-copy `BytesView` APIs including `decode_view`, `bytes_view_fixed`, and `remaining_view`;
@@ -40,9 +41,12 @@ let packet = @bin.pair(
   @bin.magic(b"BS").named("magic"),
   @bin.u16_le().named("sequence"),
 )
+
+let schema_text = packet.describe()
+let issues = packet.lint()
 ```
 
-For a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
+The native CLI also supports `binschema lint <png|wav|pcap> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory.\n\nFor a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
 
 See the canonical executable documentation in [README.mbt.md](README.mbt.md), architecture notes
 in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
