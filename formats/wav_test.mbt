@@ -127,8 +127,7 @@ test "WAVE encoder rejects stale public metadata" {
 
 ///|
 test "WAVE encoder rejects invalid ids and impossible padding metadata" {
-  let fmt =
-    b"\x01\x00\x01\x00\x40\x1f\x00\x00\x40\x1f\x00\x00\x01\x00\x08\x00"
+  let fmt = b"\x01\x00\x01\x00\x40\x1f\x00\x00\x40\x1f\x00\x00\x01\x00\x08\x00"
   let invalid_id = @formats.WavFile::{
     riff_size: 0U,
     chunks: [
@@ -146,7 +145,11 @@ test "WAVE encoder rejects invalid ids and impossible padding metadata" {
     riff_size: 0U,
     chunks: [
       @formats.WavChunk::{ id: "fmt ", data: fmt, padding: None, },
-      @formats.WavChunk::{ id: "data", data: b"\x00\x01", padding: Some(b'\x00'), },
+      @formats.WavChunk::{
+        id: "data",
+        data: b"\x00\x01",
+        padding: Some(b'\x00'),
+      },
     ],
     format: None,
   }
