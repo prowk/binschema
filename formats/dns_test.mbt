@@ -18,7 +18,8 @@ test "DNS sample decodes compressed answer names and round-trips exactly" {
 
 ///|
 test "DNS uncompressed name helper validates wire limits" {
-  let name = match @formats.dns_name_uncompressed([b"www", b"example", b"com"]) {
+  let name = match
+    @formats.dns_name_uncompressed([b"www", b"example", b"com"]) {
     Ok(value) => value
     Err(message) => fail(message)
   }
@@ -36,14 +37,12 @@ test "DNS uncompressed name helper validates wire limits" {
 
 ///|
 test "DNS rejects self and forward compression pointers" {
-  let self_pointer =
-    b"\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\xc0\x0c\x00\x01\x00\x01"
+  let self_pointer = b"\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\xc0\x0c\x00\x01\x00\x01"
   assert_true(
     @bin.decode(@formats.dns_codec(), self_pointer)
     is Err({ kind: @bin.InvalidValue, .. }),
   )
-  let forward_pointer =
-    b"\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\xc0\x0e\x00\x01\x00\x01"
+  let forward_pointer = b"\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\xc0\x0e\x00\x01\x00\x01"
   assert_true(
     @bin.decode(@formats.dns_codec(), forward_pointer)
     is Err({ kind: @bin.InvalidValue, .. }),
@@ -52,8 +51,7 @@ test "DNS rejects self and forward compression pointers" {
 
 ///|
 test "DNS rejects reserved label encodings" {
-  let packet =
-    b"\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x40\x00\x01\x00\x01"
+  let packet = b"\x00\x01\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x40\x00\x01\x00\x01"
   assert_true(
     @bin.decode(@formats.dns_codec(), packet)
     is Err({ kind: @bin.InvalidValue, .. }),
@@ -62,8 +60,7 @@ test "DNS rejects reserved label encodings" {
 
 ///|
 test "DNS section counts honor configured collection limits before looping" {
-  let packet =
-    b"\x00\x01\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00"
+  let packet = b"\x00\x01\x01\x00\x00\x02\x00\x00\x00\x00\x00\x00"
   let limits = @bin.Limits::new(
     max_input_bytes=64,
     max_collection_length=1,
@@ -79,11 +76,12 @@ test "DNS section counts honor configured collection limits before looping" {
 
 ///|
 test "DNS encoder derives section counts and validates compressed wire direction" {
-  let question_name = match @formats.dns_name_uncompressed([b"example", b"com"]) {
+  let question_name = match
+    @formats.dns_name_uncompressed([b"example", b"com"]) {
     Ok(value) => value
     Err(message) => fail(message)
   }
-  let invalid_pointer = @formats.DnsName::{ labels: [], wire: b"\xc0\xff" }
+  let invalid_pointer = @formats.DnsName::{ labels: [], wire: b"\xc0\xff", }
   let message = @formats.DnsMessage::{
     id: 1U,
     flags: 0x0100U,
