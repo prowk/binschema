@@ -429,7 +429,6 @@ test "schema linter warns about dynamic and ambiguous protocol shapes" {
   )
 }
 
-
 ///|
 test "prefix decoding consumes one frame and preserves trailing input" {
   let codec = @binschema.pair(@binschema.u16_be(), @binschema.u8())
