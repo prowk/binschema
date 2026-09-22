@@ -383,7 +383,6 @@ test "schema metadata mirrors codec composition" {
   assert_true(codec.describe().contains("payload : bytes[3]"))
 }
 
-
 ///|
 test "schema linter reports structural safety issues deterministically" {
   let safe = @binschema.length_prefixed(
@@ -394,10 +393,9 @@ test "schema linter reports structural safety issues deterministically" {
   let safe_issues = safe.lint()
   assert_eq(safe_issues.length(), 0)
 
-  let malformed = @binschema.SchemaNode::node(
-    "length-prefixed",
-    [@binschema.SchemaNode::leaf("bytes").with_name("payload")],
-  ).with_name("bad")
+  let malformed = @binschema.SchemaNode::node("length-prefixed", [
+    @binschema.SchemaNode::leaf("bytes").with_name("payload"),
+  ]).with_name("bad")
   let malformed_issues = @binschema.lint_schema(malformed)
   assert_eq(malformed_issues.length(), 1)
   assert_eq(malformed_issues[0].code, "missing-max-length")
@@ -409,28 +407,17 @@ test "schema linter reports structural safety issues deterministically" {
 test "schema linter warns about dynamic and ambiguous protocol shapes" {
   let dynamic = @binschema.tagged(
     @binschema.u8(),
-    fn(tag) {
-      if tag == 1U {
-        Ok(@binschema.u8())
-      } else {
-        Err("unknown tag")
-      }
-    },
+    fn(tag) { if tag == 1U { Ok(@binschema.u8()) } else { Err("unknown tag") } },
     fn(_) { Ok(1U) },
     render=fn(value) { value.to_string() },
   ).named("message")
   let issues = dynamic.lint()
-  assert_true(
-    issues.any(fn(issue) { issue.code == "dynamic-tagged-variants" }),
-  )
+  assert_true(issues.any(fn(issue) { issue.code == "dynamic-tagged-variants" }))
 
-  let duplicate = @binschema.SchemaNode::node(
-    "record",
-    [
-      @binschema.SchemaNode::leaf("u8").with_name("field"),
-      @binschema.SchemaNode::leaf("u16").with_name("field"),
-    ],
-  ).with_name("packet")
+  let duplicate = @binschema.SchemaNode::node("record", [
+    @binschema.SchemaNode::leaf("u8").with_name("field"),
+    @binschema.SchemaNode::leaf("u16").with_name("field"),
+  ]).with_name("packet")
   let duplicate_issues = @binschema.lint_schema(duplicate)
   assert_true(
     duplicate_issues.any(fn(issue) { issue.code == "duplicate-child-name" }),
