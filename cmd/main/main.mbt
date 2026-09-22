@@ -214,7 +214,9 @@ fn lint_format(name : String, json : Bool) -> Result[String, CliError] {
 ///|
 fn lint_command(args : Array[String]) -> Result[String, CliError] {
   if args.length() < 3 || args.length() > 4 {
-    return Err(Usage("用法: binschema lint <png|wav|pcap|bmff|dns|elf> [--json]"))
+    return Err(
+      Usage("用法: binschema lint <png|wav|pcap|bmff|dns|elf> [--json]"),
+    )
   }
   if args.length() == 4 && args[3] != "--json" {
     return Err(Usage("未知参数: " + args[3]))
