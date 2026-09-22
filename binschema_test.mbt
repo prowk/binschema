@@ -501,3 +501,33 @@ test "incremental decoder enforces buffer limits before appending" {
   }
   assert_eq(stream.buffered_bytes(), 2)
 }
+
+
+///|
+test "decoder random access views are bounded and non-consuming" {
+  let limits = @binschema.Limits::new(
+    max_input_bytes=64,
+    max_collection_length=16,
+    max_depth=7,
+    max_output_bytes=64,
+  )
+  let decoder = @binschema.Decoder::new(b"abcdef", limits)
+  assert_eq(decoder.max_depth(), 7)
+  match decoder.view_at(2, 3) {
+    Ok(view) => assert_eq(view.to_owned(), b"cde")
+    Err(error) => fail(error.render())
+  }
+  assert_eq(decoder.offset(), 0)
+  match decoder.take_view(1) {
+    Ok(view) => assert_eq(view.to_owned(), b"a")
+    Err(error) => fail(error.render())
+  }
+  assert_eq(decoder.offset(), 1)
+  match decoder.view_at(0, 2) {
+    Ok(view) => assert_eq(view.to_owned(), b"ab")
+    Err(error) => fail(error.render())
+  }
+  assert_eq(decoder.offset(), 1)
+  assert_true(decoder.view_at(-1, 1) is Err({ kind: @binschema.InvalidValue, .. }))
+  assert_true(decoder.view_at(5, 2) is Err({ kind: @binschema.UnexpectedEof, .. }))
+}
