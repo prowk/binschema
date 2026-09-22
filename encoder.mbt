@@ -61,10 +61,28 @@ fn Encoder::ensure_capacity(
   self : Encoder,
   additional : Int,
 ) -> Result[Unit, BinError] {
-  if additional < 0 || self.length() + additional > self.limits.max_output_bytes {
+  if additional < 0 ||
+    self.length() > self.limits.max_output_bytes ||
+    additional > self.limits.max_output_bytes - self.length() {
     Err(self.error(LimitExceeded, "encoded output exceeds max_output_bytes"))
   } else {
     Ok(())
+  }
+}
+
+///|
+fn Encoder::write_zeroes(self : Encoder, count : Int) -> Result[Unit, BinError] {
+  if self.bit_count != 0 {
+    return Err(self.error(Misaligned, "operation requires byte alignment"))
+  }
+  match self.ensure_capacity(count) {
+    Err(error) => Err(error)
+    Ok(_) => {
+      for _ in 0..<count {
+        self.buffer.write_byte(0U.to_byte())
+      }
+      Ok(())
+    }
   }
 }
 
@@ -94,6 +112,11 @@ pub fn Encoder::write_uint(
 ) -> Result[Unit, BinError] {
   guard width == 1 || width == 2 || width == 4 else {
     return Err(self.error(Unsupported, "UInt width must be 1, 2, or 4"))
+  }
+  if (width == 1 && value > 0xffU) || (width == 2 && value > 0xffffU) {
+    return Err(
+      self.error(InvalidValue, "unsigned value does not fit requested width"),
+    )
   }
   let output : Array[Byte] = []
   match endian {

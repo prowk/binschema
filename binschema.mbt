@@ -46,17 +46,9 @@ pub fn[T] decode_view_with_options(
   match codec.decode_from(decoder) {
     Err(error) => Err(error)
     Ok(value) =>
-      if options.require_eof && decoder.remaining() != 0 {
-        Err(
-          BinError::new(
-            TrailingBytes,
-            decoder.absolute_offset(),
-            decoder.path(),
-            "trailing bytes after decoded value",
-          ),
-        )
-      } else {
-        Ok({ value, consumed: decoder.offset(), trace: decoder.trace(), })
+      match decoder.finish_decode(options.require_eof) {
+        Err(error) => Err(error)
+        Ok(consumed) => Ok({ value, consumed, trace: decoder.trace(), })
       }
   }
 }

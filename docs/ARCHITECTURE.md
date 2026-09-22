@@ -29,7 +29,7 @@ bounded Decoder ──► Codec[T] ──► typed value
 
 - 解码器只能消费当前边界内的字节；`view_at` 允许在同一边界内进行不移动游标的随机借用读取，用于压缩指针与 offset table，越界仍返回结构化错误。
 - `take_view` / `bounded` / `decode_view` 优先使用借用视图；只有调用拥有型 API 时才复制为 `Bytes`。
-- 位读取与字节读取不可在未对齐状态下混用。
+- 位读取与字节读取不可在未对齐状态下混用；byte-framed 顶层/有界值若结束在部分字节，未消费低位必须为零，并将该部分字节计入 consumed。
 - 声明长度在分配/循环前先与运行时和用户上限比较。
 - 默认解码必须消费完整输入。
 - 编码输出始终受到 `max_output_bytes` 限制。
@@ -45,12 +45,12 @@ Web 桥接只导出字符串接口 `inspect_hex` 与 `sample_hex`，避免将 Mo
 
 ## Schema Linter
 
-`lint_schema` 只分析 `SchemaNode`，不执行解码，因此可以在没有样本文件的情况下检查协议结构。首版规则将缺失的局部 `max_length` / `max_count` / 固定边界视为错误，将动态 tagged 分支、`until_eof`、`remaining_*` 与同级重名视为警告。规则输出稳定的 `code`、`severity`、`path` 与 `message`，便于 CLI、CI 和未来的 Web 工具复用。
+`lint_schema` 只分析声明的 `SchemaNode`，不执行解码，因此可以在没有样本文件的情况下检查协议结构。它能检查 metadata 是否声明局部 `max_length` / `max_count` / 固定边界，并对动态 tagged 分支、`until_eof`、`remaining_*` 与同级重名给出提示；但对于手写 `Codec::make`，Schema 由作者声明，linter 不能证明任意 decode/encode 闭包与 metadata 一致。规则输出稳定的 `code`、`severity`、`path` 与 `message`，便于 CLI、CI 和未来的 Web 工具复用。
 
 
 ## 增量与流式解码
 
-完整文件仍使用 `decode` / `decode_view` 的严格 EOF 语义。网络帧或拼接缓冲区可使用 `decode_prefix` 只消费一个值；`probe_decode` 仅将 `UnexpectedEof` 映射为 `NeedMore`，其他错误立即暴露。`IncrementalDecoder` 在此基础上负责累积 chunk、遵守 `max_input_bytes`，成功后只丢弃已消费前缀并保留尾部。依赖“当前区域 EOF”的 `until_eof` / `remaining_*` 不适合作为无边界流式 frame，应该先用协议长度字段建立 `bounded` 区域。
+完整文件仍使用 `decode` / `decode_view` 的严格 EOF 语义。网络帧或拼接缓冲区可使用 `decode_prefix` 只消费一个值；`probe_decode` 仅将 `UnexpectedEof` 映射为 `NeedMore`，其他错误立即暴露。`IncrementalDecoder` 是 buffered/retry framing：它累积 chunk、遵守 `max_input_bytes`，并在 `poll()` 时从当前 frame 缓冲区起点重新运行 codec；成功后只丢弃已消费前缀并保留尾部。它不是 continuation-based parser，因此大量极小 chunk 应先多次 `append()` 再 `poll()`，避免不必要的重复解析。零消费 codec 会被增量 frame 层拒绝。依赖“当前区域 EOF”的 `until_eof` / `remaining_*` 不适合作为无边界流式 frame，应该先用协议长度字段建立 `bounded` 区域。
 
 
 ## ISO BMFF 压力格式

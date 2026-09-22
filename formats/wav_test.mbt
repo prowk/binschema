@@ -91,3 +91,70 @@ test "WAVE encoding enforces collection item limits" {
     is Err({ kind: @bin.LimitExceeded, .. }),
   )
 }
+
+///|
+test "WAVE encoder rejects stale public metadata" {
+  let decoded = match @bin.decode(@formats.wav_codec(), @formats.sample_wav()) {
+    Ok(value) => value.value
+    Err(error) => fail(error.render())
+  }
+  let stale_size = @formats.WavFile::{
+    riff_size: decoded.riff_size + 1U,
+    chunks: decoded.chunks,
+    format: decoded.format,
+  }
+  assert_true(
+    @bin.encode(@formats.wav_codec(), stale_size)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+  let stale_format = @formats.WavFile::{
+    riff_size: decoded.riff_size,
+    chunks: decoded.chunks,
+    format: Some(@formats.WavFormat::{
+      audio_format: 1U,
+      channels: 2U,
+      sample_rate: 8000U,
+      byte_rate: 16000U,
+      block_align: 2U,
+      bits_per_sample: 8U,
+    }),
+  }
+  assert_true(
+    @bin.encode(@formats.wav_codec(), stale_format)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}
+
+///|
+test "WAVE encoder rejects invalid ids and impossible padding metadata" {
+  let fmt = b"\x01\x00\x01\x00\x40\x1f\x00\x00\x40\x1f\x00\x00\x01\x00\x08\x00"
+  let invalid_id = @formats.WavFile::{
+    riff_size: 0U,
+    chunks: [
+      @formats.WavChunk::{ id: "fmt ", data: fmt, padding: None, },
+      @formats.WavChunk::{ id: "\u0001bad", data: b"\x00", padding: None, },
+      @formats.WavChunk::{ id: "data", data: b"\x00", padding: Some(b'\x00'), },
+    ],
+    format: None,
+  }
+  assert_true(
+    @bin.encode(@formats.wav_codec(), invalid_id)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+  let even_padding = @formats.WavFile::{
+    riff_size: 0U,
+    chunks: [
+      @formats.WavChunk::{ id: "fmt ", data: fmt, padding: None, },
+      @formats.WavChunk::{
+        id: "data",
+        data: b"\x00\x01",
+        padding: Some(b'\x00'),
+      },
+    ],
+    format: None,
+  }
+  assert_true(
+    @bin.encode(@formats.wav_codec(), even_padding)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}

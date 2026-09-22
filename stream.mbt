@@ -110,7 +110,32 @@ fn[T] IncrementalDecoder::drop_prefix(
 }
 
 ///|
+/// 仅追加字节，不立即重新解析。大量小 chunk 场景可先批量 append，再 poll，
+/// 避免每个 chunk 都从缓冲区起点重试通用 codec。
+pub fn[T] IncrementalDecoder::append(
+  self : IncrementalDecoder[T],
+  chunk : Bytes,
+) -> Result[Unit, BinError] {
+  if chunk.length() > self.limits.max_input_bytes - self.buffer.length() {
+    return Err(
+      BinError::new(
+        LimitExceeded,
+        self.buffer.length(),
+        "",
+        "incremental buffer exceeds max_input_bytes",
+      ),
+    )
+  }
+  for byte in chunk {
+    self.buffer.push(byte)
+  }
+  Ok(())
+}
+
+///|
 /// 在不追加新数据的情况下尝试解析一个 frame。
+/// 通用 codec 会从当前缓冲区起点重新尝试，因此这属于 buffered/retry framing，
+/// 不是 continuation-based parser。
 pub fn[T] IncrementalDecoder::poll(
   self : IncrementalDecoder[T],
 ) -> DecodeStep[T] {
@@ -121,6 +146,16 @@ pub fn[T] IncrementalDecoder::poll(
       require_eof: false,
     }) {
     Done(decoded) => {
+      if decoded.consumed <= 0 {
+        return Failed(
+          BinError::new(
+            InvalidValue,
+            0,
+            "",
+            "incremental frame codec must consume at least one byte",
+          ),
+        )
+      }
       self.drop_prefix(decoded.consumed)
       Done(decoded)
     }
@@ -135,18 +170,8 @@ pub fn[T] IncrementalDecoder::feed(
   self : IncrementalDecoder[T],
   chunk : Bytes,
 ) -> DecodeStep[T] {
-  if chunk.length() > self.limits.max_input_bytes - self.buffer.length() {
-    return Failed(
-      BinError::new(
-        LimitExceeded,
-        self.buffer.length(),
-        "",
-        "incremental buffer exceeds max_input_bytes",
-      ),
-    )
+  match self.append(chunk) {
+    Err(error) => Failed(error)
+    Ok(_) => self.poll()
   }
-  for byte in chunk {
-    self.buffer.push(byte)
-  }
-  self.poll()
 }

@@ -16,7 +16,7 @@ BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。�
 - **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
 - **高级组合**：提供 `count_prefixed`、`until_eof` 与 `tagged`，覆盖计数数组、流式尾读和标签联合。
 - **零拷贝解码**：`decode_view`、`bytes_view_fixed`、`remaining_view` 与 `checksum_suffix_view` 可直接借用 `BytesView`，有需要时再显式转成拥有型 `Bytes`。
-- **增量帧解析**：`decode_prefix`、`probe_decode` 与 `IncrementalDecoder` 支持分块输入、`NeedMore` 判定和多 frame 尾部保留。
+- **缓冲式增量帧解析**：`decode_prefix`、`probe_decode` 与 `IncrementalDecoder` 支持分块输入、`NeedMore` 判定和多 frame 尾部保留；它是 buffered/retry framing，而不是 continuation-based parser。
 - **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
 - **结构化安全回归**：从真实格式的 Schema/Trace 派生确定性 mutation，覆盖截断、长度膨胀、CRC 损坏和字段边界翻转。
 - **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序/长度/时间戳、ISO BMFF box 长度与扩展头，DNS section count、label 长度和压缩指针边界/方向/深度，以及 ELF32/64、端序、header table 范围、扩展 section numbering 与 section-name string table。
@@ -34,6 +34,14 @@ moon add prowk/binschema
 ```text
 import {
   "prowk/binschema" @bin,
+}
+```
+
+内置真实格式位于独立包中；需要 PNG/WAVE/PCAP/BMFF/DNS/ELF 时再额外导入：
+
+```text
+import {
+  "prowk/binschema/formats" @formats,
 }
 ```
 
@@ -86,7 +94,7 @@ test "README incremental decode" {
 }
 ```
 
-只有 `UnexpectedEof` 会被视为 `NeedMore`；校验失败、非法枚举值等错误会立即返回 `Failed`。依赖当前区域结尾的 `until_eof` / `remaining_*` 应先放进协议定义的有界区域，再用于流式场景。
+只有 `UnexpectedEof` 会被视为 `NeedMore`；校验失败、非法枚举值等错误会立即返回 `Failed`。`IncrementalDecoder` 的通用实现会在 `poll()` 时从当前缓冲区起点重新尝试 codec，因此大量极小 chunk 场景应优先多次 `append()` 后再 `poll()`，减少重复解析。它不是保存解析 continuation 的真正状态机式 streaming parser。依赖当前区域结尾的 `until_eof` / `remaining_*` 应先放进协议定义的有界区域，再用于流式场景。
 
 ## 可复现的自定义协议示例
 
@@ -137,7 +145,20 @@ moon run --target native cmd/main -- inspect sample.elf
 moon run --target native cmd/main -- formats
 ```
 
-CLI 支持 ELF、PNG、WAVE、PCAP、BMFF 与 DNS；`mp4` / `isobmff` 会解析为 BMFF。DNS 因缺少可靠固定 magic，不参与自动识别，需显式使用 `--format dns`。`lint <format>` 会对内置协议的 Schema 执行静态检查；Warning 仅提示风险，Lint Error 会返回数据错误退出码，便于接入 CI。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
+CLI 支持 ELF、PNG、WAVE、PCAP、BMFF 与 DNS；`mp4` / `isobmff` 会解析为 BMFF。DNS 因缺少可靠固定 magic，不参与自动识别，需显式使用 `--format dns`。`lint <format>` 会对内置协议声明的 Schema metadata 执行静态检查；Warning 仅提示风险，Lint Error 会返回数据错误退出码，便于接入 CI。对于自定义 `Codec::make`，linter 不会分析任意 decode/encode 闭包，也不能证明闭包与所声明 Schema 一致。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
+
+## 真实格式支持边界
+
+`formats` 包首先是 BinSchema 架构的 reference implementations / stress cases，而不是六套完整领域库。当前验证重点如下：
+
+- PNG：signature、chunk 结构/顺序、CRC、核心 IHDR 合法性；不宣称实现全部图像语义。
+- WAVE：RIFF 长度、chunk/padding、`fmt ` / `data` 基础一致性；不解码音频 payload。
+- PCAP：全局头、端序、packet 长度、时间戳范围和 snapshot 约束。
+- ISO BMFF：box header、32/64-bit size、`size=0`、`uuid` 与未知 payload 保留；不解析完整媒体语义。
+- DNS：header/question/RR framing 与安全 compression pointer；RDATA 目前保持 raw bytes。
+- ELF：ELF32/64 header、端序、program/section table 范围、扩展 section numbering 和 section names；不解析 symbols、relocations、DWARF 或动态链接语义。
+
+因此 CLI 的 `verify` 表示“在 BinSchema 当前支持的结构规则下可解析且 decode→encode 字节一致”，**不等价于对应标准的完整合规认证**。
 
 ## Web / Wasm-GC 检查器
 

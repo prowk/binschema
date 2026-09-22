@@ -28,10 +28,17 @@ and performance changes that do not alter documented semantics.
 - The public `Format` enum gained `Bmff`, `Dns`, and `Elf`. Exhaustive downstream matches
   over `Format` need corresponding branches.
 - New Decoder random-access APIs, incremental decoding APIs, Schema/Linter APIs, and the new
-  format types are additive.
+  format types are additive. `IncrementalDecoder::append` is also additive and lets callers
+  batch tiny chunks before a retrying `poll()`.
+- Fixed-width unsigned encoders now reject values that do not fit their wire width instead of
+  silently truncating high bits.
+- Byte-framed bit codecs now treat a partially used final byte as consumed only when its unread
+  low bits are zero, matching encoder zero padding. Non-zero final padding bits are rejected.
+- PNG and WAVE encoders now reject inconsistent public metadata instead of silently recomputing
+  and ignoring conflicting values.
 
-Existing canonical encodings for the v0.2.0 core codecs are not intentionally changed by this
-release.
+Existing canonical byte sequences produced by valid v0.2.0 core values are not intentionally
+changed by this release; the tightened cases above concern previously ambiguous or invalid inputs.
 
 ## Backend support
 

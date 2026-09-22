@@ -15,10 +15,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Install MoonBit
+      - name: Install release MoonBit toolchain
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          version_output="$("$HOME/.moon/bin/moon" version --all)"
+          echo "$version_output"
+          echo "$version_output" | grep -q "0.10.14" || {
+            echo "expected MoonBit 0.10.14 release line; review before updating"
+            exit 1
+          }
       - name: Restore dependencies
         run: moon update
       - name: Verify generated interfaces are committed
@@ -71,3 +77,17 @@ jobs:
         run: moon test --target native examples/demo_protocol --deny-warn
       - name: Build Wasm-GC bridge
         run: moon build --target wasm-gc web/bridge --release
+
+
+  latest-toolchain:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install latest MoonBit
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Restore dependencies
+        run: moon update
+      - name: Check forward compatibility
+        run: moon check --target all --deny-warn

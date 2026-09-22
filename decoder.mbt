@@ -103,6 +103,52 @@ pub fn Decoder::view_at(
 }
 
 ///|
+fn Decoder::consumed_bytes(self : Decoder) -> Int {
+  self.offset + (if self.bit_offset == 0 { 0 } else { 1 })
+}
+
+///|
+fn Decoder::trace_end_offset(self : Decoder) -> Int {
+  self.base_offset + self.consumed_bytes()
+}
+
+///|
+/// Finalize a byte-framed decode. Partial final bytes are accepted only when
+/// the unread low bits are zero, matching Encoder::finish zero padding.
+fn Decoder::finish_decode(
+  self : Decoder,
+  require_eof : Bool,
+) -> Result[Int, BinError] {
+  let consumed = self.consumed_bytes()
+  if self.bit_offset != 0 {
+    let unread = 8 - self.bit_offset
+    let mask = (1U << unread) - 1U
+    if (self.input[self.offset].to_uint() & mask) != 0U {
+      return Err(
+        BinError::new(
+          InvalidValue,
+          self.trace_end_offset() - 1,
+          self.field_path,
+          "non-zero padding bits after decoded value",
+        ),
+      )
+    }
+  }
+  if require_eof && consumed != self.input.length() {
+    Err(
+      BinError::new(
+        TrailingBytes,
+        self.base_offset + consumed,
+        self.field_path,
+        "trailing bytes after decoded value",
+      ),
+    )
+  } else {
+    Ok(consumed)
+  }
+}
+
+///|
 pub fn Decoder::depth(self : Decoder) -> Int {
   self.depth
 }

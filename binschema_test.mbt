@@ -19,6 +19,31 @@ test "unsigned integer codecs round-trip in both byte orders" {
 }
 
 ///|
+test "fixed-width unsigned encoders reject truncating values" {
+  assert_true(
+    @binschema.encode(@binschema.u8(), 256U)
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  assert_true(
+    @binschema.encode(@binschema.u16_be(), 65536U)
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  let payload : Array[Byte] = []
+  for _ in 0..<256 {
+    payload.push(0U.to_byte())
+  }
+  let codec = @binschema.length_prefixed(
+    @binschema.u8(),
+    @binschema.bytes_fixed(256),
+    max_length=512,
+  )
+  assert_true(
+    @binschema.encode(codec, Bytes::from_array(payload))
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+}
+
+///|
 test "signed codecs preserve two's-complement values" {
   assert_eq(@binschema.encode(@binschema.i16_le(), -2), Ok(b"\xfe\xff"))
   match @binschema.decode(@binschema.i16_le(), b"\xfe\xff") {
@@ -43,6 +68,35 @@ test "bit fields share bytes and align deterministically" {
   match @binschema.decode(layout, b"\xb1") {
     Ok(decoded) => assert_eq(decoded.value, (5U, 17U))
     Err(error) => fail("unexpected error: \{error.render()}")
+  }
+}
+
+///|
+test "partial bit frames use canonical zero padding" {
+  let codec = @binschema.bits_msb(3).named("flags")
+  assert_eq(@binschema.encode(codec, 5U), Ok(b"\xa0"))
+  match @binschema.decode(codec, b"\xa0") {
+    Ok(decoded) => {
+      assert_eq(decoded.value, 5U)
+      assert_eq(decoded.consumed, 1)
+      assert_eq(decoded.trace[0].start, 0)
+      assert_eq(decoded.trace[0].end, 1)
+    }
+    Err(error) => fail(error.render())
+  }
+  assert_true(
+    @binschema.decode(codec, b"\xa1")
+    is Err({ kind: @binschema.InvalidValue, .. }),
+  )
+  match @binschema.decode_prefix(codec, b"\xa0\xff") {
+    Ok(decoded) => assert_eq(decoded.consumed, 1)
+    Err(error) => fail(error.render())
+  }
+  let bounded = @binschema.bounded(1, @binschema.bits_msb(3))
+  assert_eq(@binschema.encode(bounded, 5U), Ok(b"\xa0"))
+  match @binschema.decode(bounded, b"\xa0") {
+    Ok(decoded) => assert_eq(decoded.value, 5U)
+    Err(error) => fail(error.render())
   }
 }
 
@@ -286,6 +340,22 @@ test "output budgets stop encoding before allocation grows" {
 }
 
 ///|
+test "padding preflights output limits before writing" {
+  let limits = @binschema.Limits::new(
+    max_input_bytes=16,
+    max_collection_length=16,
+    max_depth=4,
+    max_output_bytes=2,
+  )
+  assert_true(
+    @binschema.encode_with_options(@binschema.padding(1_000_000), (), @binschema.EncodeOptions::{
+      limits,
+    })
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
+}
+
+///|
 test "valid checksum suffix round-trips" {
   let sum = fn(bytes : Bytes) {
     let mut value = 0U
@@ -480,6 +550,30 @@ test "incremental decoder retains unconsumed frames across chunks" {
     _ => fail("trailing bytes plus next chunk must form the second frame")
   }
   assert_eq(stream.buffered_bytes(), 0)
+}
+
+///|
+test "incremental decoder supports batched append and rejects zero progress" {
+  let codec = @binschema.pair(@binschema.u16_be(), @binschema.u8())
+  let stream = @binschema.IncrementalDecoder::new(codec)
+  assert_eq(stream.append(b"\x12"), Ok(()))
+  assert_eq(stream.append(b"\x34\x56"), Ok(()))
+  match stream.poll() {
+    @binschema.Done(decoded) => {
+      assert_eq(decoded.value, (0x1234U, 0x56U))
+      assert_eq(decoded.consumed, 3)
+    }
+    _ => fail("batched append must produce one complete frame")
+  }
+  assert_eq(stream.buffered_bytes(), 0)
+
+  let empty = @binschema.IncrementalDecoder::new(
+    @binschema.repeat(0, @binschema.u8()),
+  )
+  match empty.feed(b"\x01") {
+    @binschema.Failed(error) => assert_eq(error.kind, @binschema.InvalidValue)
+    _ => fail("zero-progress frame codecs must be rejected")
+  }
 }
 
 ///|
