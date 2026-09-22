@@ -119,6 +119,7 @@ fn is_allocation_length_field(format : @formats.Format, path : String) -> Bool {
     @formats.Pcap => path.contains(".included_length")
     @formats.Bmff => path.contains(".size") || path.contains(".largesize")
     @formats.Dns => path.contains(".rdlength")
+    @formats.Elf => false
     @formats.Auto => false
   }
 }

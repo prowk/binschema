@@ -95,6 +95,7 @@ pub fn sample_hex(format_name : String) -> String {
     Ok(@formats.Pcap) => @formats.sample_pcap()
     Ok(@formats.Bmff) => @formats.sample_bmff()
     Ok(@formats.Dns) => @formats.sample_dns()
+    Ok(@formats.Elf) => @formats.sample_elf()
     Ok(@formats.Auto) => return error_json("sample format cannot be auto")
     Err(message) => return error_json(message)
   }

@@ -6,7 +6,7 @@ BinSchema 将协议处理划分为四层：
 
 1. `Decoder` / `Encoder` 管理游标、位偏移、缓冲区和资源预算；Decoder 内部持有 `BytesView`，有界子区域默认借用原输入。
 2. `Codec[T]` 封装双向规则，同时携带只读 `SchemaNode` 元数据；组合子会同步组合运行时规则和协议结构。
-3. `formats` 使用同一套公开 API 实现 PNG、WAVE、PCAP、ISO BMFF、DNS，并为手写动态解析器提供显式 Schema 结构描述。
+3. `formats` 使用同一套公开 API 实现 ELF、PNG、WAVE、PCAP、ISO BMFF、DNS，并为手写动态解析器提供显式 Schema 结构描述。
 4. CLI 与 Wasm Web 只依赖统一的 `Inspection`；其中同时包含 `SchemaNode`（静态结构）与 `TraceEntry[]`（本次输入的动态字节轨迹）。
 
 ```text
@@ -61,3 +61,8 @@ ISO BMFF 用作长度驱动容器协议的真实压力样例。`BmffBox` 保留 
 ## DNS 引用型压力格式
 
 DNS 用作“顺序字段 + 包内引用”的真实压力样例。域名主路径仍通过普通 Decoder 顺序消费；遇到 RFC 1035 压缩指针时，使用 `view_at` 在同一报文边界内非消费读取目标。实现要求 pointer 目标严格早于 pointer 本身、所有随机读取必须留在当前 Decoder 区域内，并以 `max_depth` 限制 pointer 跳转链；label 长度限制为 63 octets，展开后的域名限制为 255 octets，四个 section count 在进入循环前与 collection budget 比较。`DnsName` 同时保留展开后的 labels 和本字段原始 wire，因此包含压缩指针的合法报文仍可字节级 roundtrip。RDATA 首版保持 raw bytes，避免在未实现具体 RR TYPE 时做有损解释。
+
+
+## ELF offset-table 压力格式
+
+ELF 用作“固定 header + 文件内 offset table + 跨表字符串引用”的真实压力样例。首版同时支持 ELF32/ELF64 与大小端，验证 `e_phoff` / `e_shoff`、表项大小、表项数量、section payload 范围，以及 `e_shstrndx` 指向的 section-name string table；`e_shnum == 0`、`e_shstrndx == 0xffff` 与扩展 program-header count 会从 section header zero 解析。ELF codec 是字节保真的结构视图：`ElfFile` 同时保存解析后的 metadata 与原始 `raw`，编码前会重新解析 `raw` 并要求 metadata 完全一致，避免用户修改 metadata 后编码器悄悄忽略更改。重定位、符号表和动态链接语义留给后续专门层，不在本阶段做有损解释。
