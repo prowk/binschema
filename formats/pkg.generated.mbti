@@ -11,6 +11,10 @@ pub fn bmff_codec() -> @binschema.Codec[BmffFile]
 
 pub fn detect_format(Bytes) -> Result[Format, @binschema.BinError]
 
+pub fn dns_codec() -> @binschema.Codec[DnsMessage]
+
+pub fn dns_name_uncompressed(Array[Bytes]) -> Result[DnsName, String]
+
 pub fn inspect(Bytes, format? : Format) -> Result[Inspection, @binschema.BinError]
 
 pub fn pcap_codec() -> @binschema.Codec[PcapFile]
@@ -18,6 +22,8 @@ pub fn pcap_codec() -> @binschema.Codec[PcapFile]
 pub fn png_codec() -> @binschema.Codec[PngFile]
 
 pub fn sample_bmff() -> Bytes
+
+pub fn sample_dns() -> Bytes
 
 pub fn sample_pcap() -> Bytes
 
@@ -51,12 +57,58 @@ pub fn BmffFile::not_equal(Self, Self) -> Bool
 pub fn BmffFile::to_json(Self) -> Json
 pub fn BmffFile::to_repr(Self) -> @debug.Repr
 
+pub(all) struct DnsMessage {
+  id : UInt
+  flags : UInt
+  questions : Array[DnsQuestion]
+  answers : Array[DnsRecord]
+  authorities : Array[DnsRecord]
+  additionals : Array[DnsRecord]
+} derive(Eq, ToJson, @debug.Debug)
+pub fn DnsMessage::equal(Self, Self) -> Bool
+pub fn DnsMessage::not_equal(Self, Self) -> Bool
+pub fn DnsMessage::to_json(Self) -> Json
+pub fn DnsMessage::to_repr(Self) -> @debug.Repr
+
+pub(all) struct DnsName {
+  labels : Array[Bytes]
+  wire : Bytes
+} derive(Eq, ToJson, @debug.Debug)
+pub fn DnsName::display(Self) -> String
+pub fn DnsName::equal(Self, Self) -> Bool
+pub fn DnsName::not_equal(Self, Self) -> Bool
+pub fn DnsName::to_json(Self) -> Json
+pub fn DnsName::to_repr(Self) -> @debug.Repr
+
+pub(all) struct DnsQuestion {
+  name : DnsName
+  qtype : UInt
+  qclass : UInt
+} derive(Eq, ToJson, @debug.Debug)
+pub fn DnsQuestion::equal(Self, Self) -> Bool
+pub fn DnsQuestion::not_equal(Self, Self) -> Bool
+pub fn DnsQuestion::to_json(Self) -> Json
+pub fn DnsQuestion::to_repr(Self) -> @debug.Repr
+
+pub(all) struct DnsRecord {
+  name : DnsName
+  rr_type : UInt
+  rr_class : UInt
+  ttl : UInt
+  rdata : Bytes
+} derive(Eq, ToJson, @debug.Debug)
+pub fn DnsRecord::equal(Self, Self) -> Bool
+pub fn DnsRecord::not_equal(Self, Self) -> Bool
+pub fn DnsRecord::to_json(Self) -> Json
+pub fn DnsRecord::to_repr(Self) -> @debug.Repr
+
 pub(all) enum Format {
   Auto
   Png
   Wav
   Pcap
   Bmff
+  Dns
 } derive(Eq, ToJson, @debug.Debug)
 pub fn Format::equal(Self, Self) -> Bool
 pub fn Format::name(Self) -> String
