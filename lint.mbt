@@ -82,11 +82,7 @@ fn lint_issue(
 
 ///|
 fn child_path(parent : String, child : SchemaNode, index : Int) -> String {
-  let segment = if child.name == "" {
-    "#\{index}"
-  } else {
-    child.name
-  }
+  let segment = if child.name == "" { "#\{index}" } else { child.name }
   if parent == "" {
     segment
   } else {
@@ -103,17 +99,16 @@ fn lint_duplicate_child_names(
   for left = 0; left < node.children.length(); left = left + 1 {
     let name = node.children[left].name
     if name != "" {
-      for
-        right = left + 1;
-        right < node.children.length();
-        right = right + 1 {
+      for right = left + 1; right < node.children.length(); right = right + 1 {
         if node.children[right].name == name {
           lint_issue(
             issues,
             "duplicate-child-name",
             LintWarning,
             path,
-            "multiple child fields share the name '" + name + "', which makes traces and generated tooling ambiguous",
+            "multiple child fields share the name '" +
+            name +
+            "', which makes traces and generated tooling ambiguous",
           )
           break
         }
