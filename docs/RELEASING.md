@@ -50,7 +50,7 @@ cross-machine performance guarantee.
 ## 3. Publish
 
 1. Merge the release PR only after the required GitHub Actions `test` check is green.
-2. Create an annotated tag such as `v0.2.0` on the release commit.
+2. Create an annotated tag matching the release version (for example, `v0.3.0` for version `0.3.0`) on the release commit.
 3. Publish the MoonBit module using the normal registry release flow.
 4. Create a GitHub Release from the same tag and copy the relevant changelog section.
 5. Verify a clean consumer project can install the released version and compile a minimal codec.
