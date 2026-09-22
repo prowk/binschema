@@ -13,7 +13,7 @@ test "hex bridge rejects malformed and oversized inputs" {
 
 ///|
 test "exported bridge inspects every built-in sample" {
-  for format in ["png", "wav", "pcap"] {
+  for format in ["png", "wav", "pcap", "bmff"] {
     let hex = sample_hex(format)
     assert_true(!hex.contains(" "))
     let report = inspect_hex("auto", hex)
