@@ -4,6 +4,12 @@
 
 ## 0.3.0 — 2026-09-22
 
+- 修复定宽无符号整数编码的静默截断：`u8` / `u16_*` 现在拒绝超出 wire width 的值，长度前缀也不会写出截断后的长度。
+- 修复非整字节 bit codec 的 byte-frame 对称性：编码零填充的末字节可被完整/前缀/有界解码正确消费，非零尾随 padding bits 会被拒绝。
+- 强化 `padding` 输出预算与增量 framing：零填充在大写入前预检 `max_output_bytes`，`IncrementalDecoder` 拒绝零消费 frame，并新增 `append()` 以便批量小 chunk 后再 `poll()`。
+- 收紧 PNG/WAVE 编码模型：PNG 校验公开 CRC、chunk type 与核心 IHDR 规则；WAVE 校验非零 RIFF size、派生 format metadata、chunk id 与 padding 一致性。
+- 新增不依赖 `sample_*` encoder 的固定 wire golden fixtures，覆盖 PNG、WAVE、PCAP、ISO BMFF、DNS 与 ELF 的独立解析/roundtrip smoke test。
+- 明确 Schema Linter、buffered incremental framing、内置真实格式与 CLI `verify` 的能力边界；发布 CI 固定 MoonBit 0.10.14，并额外检查 latest toolchain 前向兼容。
 - 新增 ELF32/ELF64 字节保真结构检查：支持双端序、program/section header table 边界验证、扩展 section numbering 与 section-name string table 解析，并贯通 Inspector、CLI 与 Web。
 - 新增 DNS 报文格式支持：解析 header/question/RR，保留 raw RDATA 与压缩域名 wire；压缩 pointer 强制包内向后引用并受 `max_depth` 限制，section count/label/展开域名均受资源边界约束，并贯通 CLI、Web Inspector、Schema 与 mutation 回归。
 - Decoder 新增 `view_at(offset, count)` 非消费有界随机读取与 `max_depth()` 预算查询，为 DNS 压缩指针、offset table 等引用型协议提供安全基础。
