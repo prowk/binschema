@@ -61,6 +61,8 @@ pub fn i8() -> Codec[Int]
 
 pub fn[T] length_prefixed(Codec[UInt], Codec[T], max_length? : Int) -> Codec[T]
 
+pub fn lint_schema(SchemaNode) -> Array[LintIssue]
+
 pub fn magic(Bytes) -> Codec[Unit]
 
 pub fn nul_terminated_bytes(max_length? : Int) -> Codec[Bytes]
@@ -125,6 +127,7 @@ pub struct Codec[T] {
 pub fn[T] Codec::decode_from(Self[T], Decoder) -> Result[T, BinError]
 pub fn[T] Codec::describe(Self[T]) -> String
 pub fn[T] Codec::encode_into(Self[T], Encoder, T) -> Result[Unit, BinError]
+pub fn[T] Codec::lint(Self[T]) -> Array[LintIssue]
 pub fn[T] Codec::make((Decoder) -> Result[T, BinError], (Encoder, T) -> Result[Unit, BinError], kind~ : String, render~ : (T) -> String, schema? : SchemaNode) -> Self[T]
 pub fn[T] Codec::named(Self[T], String) -> Self[T]
 pub fn[T] Codec::schema_node(Self[T]) -> SchemaNode
@@ -237,6 +240,28 @@ pub fn Limits::equal(Self, Self) -> Bool
 pub fn Limits::new(max_input_bytes? : Int, max_collection_length? : Int, max_depth? : Int, max_output_bytes? : Int, max_trace_entries? : Int) -> Self
 pub fn Limits::not_equal(Self, Self) -> Bool
 pub fn Limits::to_repr(Self) -> @debug.Repr
+
+pub(all) struct LintIssue {
+  code : String
+  severity : LintSeverity
+  path : String
+  message : String
+} derive(Eq, ToJson, @debug.Debug)
+pub fn LintIssue::equal(Self, Self) -> Bool
+pub fn LintIssue::not_equal(Self, Self) -> Bool
+pub fn LintIssue::render(Self) -> String
+pub fn LintIssue::to_json(Self) -> Json
+pub fn LintIssue::to_repr(Self) -> @debug.Repr
+
+pub(all) enum LintSeverity {
+  LintWarning
+  LintError
+} derive(Eq, ToJson, @debug.Debug)
+pub fn LintSeverity::equal(Self, Self) -> Bool
+pub fn LintSeverity::name(Self) -> String
+pub fn LintSeverity::not_equal(Self, Self) -> Bool
+pub fn LintSeverity::to_json(Self) -> Json
+pub fn LintSeverity::to_repr(Self) -> @debug.Repr
 
 pub(all) struct SchemaNode {
   name : String

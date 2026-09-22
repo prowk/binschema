@@ -6,6 +6,7 @@ let help_text =
   #|  binschema inspect <file> [--format auto|png|wav|pcap] [--json]
   #|  binschema verify  <file> [--format auto|png|wav|pcap]
   #|  binschema sample  <png|wav|pcap> <output>
+  #|  binschema lint    <png|wav|pcap> [--json]
   #|  binschema formats
   #|  binschema --version
 
@@ -160,6 +161,65 @@ fn inspect_command(
 }
 
 ///|
+fn schema_for_format(
+  format : @formats.Format,
+) -> Result[@bin.SchemaNode, CliError] {
+  match format {
+    @formats.Png => Ok(@formats.png_codec().schema_node())
+    @formats.Wav => Ok(@formats.wav_codec().schema_node())
+    @formats.Pcap => Ok(@formats.pcap_codec().schema_node())
+    @formats.Auto => Err(Usage("lint 不支持 auto 格式"))
+  }
+}
+
+///|
+fn lint_format(name : String, json : Bool) -> Result[String, CliError] {
+  let format = match @formats.Format::parse(name) {
+    Ok(value) => value
+    Err(message) => return Err(Usage(message))
+  }
+  let schema = match schema_for_format(format) {
+    Ok(value) => value
+    Err(error) => return Err(error)
+  }
+  let issues = @bin.lint_schema(schema)
+  if json {
+    return Ok(@json.to_json(issues).stringify(indent=2))
+  }
+  let buffer = StringBuilder()
+  buffer.write_string("Schema lint: \{format.name()}\n")
+  let mut error_count = 0
+  let mut warning_count = 0
+  for issue in issues {
+    match issue.severity {
+      @bin.LintError => error_count += 1
+      @bin.LintWarning => warning_count += 1
+    }
+    buffer.write_string("  " + issue.render() + "\n")
+  }
+  buffer.write_string(
+    "结果: \{error_count} errors, \{warning_count} warnings",
+  )
+  let output = buffer.to_string()
+  if error_count > 0 {
+    Err(Data(output))
+  } else {
+    Ok(output)
+  }
+}
+
+///|
+fn lint_command(args : Array[String]) -> Result[String, CliError] {
+  if args.length() < 3 || args.length() > 4 {
+    return Err(Usage("用法: binschema lint <png|wav|pcap> [--json]"))
+  }
+  if args.length() == 4 && args[3] != "--json" {
+    return Err(Usage("未知参数: " + args[3]))
+  }
+  lint_format(args[2], args.length() == 4)
+}
+
+///|
 fn sample_bytes(name : String) -> Result[Bytes, CliError] {
   match @formats.Format::parse(name) {
     Ok(@formats.Png) => Ok(@formats.sample_png())
@@ -197,6 +257,7 @@ fn run(args : Array[String]) -> Result[String, CliError] {
     "inspect" => inspect_command(args, false)
     "verify" => inspect_command(args, true)
     "sample" => sample_command(args)
+    "lint" => lint_command(args)
     "formats" => Ok("支持格式: PNG, WAVE, PCAP")
     "--version" | "-V" => Ok("binschema " + @bin.VERSION)
     "--help" | "-h" | "help" => Ok(help_text)

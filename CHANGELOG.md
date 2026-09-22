@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- 新增 Schema Linter：可检查缺失的局部长度/计数上限、动态 tagged 分支、until-eof/remaining 区域依赖和同级字段重名；CLI 新增 `lint <format> [--json]`。
+
 - Inspector 结果现包含协议 Schema 树，PNG/WAVE/PCAP 提供静态结构描述，Web Inspector 可直接浏览协议层级与约束。
 
 - `Codec[T]` 现携带可检查的 Schema 元数据树，可导出名称、组合结构与约束，并支持稳定文本描述。

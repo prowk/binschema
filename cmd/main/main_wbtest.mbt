@@ -96,3 +96,27 @@ test "CLI verification rejects non-canonical round trips" {
   }
   assert_true(verify_report(report) is Err(Data(_)))
 }
+
+///|
+test "CLI schema lint supports text JSON and validation" {
+  match lint_format("png", false) {
+    Ok(text) => {
+      assert_true(text.contains("Schema lint: png"))
+      assert_true(text.contains("0 errors"))
+    }
+    Err(error) => fail(error.message())
+  }
+  match lint_format("wav", true) {
+    Ok(text) => assert_true(text.contains("["))
+    Err(error) => fail(error.message())
+  }
+  match lint_format("pcap", false) {
+    Ok(text) => assert_true(text.contains("0 errors"))
+    Err(error) => fail(error.message())
+  }
+  assert_true(lint_format("auto", false) is Err(Usage(_)))
+  assert_true(lint_command(["binschema", "lint"]) is Err(Usage(_)))
+  assert_true(
+    lint_command(["binschema", "lint", "png", "--wat"]) is Err(Usage(_)),
+  )
+}

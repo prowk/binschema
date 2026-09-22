@@ -12,6 +12,7 @@ BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。�
 - **双向定义**：同一 `Codec[T]` 同时负责解码和编码，便于验证 `encode(decode(bytes)) == bytes`。
 - **可诊断错误**：错误包含分类、绝对字节偏移、字段路径和稳定的可读消息。
 - **结构追踪**：`.named()` 记录字段的 `[start, end)`、类型和值预览，可直接驱动可视化界面。
+- **Schema 与静态检查**：每个 `Codec[T]` 都能导出结构树，并通过 `lint()` 检查缺失的局部上限、动态分支和区域吞噬等协议风险。
 - **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
 - **高级组合**：提供 `count_prefixed`、`until_eof` 与 `tagged`，覆盖计数数组、流式尾读和标签联合。
 - **零拷贝解码**：`decode_view`、`bytes_view_fixed`、`remaining_view` 与 `checksum_suffix_view` 可直接借用 `BytesView`，有需要时再显式转成拥有型 `Bytes`。
@@ -56,6 +57,8 @@ test "README quick start" {
     Ok(decoded) => {
       assert_eq(decoded.value, value)
       assert_eq(decoded.trace.length(), 3)
+      assert_true(packet.describe().contains("stream_id"))
+      assert_eq(packet.lint().length(), 0)
     }
   }
 }
@@ -101,10 +104,12 @@ moon run --target native cmd/main -- inspect image.png
 moon run --target native cmd/main -- inspect capture.pcap --json
 moon run --target native cmd/main -- verify audio.wav
 moon run --target native cmd/main -- sample png sample.png
+moon run --target native cmd/main -- lint png
+moon run --target native cmd/main -- lint pcap --json
 moon run --target native cmd/main -- formats
 ```
 
-CLI 支持自动识别或通过 `--format png|wav|pcap` 显式指定格式。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
+CLI 支持自动识别或通过 `--format png|wav|pcap` 显式指定格式。`lint <format>` 会对内置协议的 Schema 执行静态检查；Warning 仅提示风险，Lint Error 会返回数据错误退出码，便于接入 CI。输入上限为 64 MiB，并使用稳定退出码区分参数错误、数据错误和 I/O 错误。
 
 ## Web / Wasm-GC 检查器
 
@@ -132,6 +137,7 @@ Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
 
 ```text
 ├─ codec.mbt / decoder.mbt / encoder.mbt  # 安全组合子核心
+├─ schema.mbt / lint.mbt                  # Schema 元数据与静态检查
 ├─ primitives.mbt / varint.mbt            # 定长与变长基础类型
 ├─ formats/                               # PNG / WAVE / PCAP
 ├─ cmd/main/                              # 原生 CLI
