@@ -117,7 +117,11 @@ test "PNG encoder rejects stale CRC and malformed chunk type without panicking" 
   let malformed = @formats.PngFile::{
     chunks: [
       @formats.PngChunk::{ kind: "A", data: b"", crc: 0U, },
-      @formats.PngChunk::{ kind: "IEND", data: b"", crc: decoded.chunks[2].crc, },
+      @formats.PngChunk::{
+        kind: "IEND",
+        data: b"",
+        crc: decoded.chunks[2].crc,
+      },
     ],
   }
   assert_true(
@@ -128,8 +132,7 @@ test "PNG encoder rejects stale CRC and malformed chunk type without panicking" 
 
 ///|
 test "PNG encoder validates core IHDR semantics" {
-  let invalid_ihdr =
-    b"\x00\x00\x00\x01\x00\x00\x00\x01\x03\x02\x00\x00\x00"
+  let invalid_ihdr = b"\x00\x00\x00\x01\x00\x00\x00\x01\x03\x02\x00\x00\x00"
   let invalid = @formats.PngFile::{
     chunks: [
       @formats.PngChunk::{ kind: "IHDR", data: invalid_ihdr, crc: 0U, },
