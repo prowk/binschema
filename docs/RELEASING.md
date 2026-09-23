@@ -32,6 +32,16 @@ moon build --target native examples/custom_packet --release
 moon build --target wasm-gc web/bridge --release
 ```
 
+If `moon coverage analyze` exits with an internal reporter assertion on Windows after the
+coverage-enabled tests pass, verify the instrumented library packages separately:
+
+```bash
+moon coverage analyze -p prowk/binschema
+moon coverage analyze -p prowk/binschema/formats
+```
+
+The aggregate coverage run in the Ubuntu GitHub Actions job remains the release gate.
+
 Inspect `moon package --list` before publishing. The root `.moonignore` is the source of truth
 for repository-only files that must not enter the release archive.
 
