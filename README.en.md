@@ -1,34 +1,29 @@
-# BinSchema
+<div align="center">
 
-[简体中文](README.md) · **English** · [🌐 Online Playground](https://prowk.github.io/binschema/)
+<h1>BinSchema</h1>
+<p><strong>Safe, composable, and explainable binary protocol tooling for MoonBit</strong></p>
+<p>
+  <a href="https://github.com/prowk/binschema/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/prowk/binschema?display_name=tag&amp;sort=semver&amp;style=flat-square"></a>
+  <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
+</p>
+<p><a href="https://prowk.github.io/binschema/">Online Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes documentation</a> · <a href="README.md">简体中文</a> · <strong>English</strong></p>
 
-> Define safe binary decoding and encoding once with a composable `Codec[T]`, while keeping every byte explainable.
+</div>
 
-BinSchema is a MoonBit binary protocol codec library focused on safe defaults, composability,
-diagnostics, and cross-backend consistency. It includes a native CLI, a Wasm-GC browser
-inspector, and real ELF, PNG, WAVE, PCAP, ISO BMFF, and DNS format implementations.
+[![BinSchema Playground — browser-local binary protocol inspection](https://raw.githubusercontent.com/prowk/binschema/main/.github/assets/playground-preview.png)](https://prowk.github.io/binschema/)
 
-## Highlights
+BinSchema defines safe binary decoding and encoding once with a composable `Codec[T]`, while keeping every byte explainable. It combines resource limits, structured errors, field traces, schema metadata, and round-trip verification in one API, backed by a native CLI, a Wasm-GC browser inspector, and real ELF, PNG, WAVE, PCAP, ISO BMFF, and DNS implementations.
 
-- bounded input/output, collection, nesting, and trace budgets;
-- one `Codec[T]` for both decoding and encoding;
-- offset/path-aware structured errors and named-field traces;
-- inspectable `SchemaNode` metadata plus deterministic schema linting;
-- canonical ULEB128/SLEB128 support;
-- higher-level `count_prefixed`, `until_eof`, and `tagged` combinators;
-- zero-copy `BytesView` APIs including `decode_view`, `bytes_view_fixed`, and `remaining_view`;
-- buffered/retry incremental framing with `decode_prefix`, `probe_decode`, and `IncrementalDecoder`;
-- deterministic property-style tests and a fixed malformed/valid binary corpus;
-- validated Wasm, Wasm-GC, JavaScript, and Native library backends;
-- deterministic Schema/Trace-guided mutation regression for truncation, length inflation, checksum damage, and field-boundary flips;
-- byte-exact ISO BMFF box parsing with 32-bit size, 64-bit `largesize`, `size=0`, `uuid` user types, and unknown-payload preservation;
-- DNS message parsing with bounded section counts, 63-octet labels, byte-exact compressed names, backward-only bounded compression pointers, and depth limits;
-- byte-preserving ELF32/ELF64 structural inspection with both byte orders, bounded offset tables, extended section numbering, and section-name resolution.
+| Safety boundaries | Observability | Engineering confidence |
+| --- | --- | --- |
+| Bounded input, output, collections, and nesting | Stable errors with offsets and field paths | One suite across Wasm, Wasm-GC, JavaScript, and Native |
+| Strict EOF, canonical integers, and structural validation | Trace and Schema metadata drive the inspector | Documentation, corpus, mutation, and coverage gates |
 
 ## Install
 
 ```bash
-moon add prowk/binschema
+moon add prowk/binschema@0.3.0
 ```
 
 Import it from your package:
@@ -47,6 +42,8 @@ import {
 }
 ```
 
+## Quick start
+
 A minimal codec:
 
 ```moonbit
@@ -58,6 +55,19 @@ let packet = @bin.pair(
 let schema_text = packet.describe()
 let issues = packet.lint()
 ```
+
+## Core capabilities
+
+- bounded input/output, collection, nesting, and trace budgets;
+- one `Codec[T]` for both decoding and encoding;
+- offset/path-aware structured errors and named-field traces;
+- inspectable `SchemaNode` metadata plus deterministic schema linting;
+- canonical ULEB128/SLEB128 support;
+- higher-level `count_prefixed`, `until_eof`, and `tagged` combinators;
+- zero-copy `BytesView` APIs including `decode_view`, `bytes_view_fixed`, and `remaining_view`;
+- buffered/retry incremental framing with `decode_prefix`, `probe_decode`, and `IncrementalDecoder`;
+- deterministic property-style, corpus, and Schema/Trace-guided mutation regression;
+- byte-exact ISO BMFF, bounded DNS compression, and byte-preserving ELF32/ELF64 structural inspection.
 
 The native CLI also supports `binschema lint <png|wav|pcap|bmff|dns|elf> [--json]`; lint errors can be used as a CI quality gate while warnings remain advisory. The linter checks declared `SchemaNode` metadata; it does not analyze arbitrary `Codec::make` closures or prove that a custom closure matches its declared schema.
 
