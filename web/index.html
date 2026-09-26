@@ -3,83 +3,114 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="BinSchema — 运行于浏览器的安全二进制协议检查器">
-  <title>BinSchema · Binary structure, made visible</title>
+  <meta name="description" content="BinSchema — 在浏览器本地检查二进制协议结构">
+  <meta name="theme-color" content="#f3f6fa">
+  <title>BinSchema · Binary protocol inspector</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#">BIN<span>SCHEMA</span></a>
-    <div class="runtime"><i></i> MOONBIT · WASM-GC</div>
-    <a class="source" href="https://github.com/prowk/binschema">GitHub ↗</a>
+    <a class="brand" href="#top" aria-label="BinSchema home">
+      <span class="brand-mark" aria-hidden="true">BS</span>
+      <span>BinSchema</span>
+    </a>
+    <nav class="topnav" aria-label="Primary navigation" data-i18n-aria="navLabel">
+      <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes</a>
+      <a href="https://github.com/prowk/binschema">GitHub</a>
+      <div class="language-switch" role="group" aria-label="Language" data-i18n-aria="languageLabel">
+        <button type="button" data-language="zh" aria-pressed="true">中文</button>
+        <button type="button" data-language="en" aria-pressed="false">EN</button>
+      </div>
+    </nav>
   </header>
 
-  <main>
-    <section class="hero">
-      <p class="eyebrow">SAFE BINARY PROTOCOL TOOLKIT</p>
-      <h1>看见每一个<br><em>字节的意义。</em></h1>
-      <p class="lede">在浏览器本地解析 ELF、PNG、WAVE、PCAP、ISO BMFF / MP4 与 DNS。无上传、无服务器，字段边界、校验结果和错误偏移一目了然。</p>
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div>
+        <p class="eyebrow" data-i18n="eyebrow">LOCAL-FIRST · WASM-GC · OPEN SOURCE</p>
+        <h1 id="hero-title" data-i18n="heroTitle">让二进制协议<br>清晰、可信、可解释。</h1>
+      </div>
+      <div class="hero-copy">
+        <p data-i18n="heroDescription">在浏览器本地检查 ELF、PNG、WAVE、PCAP、ISO BMFF / MP4 与 DNS。查看字段边界、协议结构与往返校验结果，文件始终留在你的设备上。</p>
+        <div class="capabilities" aria-label="Capabilities" data-i18n-aria="capabilitiesLabel">
+          <span data-i18n="capabilityPrivate">本地处理</span>
+          <span data-i18n="capabilityFormats">6 种格式</span>
+          <span data-i18n="capabilityLimit">16 MiB 上限</span>
+        </div>
+      </div>
     </section>
 
-    <section class="workspace">
-      <div class="controls">
-        <label class="format-label" for="format">格式</label>
-        <select id="format">
-          <option value="auto">自动识别</option>
-          <option value="png">PNG</option>
-          <option value="wav">WAVE</option>
-          <option value="pcap">PCAP</option>
-          <option value="bmff">ISO BMFF / MP4</option>
-          <option value="dns">DNS</option>
-          <option value="elf">ELF</option>
-        </select>
-        <span class="spacer"></span>
-        <span class="samples-label">示例</span>
-        <button class="sample" data-format="png">PNG</button>
-        <button class="sample" data-format="wav">WAVE</button>
-        <button class="sample" data-format="pcap">PCAP</button>
-        <button class="sample" data-format="bmff">BMFF</button>
-        <button class="sample" data-format="dns">DNS</button>
-        <button class="sample" data-format="elf">ELF</button>
-      </div>
-
-      <label id="dropzone" class="dropzone" for="file" tabindex="0" role="button" aria-label="选择或拖入二进制文件，最大 16 MiB">
-        <input id="file" type="file" hidden>
-        <span class="drop-icon">↧</span>
-        <strong>拖入二进制文件</strong>
-        <small>或点击选择 · 最大 16 MiB · 文件只在本机处理</small>
-      </label>
-
-      <div id="error" class="error" role="alert" hidden></div>
-      <div id="status" class="sr-only" role="status" aria-live="polite"></div>
-
-      <section id="result" class="result" hidden>
-        <div class="overview">
-          <div><small>FORMAT</small><strong id="result-format">—</strong></div>
-          <div><small>SIZE</small><strong id="result-size">—</strong></div>
-          <div><small>ROUNDTRIP</small><strong id="result-roundtrip">—</strong></div>
-          <div><small>FIELDS</small><strong id="result-fields">—</strong></div>
+    <section class="workspace" aria-labelledby="workspace-title">
+      <h2 id="workspace-title" class="sr-only" data-i18n="workspaceTitle">二进制协议检查器</h2>
+      <aside class="input-panel" aria-labelledby="input-title">
+        <div class="section-heading">
+          <div><span class="section-index">01</span><h2 id="input-title" data-i18n="inputTitle">选择输入</h2></div>
+          <div id="engine-state" class="engine-state loading" role="status" aria-live="polite"><i aria-hidden="true"></i><span data-i18n="engineLoading">正在加载引擎</span></div>
         </div>
+        <div class="field">
+          <label for="format" data-i18n="formatLabel">解析格式</label>
+          <select id="format" disabled>
+            <option value="auto" data-i18n="formatAuto">自动识别</option>
+            <option value="png">PNG</option><option value="wav">WAVE</option><option value="pcap">PCAP</option>
+            <option value="bmff">ISO BMFF / MP4</option><option value="dns">DNS</option><option value="elf">ELF</option>
+          </select>
+        </div>
+        <div class="field">
+          <span class="field-label" data-i18n="samplesLabel">内置样例</span>
+          <div class="sample-grid">
+            <button class="sample" type="button" data-format="png" disabled>PNG</button><button class="sample" type="button" data-format="wav" disabled>WAVE</button>
+            <button class="sample" type="button" data-format="pcap" disabled>PCAP</button><button class="sample" type="button" data-format="bmff" disabled>BMFF</button>
+            <button class="sample" type="button" data-format="dns" disabled>DNS</button><button class="sample" type="button" data-format="elf" disabled>ELF</button>
+          </div>
+        </div>
+        <label id="dropzone" class="dropzone disabled" for="file" tabindex="-1" role="button" aria-disabled="true" aria-label="选择或拖入二进制文件，最大 16 MiB" data-i18n-aria="dropAria">
+          <input id="file" type="file" hidden disabled>
+          <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          <strong data-i18n="dropTitle">拖放文件或点击浏览</strong><small data-i18n="dropHint">支持单个文件，最大 16 MiB</small>
+        </label>
+        <p class="privacy-note"><span class="privacy-icon" aria-hidden="true">✓</span><span data-i18n="privacyNote">文件仅在此浏览器中处理，不会上传。</span></p>
+        <div id="error" class="error" role="alert" hidden></div>
+        <div id="status" class="sr-only" role="status" aria-live="polite"></div>
+      </aside>
 
-        <div class="panels">
+      <section class="analysis-panel" aria-labelledby="analysis-title">
+        <header class="analysis-header">
+          <div><span class="section-index">02</span><h2 id="analysis-title" data-i18n="analysisTitle">分析结果</h2></div>
+          <span id="file-name" class="file-name" data-i18n="noFile">等待输入</span>
+        </header>
+        <div class="overview" aria-label="Inspection summary" data-i18n-aria="overviewLabel">
+          <div><small data-i18n="metricFormat">格式</small><strong id="result-format">—</strong></div>
+          <div><small data-i18n="metricSize">大小</small><strong id="result-size">—</strong></div>
+          <div><small data-i18n="metricFields">字段</small><strong id="result-fields">—</strong></div>
+          <div><small data-i18n="metricRoundtrip">往返校验</small><strong id="result-roundtrip">—</strong></div>
+        </div>
+        <div id="empty-state" class="empty-state"><span class="empty-mark" aria-hidden="true">{ }</span><strong data-i18n="emptyTitle">正在准备检查器</strong><p data-i18n="emptyDescription">引擎就绪后将自动载入一个 PNG 示例。</p></div>
+        <div id="result" class="result" hidden>
           <article class="panel hex-panel">
-            <header><h2>HEX MAP</h2><span id="file-name">sample.bin</span></header>
-            <div id="hex" class="hex" aria-label="十六进制内容"></div>
+            <header><div><span class="panel-kicker">HEX MAP</span><h3 data-i18n="hexTitle">字节视图</h3></div><span class="panel-hint" data-i18n="hexHint">点击字节定位字段</span></header>
+            <div id="hex" class="hex" aria-label="十六进制内容" data-i18n-aria="hexAria"></div>
           </article>
-          <article class="panel trace-panel">
-            <header><h2>STRUCTURE</h2><span>OFFSET / VALUE</span></header>
+          <article class="panel inspector-panel">
+            <header class="inspector-header">
+              <div><span class="panel-kicker">STRUCTURE</span><h3 data-i18n="structureTitle">协议结构</h3></div>
+              <div class="view-tabs" role="tablist" aria-label="Structure views" data-i18n-aria="viewsLabel">
+                <button id="schema-tab" type="button" role="tab" aria-selected="true" aria-controls="schema-view" data-view="schema" data-i18n="schemaTab">Schema</button>
+                <button id="trace-tab" type="button" role="tab" aria-selected="false" aria-controls="trace-view" data-view="trace" data-i18n="traceTab">Trace</button>
+              </div>
+            </header>
             <div id="summary" class="summary"></div>
-            <div class="structure-label">SCHEMA</div>
-            <div id="schema" class="schema-tree"></div>
-            <div class="structure-label">DECODE TRACE</div>
-            <div id="trace" class="trace"></div>
+            <div id="schema-view" class="structure-view" role="tabpanel" aria-labelledby="schema-tab"><div id="schema" class="schema-tree"></div></div>
+            <div id="trace-view" class="structure-view" role="tabpanel" aria-labelledby="trace-tab" hidden>
+              <div class="trace-head" aria-hidden="true"><span data-i18n="traceOffset">偏移</span><span data-i18n="traceField">字段</span><span data-i18n="traceValue">值</span></div>
+              <div id="trace" class="trace" role="listbox" aria-label="解码字段" data-i18n-aria="traceListLabel"></div>
+            </div>
           </article>
         </div>
       </section>
     </section>
   </main>
-
-  <footer><span>BINSCHEMA 0.3.0</span><span>BUILT WITH MOONBIT</span><span>APACHE-2.0</span></footer>
+  <footer><span>BinSchema v0.3.0</span><span data-i18n="footerText">MoonBit 构建 · Apache-2.0</span></footer>
   <script type="module" src="app.js"></script>
 </body>
 </html>

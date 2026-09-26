@@ -1,32 +1,31 @@
-# BinSchema
+<div align="center">
 
-**简体中文** · [English](README.en.md) · [🌐 在线 Playground](https://prowk.github.io/binschema/)
+<h1>BinSchema</h1>
+<p><strong>安全、可组合、可解释的 MoonBit 二进制协议编解码工具包</strong></p>
+<p>
+  <a href="https://github.com/prowk/binschema/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/prowk/binschema?display_name=tag&amp;sort=semver&amp;style=flat-square"></a>
+  <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
+</p>
+<p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
 
-> 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。
+</div>
 
-BinSchema 是一个用 MoonBit 编写的安全二进制协议编解码框架。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 ELF、PNG、WAVE、PCAP、ISO BMFF 与 DNS 六种真实格式实现。
+[![BinSchema Playground — browser-local binary protocol inspection](https://raw.githubusercontent.com/prowk/binschema/main/.github/assets/playground-preview.png)](https://prowk.github.io/binschema/)
 
-## 特性
+BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 ELF、PNG、WAVE、PCAP、ISO BMFF 与 DNS 六种真实格式实现。
 
-- **安全默认值**：64 MiB 核心输入/输出限制、集合长度上限、嵌套深度上限和严格 EOF 检查。
-- **双向定义**：同一 `Codec[T]` 同时负责解码和编码，便于验证 `encode(decode(bytes)) == bytes`。
-- **可诊断错误**：错误包含分类、绝对字节偏移、字段路径和稳定的可读消息。
-- **结构追踪**：`.named()` 记录字段的 `[start, end)`、类型和值预览，可直接驱动可视化界面。
-- **Schema 与静态检查**：每个 `Codec[T]` 都能导出结构树，并通过 `lint()` 检查缺失的局部上限、动态分支和区域吞噬等协议风险。
-- **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
-- **高级组合**：提供 `count_prefixed`、`until_eof` 与 `tagged`，覆盖计数数组、流式尾读和标签联合。
-- **零拷贝解码**：`decode_view`、`bytes_view_fixed`、`remaining_view` 与 `checksum_suffix_view` 可直接借用 `BytesView`，有需要时再显式转成拥有型 `Bytes`。
-- **缓冲式增量帧解析**：`decode_prefix`、`probe_decode` 与 `IncrementalDecoder` 支持分块输入、`NeedMore` 判定和多 frame 尾部保留；它是 buffered/retry framing，而不是 continuation-based parser。
-- **跨后端验证**：Wasm、Wasm-GC、JavaScript、Native 四后端使用同一套测试。
-- **结构化安全回归**：从真实格式的 Schema/Trace 派生确定性 mutation，覆盖截断、长度膨胀、CRC 损坏和字段边界翻转。
-- **真实格式校验**：检查 PNG CRC 与块顺序、WAVE RIFF 结构、PCAP 字节序/长度/时间戳、ISO BMFF box 长度与扩展头，DNS section count、label 长度和压缩指针边界/方向/深度，以及 ELF32/64、端序、header table 范围、扩展 section numbering 与 section-name string table。
+| 安全边界 | 可观测性 | 工程化验证 |
+| --- | --- | --- |
+| 默认限制输入、输出、集合与嵌套深度 | 错误包含偏移、字段路径与稳定消息 | Wasm、Wasm-GC、JavaScript、Native 四后端一致测试 |
+| 严格 EOF、规范整数与格式结构校验 | Trace 与 Schema 可直接驱动检查器 | 文档测试、固定 corpus、mutation 与 coverage 门禁 |
 
-## 快速开始
+## 安装
 
-在 MoonBit 项目中添加依赖：
+在 MoonBit 项目中添加稳定版本：
 
 ```bash
-moon add prowk/binschema
+moon add prowk/binschema@0.3.0
 ```
 
 并在调用方的 `moon.pkg` 中导入：
@@ -44,6 +43,8 @@ import {
   "prowk/binschema/formats" @formats,
 }
 ```
+
+## 快速开始
 
 下面的快速开始同时是仓库里的可执行文档测试。组合一个带魔数、版本号和 LEB128 流 ID 的协议：
 
@@ -75,6 +76,19 @@ test "README quick start" {
 ```
 
 基础 codec 覆盖有/无符号 8/16/32/64 位整数、大小端、ULEB128、SLEB128、固定字节串、magic、MSB 位域和布尔值。主要组合子包括 `pair`、`repeat`、`count_prefixed`、`until_eof`、`tagged`、`xmap`、`validate`、`bounded`、`length_prefixed`、`optional_if`、`checksum_suffix` 与零拷贝 `checksum_suffix_view`。对于大输入，可用 `decode_view` + `bytes_view_fixed` / `remaining_view` 避免不必要的字节复制。
+
+## 核心能力
+
+- **安全默认值**：64 MiB 核心输入/输出限制、集合长度上限、嵌套深度上限和严格 EOF 检查。
+- **双向定义**：同一 `Codec[T]` 同时负责解码和编码，便于验证 `encode(decode(bytes)) == bytes`。
+- **可诊断错误**：错误包含分类、绝对字节偏移、字段路径和稳定的可读消息。
+- **结构追踪**：`.named()` 记录字段的 `[start, end)`、类型和值预览，可直接驱动可视化界面。
+- **Schema 与静态检查**：每个 `Codec[T]` 都能导出结构树，并通过 `lint()` 检查缺失的局部上限、动态分支和区域吞噬等协议风险。
+- **规范变长整数**：内置安全的 `uleb128()` 与 `sleb128()`，拒绝截断、溢出、超长和非最短编码。
+- **高级组合**：提供 `count_prefixed`、`until_eof` 与 `tagged`，覆盖计数数组、流式尾读和标签联合。
+- **零拷贝解码**：`decode_view`、`bytes_view_fixed`、`remaining_view` 与 `checksum_suffix_view` 可直接借用 `BytesView`，有需要时再显式转成拥有型 `Bytes`。
+- **缓冲式增量帧解析**：`decode_prefix`、`probe_decode` 与 `IncrementalDecoder` 支持分块输入、`NeedMore` 判定和多 frame 尾部保留。
+- **结构化安全回归**：从真实格式的 Schema/Trace 派生确定性 mutation，覆盖截断、长度膨胀、CRC 损坏和字段边界翻转。
 
 ## 增量 / 流式输入
 
