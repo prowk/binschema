@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="BinSchema — 在浏览器本地检查二进制协议结构">
-  <meta name="theme-color" content="#f3f6fa">
+  <meta name="theme-color" content="#fafcfd">
   <title>BinSchema · Binary protocol inspector</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
@@ -27,21 +27,47 @@
 
   <main id="top">
     <section class="hero" aria-labelledby="hero-title">
-      <div>
-        <p class="eyebrow" data-i18n="eyebrow">LOCAL-FIRST · WASM-GC · OPEN SOURCE</p>
-        <h1 id="hero-title" data-i18n="heroTitle">让二进制协议<br>清晰、可信、可解释。</h1>
-      </div>
-      <div class="hero-copy">
-        <p data-i18n="heroDescription">在浏览器本地检查 ELF、PNG、WAVE、PCAP、ISO BMFF / MP4 与 DNS。查看字段边界、协议结构与往返校验结果，文件始终留在你的设备上。</p>
-        <div class="capabilities" aria-label="Capabilities" data-i18n-aria="capabilitiesLabel">
+      <div class="hero-content">
+        <p class="eyebrow">MOONBIT POWERED · OPEN SOURCE</p>
+        <h1 id="hero-title">BinSchema<span class="brand-dot" aria-hidden="true">.</span></h1>
+        <p class="hero-subtitle" data-i18n="heroSubtitle">看清每一个字节</p>
+        <p class="hero-description" data-i18n="heroDescription">在浏览器中解析二进制文件，查看字段边界、协议结构与往返校验。</p>
+        <div class="hero-actions">
+          <a class="button-primary" href="#workspace"><span data-i18n="startInspecting">开始检查</span><span aria-hidden="true">↗</span></a>
+          <a class="button-text" href="https://mooncakes.io/docs/prowk/binschema@0.3.0"><span data-i18n="viewDocs">查看文档</span><span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="capabilities" aria-label="核心能力" data-i18n-aria="capabilitiesLabel">
           <span data-i18n="capabilityPrivate">本地处理</span>
           <span data-i18n="capabilityFormats">6 种格式</span>
           <span data-i18n="capabilityLimit">16 MiB 上限</span>
         </div>
       </div>
+      <div class="hero-art" aria-hidden="true">
+        <svg viewBox="0 0 480 360" fill="none" focusable="false">
+          <g stroke="currentColor" stroke-width="1.2">
+            <path d="M40 94H440M40 158H440M40 222H440M40 286H440" opacity=".18"/>
+            <rect x="56" y="70" width="368" height="224" rx="18" fill="white" fill-opacity=".35" stroke-opacity=".3"/>
+            <rect x="72" y="86" width="112" height="48" rx="7" fill="#e9f8f8" stroke="#31a5b2"/>
+            <rect x="192" y="86" width="216" height="48" rx="7" fill="white" fill-opacity=".5" stroke-opacity=".25"/>
+            <rect x="72" y="146" width="216" height="48" rx="7" fill="white" fill-opacity=".5" stroke-opacity=".25"/>
+            <rect x="296" y="146" width="112" height="48" rx="7" fill="#fff4d8" stroke="#dcb760"/>
+            <rect x="72" y="206" width="336" height="72" rx="7" fill="white" fill-opacity=".5" stroke-opacity=".25"/>
+            <path d="M100 102V118M128 102V118M156 102V118M220 102V118M248 102V118M276 102V118M304 102V118M332 102V118M360 102V118M388 102V118M100 162V178M128 162V178M156 162V178M184 162V178M212 162V178M240 162V178M268 162V178M324 162V178M352 162V178M380 162V178" opacity=".4"/>
+            <path d="M94 229H176M94 245H230M94 261H152M274 229H386M300 245H386M250 261H386" stroke-dasharray="3 8" stroke-linecap="round" opacity=".4"/>
+            <path d="M128 70V38H224M352 194V320H252" stroke="#2897a4"/>
+            <circle cx="128" cy="70" r="3" fill="#2897a4" stroke="none"/>
+            <circle cx="352" cy="194" r="3" fill="#dcb760" stroke="none"/>
+          </g>
+          <g fill="currentColor" font-family="Consolas, monospace" font-size="10" letter-spacing="2">
+            <text x="234" y="42">FIELD BOUNDARIES</text>
+            <text x="76" y="324">BYTES → STRUCTURE</text>
+            <text x="74" y="58" opacity=".55">0x0000</text>
+          </g>
+        </svg>
+      </div>
     </section>
 
-    <section class="workspace" aria-labelledby="workspace-title">
+    <section id="workspace" class="workspace" aria-labelledby="workspace-title" tabindex="-1">
       <h2 id="workspace-title" class="sr-only" data-i18n="workspaceTitle">二进制协议检查器</h2>
       <aside class="input-panel" aria-labelledby="input-title">
         <div class="section-heading">
