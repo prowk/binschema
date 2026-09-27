@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#fafcfd">
   <title>BinSchema · Binary protocol inspector</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=0.3.0">
+  <link rel="stylesheet" href="styles.css?v=0.3.1">
 </head>
 <body>
   <header class="topbar">
@@ -114,7 +114,7 @@
         <div id="empty-state" class="empty-state"><span class="empty-mark" aria-hidden="true">{ }</span><strong data-i18n="emptyTitle">正在准备检查器</strong><p data-i18n="emptyDescription">引擎就绪后将自动载入一个 PNG 示例。</p></div>
         <div id="result" class="result" hidden>
           <article class="panel hex-panel">
-            <header><div><span class="panel-kicker">HEX MAP</span><h3 data-i18n="hexTitle">字节视图</h3></div><span class="panel-hint" data-i18n="hexHint">点击字节定位字段</span></header>
+            <header><div><span class="panel-kicker">HEX MAP</span><h3 data-i18n="hexTitle">字节视图</h3></div><span class="panel-hint" data-i18n="hexHint">点击右侧 Trace 字段定位字节</span></header>
             <div id="hex" class="hex" aria-label="十六进制内容" data-i18n-aria="hexAria"></div>
           </article>
           <article class="panel inspector-panel">
@@ -189,6 +189,6 @@
     </section>
   </main>
   <footer><span>BinSchema v0.3.0</span><span data-i18n="footerText">MoonBit 构建 · Apache-2.0</span></footer>
-  <script type="module" src="app.js?v=0.3.0"></script>
+  <script type="module" src="app.js?v=0.3.1"></script>
 </body>
 </html>

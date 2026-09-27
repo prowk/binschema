@@ -29,10 +29,14 @@ for (const key of translationKeys) {
 }
 
 assert.equal([...html.matchAll(/class="sample"/g)].length, 6, "页面必须提供六种内置样例");
-assert(html.includes('<link rel="stylesheet" href="styles.css?v=0.3.0">'), "缺少带版本标识的本地样式表");
+assert(html.includes('<link rel="stylesheet" href="styles.css?v=0.3.1">'), "缺少带版本标识的本地样式表");
 assert(html.includes('<link rel="icon" href="favicon.svg" type="image/svg+xml">'), "缺少本地图标");
-assert(html.includes('<script type="module" src="app.js?v=0.3.0"></script>'), "缺少带版本标识的本地模块脚本");
+assert(html.includes('<script type="module" src="app.js?v=0.3.1"></script>'), "缺少带版本标识的本地模块脚本");
 assert(!/<script[^>]+src="https?:/i.test(html), "不得加载外部脚本");
 assert(!/<link[^>]+href="https?:/i.test(html), "不得加载外部样式或字体");
+assert(!app.includes('addEventListener("mouseenter"'), "Trace 字段不得通过鼠标悬浮触发字节高亮");
+assert(!app.includes('addEventListener("mouseleave"'), "Trace 字段不得通过鼠标移出改变字节高亮");
+assert(app.includes('$("#trace").addEventListener("click"'), "Trace 字段应使用点击事件委托");
+assert(app.includes("scrollHexToByte(entry.start)"), "点击 Trace 字段后应滚动到对应字节");
 
 console.log(`Static web checks passed: ${ids.length} ids, ${translationKeys.size} translation keys.`);

@@ -12,7 +12,7 @@ const messages = {
     formatLabel: "解析格式", formatAuto: "自动识别", samplesLabel: "内置样例", dropAria: "选择或拖入二进制文件，最大 16 MiB",
     dropTitle: "拖放文件或点击浏览", dropHint: "支持单个文件，最大 16 MiB", privacyNote: "文件仅在此浏览器中处理，不会上传。",
     analysisTitle: "分析结果", noFile: "等待输入", overviewLabel: "检查摘要", metricFormat: "格式", metricSize: "大小", metricFields: "字段", metricRoundtrip: "往返校验",
-    emptyTitle: "正在准备检查器", emptyDescription: "引擎就绪后将自动载入一个 PNG 示例。", hexTitle: "字节视图", hexHint: "点击字节定位字段", hexAria: "十六进制内容",
+    emptyTitle: "正在准备检查器", emptyDescription: "引擎就绪后将自动载入一个 PNG 示例。", hexTitle: "字节视图", hexHint: "点击右侧 Trace 字段定位字节", hexAria: "十六进制内容",
     structureTitle: "协议结构", viewsLabel: "结构视图", schemaTab: "Schema", traceTab: "Trace", traceOffset: "偏移", traceField: "字段", traceValue: "值", traceListLabel: "解码字段",
     featureTitle: "一次定义，贯穿编解码与验证", featureDescription: "上面的检查器不只是十六进制查看器。它直接使用 BinSchema 的 Codec，将协议定义、边界校验、结构描述和字节级追踪连接在一起。",
     featureCodecTitle: "双向 Codec", featureCodecDescription: "同一份组合式定义同时完成安全解码与编码，并用于字节级往返校验。",
@@ -33,7 +33,7 @@ const messages = {
     formatLabel: "Parse as", formatAuto: "Auto detect", samplesLabel: "Built-in samples", dropAria: "Choose or drop a binary file, up to 16 MiB",
     dropTitle: "Drop a file or browse", dropHint: "One file, up to 16 MiB", privacyNote: "Files are processed only in this browser and are never uploaded.",
     analysisTitle: "Analysis", noFile: "Waiting for input", overviewLabel: "Inspection summary", metricFormat: "Format", metricSize: "Size", metricFields: "Fields", metricRoundtrip: "Round trip",
-    emptyTitle: "Preparing the inspector", emptyDescription: "A PNG sample will load automatically when the engine is ready.", hexTitle: "Byte view", hexHint: "Select a byte to locate its field", hexAria: "Hexadecimal content",
+    emptyTitle: "Preparing the inspector", emptyDescription: "A PNG sample will load automatically when the engine is ready.", hexTitle: "Byte view", hexHint: "Select a Trace field to locate its bytes", hexAria: "Hexadecimal content",
     structureTitle: "Protocol structure", viewsLabel: "Structure views", schemaTab: "Schema", traceTab: "Trace", traceOffset: "Offset", traceField: "Field", traceValue: "Value", traceListLabel: "Decoded fields",
     featureTitle: "Define once. Decode, explain, and verify.", featureDescription: "The inspector above is more than a hex viewer. It runs BinSchema codecs directly, connecting protocol definitions, boundary checks, structural metadata, and byte-level traces.",
     featureCodecTitle: "Bidirectional codecs", featureCodecDescription: "One compositional definition safely decodes and encodes data, enabling byte-exact round-trip checks.",
@@ -65,6 +65,7 @@ const state = {
   phase: "loading",
   language: preferredLanguage(),
   pinnedTrace: -1,
+  paintedRange: null,
   errorKey: null,
   errorDetail: "",
 };
@@ -168,60 +169,68 @@ function setView(view) {
   $("#trace-view").hidden = view !== "trace";
 }
 
-function paintRange(start, end, pinned = false) {
-  document.querySelectorAll("#hex span").forEach((node, index) => {
-    const selected = index >= start && index < end;
-    node.classList.toggle("active", selected);
-    node.classList.toggle("pinned", selected && pinned);
-  });
-}
-
-function activateTrace(index, scroll = false) {
-  state.pinnedTrace = index;
-  document.querySelectorAll(".trace-row").forEach((row) => {
-    const active = Number(row.dataset.traceIndex) === index;
-    row.classList.toggle("active", active);
-    row.setAttribute("aria-selected", String(active));
-    if (active && scroll) row.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
-  });
-  if (index < 0 || !state.report) paintRange(-1, -1);
-  else {
-    const entry = state.report.trace[index];
-    paintRange(entry.start, entry.end, true);
+function updateRangeClasses(range, active) {
+  if (!range) return;
+  const bytes = $("#hex").children;
+  const end = Math.min(range.end, bytes.length);
+  for (let index = Math.max(0, range.start); index < end; index += 1) {
+    bytes[index].classList.toggle("active", active);
+    bytes[index].classList.toggle("pinned", active);
   }
 }
 
-function bindTraceInteractions() {
-  document.querySelectorAll(".trace-row").forEach((row) => {
-    const index = Number(row.dataset.traceIndex);
-    row.addEventListener("mouseenter", () => {
-      const entry = state.report.trace[index];
-      paintRange(entry.start, entry.end, state.pinnedTrace === index);
-    });
-    row.addEventListener("mouseleave", () => activateTrace(state.pinnedTrace));
-    row.addEventListener("click", () => activateTrace(state.pinnedTrace === index ? -1 : index));
-    row.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") { event.preventDefault(); row.click(); }
-    });
+function paintRange(start, end) {
+  updateRangeClasses(state.paintedRange, false);
+  state.paintedRange = start >= 0 && end > start ? { start, end } : null;
+  updateRangeClasses(state.paintedRange, true);
+}
+
+function scrollHexToByte(index) {
+  const hex = $("#hex");
+  const byte = hex.children[index];
+  if (!byte) return;
+  const top = byte.getBoundingClientRect().top - hex.getBoundingClientRect().top
+    + hex.scrollTop - (hex.clientHeight - byte.offsetHeight) / 2;
+  hex.scrollTo({
+    top: Math.max(0, top),
+    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
   });
 }
 
-function bindHexInteractions() {
-  document.querySelectorAll("#hex span").forEach((node) => node.addEventListener("click", () => {
-    const byteIndex = Number(node.dataset.index);
-    const candidates = state.report.trace.map((entry, index) => ({ entry, index })).filter(({ entry }) => byteIndex >= entry.start && byteIndex < entry.end);
-    candidates.sort((left, right) => (left.entry.end - left.entry.start) - (right.entry.end - right.entry.start));
-    if (candidates.length > 0) {
-      setView("trace");
-      activateTrace(candidates[0].index, true);
-      $("#trace-tab").focus();
-    }
-  }));
+function activateTrace(index, { scrollHex = false } = {}) {
+  const trace = $("#trace");
+  const previous = trace.querySelector(`[data-trace-index="${state.pinnedTrace}"]`);
+  if (previous) {
+    previous.classList.remove("active");
+    previous.setAttribute("aria-selected", "false");
+  }
+  state.pinnedTrace = index;
+  const active = trace.querySelector(`[data-trace-index="${index}"]`);
+  if (active) {
+    active.classList.add("active");
+    active.setAttribute("aria-selected", "true");
+  }
+  if (index < 0 || !state.report) paintRange(-1, -1);
+  else {
+    const entry = state.report.trace[index];
+    paintRange(entry.start, entry.end);
+    if (scrollHex) scrollHexToByte(entry.start);
+  }
+}
+
+function bindInspectorInteractions() {
+  $("#trace").addEventListener("click", (event) => {
+    const row = event.target.closest(".trace-row");
+    if (!row) return;
+    const index = Number(row.dataset.traceIndex);
+    activateTrace(state.pinnedTrace === index ? -1 : index, { scrollHex: true });
+  });
 }
 
 function render(report) {
   state.report = report;
   state.pinnedTrace = -1;
+  state.paintedRange = null;
   $("#result-format").textContent = report.format;
   $("#result-size").textContent = `${report.size} B`;
   $("#result-fields").textContent = report.trace.length;
@@ -233,8 +242,6 @@ function render(report) {
   $("#schema").innerHTML = renderSchemaNode(report.schema);
   $("#hex").innerHTML = Array.from(state.bytes, (byte, index) => `<span data-index="${index}" title="0x${index.toString(16).padStart(4, "0")}">${byte.toString(16).padStart(2, "0")}</span>`).join(" ");
   $("#trace").innerHTML = report.trace.map((entry, index) => `<button class="trace-row" type="button" role="option" aria-selected="false" data-trace-index="${index}"><span class="offset">${entry.start.toString(16).padStart(4, "0")}</span><span class="path" title="${escapeText(entry.path)}">${escapeText(entry.path || "root")}</span><span class="value" title="${escapeText(entry.value)}">${escapeText(entry.value)}</span></button>`).join("");
-  bindTraceInteractions();
-  bindHexInteractions();
   setView("schema");
   clearError();
   $("#empty-state").hidden = true;
@@ -293,6 +300,7 @@ function bindControls() {
 async function init() {
   applyLanguage(state.language);
   bindControls();
+  bindInspectorInteractions();
   setControlsEnabled(false);
   try {
     await loadWasm();
