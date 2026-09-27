@@ -11,8 +11,6 @@
 
 </div>
 
-[![BinSchema Playground — browser-local binary protocol inspection](https://raw.githubusercontent.com/prowk/binschema/main/.github/assets/playground-preview.png)](https://prowk.github.io/binschema/)
-
 BinSchema defines safe binary decoding and encoding once with a composable `Codec[T]`, while keeping every byte explainable. It combines resource limits, structured errors, field traces, schema metadata, and round-trip verification in one API, backed by a native CLI, a Wasm-GC browser inspector, and real ELF, PNG, WAVE, PCAP, ISO BMFF, and DNS implementations.
 
 | Safety boundaries | Observability | Engineering confidence |
