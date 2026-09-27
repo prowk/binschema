@@ -3,15 +3,13 @@
 <h1>BinSchema</h1>
 <p><strong>安全、可组合、可解释的 MoonBit 二进制协议编解码工具包</strong></p>
 <p>
-  <a href="https://github.com/prowk/binschema/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/prowk/binschema?display_name=tag&amp;sort=semver&amp;style=flat-square"></a>
-  <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
+  <a href="https://github.com/prowk/binschema/releases/latest">Release</a>
+  <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml">CI</a>
+  <a href="LICENSE">License</a>
 </p>
 <p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
 
 </div>
-
-[![BinSchema Playground — browser-local binary protocol inspection](https://raw.githubusercontent.com/prowk/binschema/main/.github/assets/playground-preview.png)](https://prowk.github.io/binschema/)
 
 BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 ELF、PNG、WAVE、PCAP、ISO BMFF 与 DNS 六种真实格式实现。
 

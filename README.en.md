@@ -3,15 +3,13 @@
 <h1>BinSchema</h1>
 <p><strong>Safe, composable, and explainable binary protocol tooling for MoonBit</strong></p>
 <p>
-  <a href="https://github.com/prowk/binschema/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/prowk/binschema?display_name=tag&amp;sort=semver&amp;style=flat-square"></a>
-  <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
+  <a href="https://github.com/prowk/binschema/releases/latest">Release</a>
+  <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml">CI</a>
+  <a href="LICENSE">License</a>
 </p>
 <p><a href="https://prowk.github.io/binschema/">Online Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes documentation</a> · <a href="README.md">简体中文</a> · <strong>English</strong></p>
 
 </div>
-
-[![BinSchema Playground — browser-local binary protocol inspection](https://raw.githubusercontent.com/prowk/binschema/main/.github/assets/playground-preview.png)](https://prowk.github.io/binschema/)
 
 BinSchema defines safe binary decoding and encoding once with a composable `Codec[T]`, while keeping every byte explainable. It combines resource limits, structured errors, field traces, schema metadata, and round-trip verification in one API, backed by a native CLI, a Wasm-GC browser inspector, and real ELF, PNG, WAVE, PCAP, ISO BMFF, and DNS implementations.
 
