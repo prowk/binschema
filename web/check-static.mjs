@@ -29,9 +29,9 @@ for (const key of translationKeys) {
 }
 
 assert.equal([...html.matchAll(/class="sample"/g)].length, 6, "页面必须提供六种内置样例");
-assert(html.includes('<link rel="stylesheet" href="styles.css">'), "缺少本地样式表");
+assert(html.includes('<link rel="stylesheet" href="styles.css?v=0.3.0">'), "缺少带版本标识的本地样式表");
 assert(html.includes('<link rel="icon" href="favicon.svg" type="image/svg+xml">'), "缺少本地图标");
-assert(html.includes('<script type="module" src="app.js"></script>'), "缺少本地模块脚本");
+assert(html.includes('<script type="module" src="app.js?v=0.3.0"></script>'), "缺少带版本标识的本地模块脚本");
 assert(!/<script[^>]+src="https?:/i.test(html), "不得加载外部脚本");
 assert(!/<link[^>]+href="https?:/i.test(html), "不得加载外部样式或字体");
 

@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#fafcfd">
   <title>BinSchema · Binary protocol inspector</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=0.3.0">
 </head>
 <body>
   <header class="topbar">
@@ -135,8 +135,60 @@
         </div>
       </section>
     </section>
+
+    <section class="feature-story" aria-labelledby="feature-title">
+      <header class="feature-intro">
+        <div>
+          <p class="eyebrow">CODEC → SCHEMA → TRACE</p>
+          <h2 id="feature-title" data-i18n="featureTitle">一次定义，贯穿编解码与验证</h2>
+        </div>
+        <p data-i18n="featureDescription">上面的检查器不只是十六进制查看器。它直接使用 BinSchema 的 Codec，将协议定义、边界校验、结构描述和字节级追踪连接在一起。</p>
+      </header>
+
+      <div class="feature-grid">
+        <article class="feature-card">
+          <span class="feature-index">01</span>
+          <h3 data-i18n="featureCodecTitle">双向 Codec</h3>
+          <p data-i18n="featureCodecDescription">同一份组合式定义同时完成安全解码与编码，并用于字节级往返校验。</p>
+          <code>encode ↔ decode</code>
+        </article>
+        <article class="feature-card">
+          <span class="feature-index">02</span>
+          <h3 data-i18n="featureSafetyTitle">边界优先</h3>
+          <p data-i18n="featureSafetyDescription">输入、输出、集合、嵌套与追踪均有资源上限，错误保留偏移和字段路径。</p>
+          <code>Limits + BinError</code>
+        </article>
+        <article class="feature-card">
+          <span class="feature-index">03</span>
+          <h3 data-i18n="featureExplainTitle">结构可解释</h3>
+          <p data-i18n="featureExplainDescription">Schema 描述协议结构，Trace 将每个字段映射回准确的字节范围。</p>
+          <code>Schema + Trace</code>
+        </article>
+        <article class="feature-card">
+          <span class="feature-index">04</span>
+          <h3 data-i18n="featureStreamTitle">面向真实输入</h3>
+          <p data-i18n="featureStreamDescription">支持增量帧解析、零拷贝视图和 Schema lint，适合流式及大输入场景。</p>
+          <code>NeedMore + BytesView</code>
+        </article>
+      </div>
+
+      <div class="code-showcase">
+        <div class="code-copy">
+          <span class="panel-kicker">COMPOSITIONAL API</span>
+          <h3 data-i18n="codeTitle">像搭积木一样描述协议</h3>
+          <p data-i18n="codeDescription">基础类型、字段命名和组合子共同生成可执行协议；检查器中的 Schema、Trace 与往返结果都来自同一棵 Codec 树。</p>
+          <div class="api-tags" aria-label="扩展能力" data-i18n-aria="apiTagsLabel">
+            <span>Schema lint</span><span data-i18n="apiStructuredErrors">结构化错误</span><span data-i18n="apiIncremental">增量解码</span><span data-i18n="apiZeroCopy">零拷贝视图</span>
+          </div>
+        </div>
+        <pre aria-label="MoonBit codec example" data-i18n-aria="codeAria"><code><span class="code-keyword">let</span> packet = @binschema.pair(
+  @binschema.magic(b<span class="code-string">"BS"</span>).named(<span class="code-string">"magic"</span>),
+  @binschema.uleb128().named(<span class="code-string">"stream_id"</span>),
+)</code></pre>
+      </div>
+    </section>
   </main>
   <footer><span>BinSchema v0.3.0</span><span data-i18n="footerText">MoonBit 构建 · Apache-2.0</span></footer>
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=0.3.0"></script>
 </body>
 </html>
