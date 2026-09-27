@@ -11,8 +11,6 @@
 
 </div>
 
-[![BinSchema Playground — browser-local binary protocol inspection](https://raw.githubusercontent.com/prowk/binschema/main/.github/assets/playground-preview.png)](https://prowk.github.io/binschema/)
-
 BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，并让每个字节都可解释。它将边界检查、资源限制、字段路径、偏移追踪和往返验证统一在同一套 API 中，并附带原生 CLI、Wasm-GC 浏览器检查器以及 ELF、PNG、WAVE、PCAP、ISO BMFF 与 DNS 六种真实格式实现。
 
 | 安全边界 | 可观测性 | 工程化验证 |

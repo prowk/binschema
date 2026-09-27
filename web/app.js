@@ -5,8 +5,8 @@ const $ = (selector) => document.querySelector(selector);
 const messages = {
   zh: {
     navLabel: "主导航", languageLabel: "语言", eyebrow: "LOCAL-FIRST · WASM-GC · OPEN SOURCE",
-    heroTitle: "让二进制协议<br>清晰、可信、可解释。",
-    heroDescription: "在浏览器本地检查 ELF、PNG、WAVE、PCAP、ISO BMFF / MP4 与 DNS。查看字段边界、协议结构与往返校验结果，文件始终留在你的设备上。",
+    heroSubtitle: "看清每一个字节", startInspecting: "开始检查", viewDocs: "查看文档",
+    heroDescription: "在浏览器中解析二进制文件，查看字段边界、协议结构与往返校验。",
     capabilitiesLabel: "核心能力", capabilityPrivate: "本地处理", capabilityFormats: "6 种格式", capabilityLimit: "16 MiB 上限",
     workspaceTitle: "二进制协议检查器", inputTitle: "选择输入", engineLoading: "正在加载引擎", engineReady: "引擎已就绪", engineBusy: "正在解析", engineFailed: "引擎不可用",
     formatLabel: "解析格式", formatAuto: "自动识别", samplesLabel: "内置样例", dropAria: "选择或拖入二进制文件，最大 16 MiB",
@@ -19,8 +19,8 @@ const messages = {
   },
   en: {
     navLabel: "Primary navigation", languageLabel: "Language", eyebrow: "LOCAL-FIRST · WASM-GC · OPEN SOURCE",
-    heroTitle: "Binary protocols,<br>clear and explainable.",
-    heroDescription: "Inspect ELF, PNG, WAVE, PCAP, ISO BMFF / MP4, and DNS locally in your browser. See field boundaries, protocol structure, and round-trip validation without sending files anywhere.",
+    heroSubtitle: "Clarity in every byte", startInspecting: "Start inspecting", viewDocs: "Read the docs",
+    heroDescription: "Inspect binary files in your browser. Explore field boundaries, protocol structure, and round-trip validation.",
     capabilitiesLabel: "Core capabilities", capabilityPrivate: "Local processing", capabilityFormats: "6 formats", capabilityLimit: "16 MiB limit",
     workspaceTitle: "Binary protocol inspector", inputTitle: "Choose input", engineLoading: "Loading engine", engineReady: "Engine ready", engineBusy: "Inspecting", engineFailed: "Engine unavailable",
     formatLabel: "Parse as", formatAuto: "Auto detect", samplesLabel: "Built-in samples", dropAria: "Choose or drop a binary file, up to 16 MiB",
@@ -87,8 +87,7 @@ function applyLanguage(language, persist = false) {
   document.querySelectorAll("[data-language]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.language === language)));
   document.querySelectorAll("[data-i18n]").forEach((element) => {
     const key = element.dataset.i18n;
-    if (key === "heroTitle") element.innerHTML = t(key);
-    else element.textContent = t(key);
+    element.textContent = t(key);
   });
   document.querySelectorAll("[data-i18n-aria]").forEach((element) => element.setAttribute("aria-label", t(element.dataset.i18nAria)));
   $("#file-name").textContent = state.name || t("noFile");
@@ -169,7 +168,7 @@ function activateTrace(index, scroll = false) {
     const active = Number(row.dataset.traceIndex) === index;
     row.classList.toggle("active", active);
     row.setAttribute("aria-selected", String(active));
-    if (active && scroll) row.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (active && scroll) row.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
   });
   if (index < 0 || !state.report) paintRange(-1, -1);
   else {
