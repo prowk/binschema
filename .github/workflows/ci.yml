@@ -21,10 +21,16 @@ jobs:
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
           version_output="$("$HOME/.moon/bin/moon" version --all)"
           echo "$version_output"
-          echo "$version_output" | grep -q "0.10.14" || {
-            echo "expected MoonBit 0.10.14 release line; review before updating"
+          minimum_moonc_version="0.10.14"
+          moonc_version="$(printf '%s\n' "$version_output" | sed -n 's/^moonc v\([0-9][0-9.]*\).*/\1/p')"
+          test -n "$moonc_version" || {
+            echo "unable to determine moonc version"
             exit 1
           }
+          if [ "$(printf '%s\n%s\n' "$minimum_moonc_version" "$moonc_version" | sort -V | head -n 1)" != "$minimum_moonc_version" ]; then
+            echo "moonc $moonc_version is older than required $minimum_moonc_version"
+            exit 1
+          fi
       - name: Restore dependencies
         run: moon update
       - name: Verify generated interfaces are committed
