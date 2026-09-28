@@ -14,6 +14,7 @@
 # Keep only user-facing architecture, security, compatibility, and release docs.
 docs/*
 !/docs/ARCHITECTURE.md
+!/docs/ACCEPTANCE.md
 !/docs/SECURITY.md
 !/docs/COMPATIBILITY.md
 !/docs/RELEASING.md

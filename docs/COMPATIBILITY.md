@@ -2,6 +2,13 @@
 
 BinSchema follows Semantic Versioning for published MoonBit module releases.
 
+## Toolchain support
+
+BinSchema requires `moonc >= 0.10.14`. The release CI parses the installed compiler version and
+rejects older toolchains, while a separate job checks forward compatibility with the latest
+MoonBit release. Raising the minimum supported compiler version is a compatibility change and
+must be documented in the changelog and README.
+
 ## Public API
 
 The generated `pkg.generated.mbti` files are the reviewable public API snapshot. CI runs

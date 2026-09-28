@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#fafcfd">
   <title>BinSchema · Binary protocol inspector</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=0.3.1">
+  <link rel="stylesheet" href="styles.css?v=0.3.3">
 </head>
 <body>
   <header class="topbar">
@@ -90,11 +90,20 @@
             <button class="sample" type="button" data-format="dns" disabled>DNS</button><button class="sample" type="button" data-format="elf" disabled>ELF</button>
           </div>
         </div>
-        <label id="dropzone" class="dropzone disabled" for="file" tabindex="-1" role="button" aria-disabled="true" aria-label="选择或拖入二进制文件，最大 16 MiB" data-i18n-aria="dropAria">
+        <div id="dropzone" class="dropzone disabled" aria-disabled="true">
           <input id="file" type="file" hidden disabled>
-          <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-          <strong data-i18n="dropTitle">拖放文件或点击浏览</strong><small data-i18n="dropHint">支持单个文件，最大 16 MiB</small>
-        </label>
+          <button id="drop-prompt" class="drop-prompt" type="button" aria-label="选择或拖入二进制文件，最大 16 MiB" disabled>
+            <span class="drop-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 18h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+            <strong data-i18n="dropTitle">拖放文件或点击浏览</strong><small data-i18n="dropHint">支持单个文件，最大 16 MiB</small>
+          </button>
+          <div id="uploaded-file" class="uploaded-file" role="status" aria-live="polite" hidden>
+            <span class="uploaded-file-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M7 3.5h7l4 4V20.5H7zM14 3.5v4h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
+            <span class="uploaded-file-copy"><strong id="uploaded-file-name"></strong><small id="uploaded-file-meta"></small></span>
+            <button id="clear-file" class="clear-file" type="button" aria-label="取消选择" title="取消选择" disabled>
+              <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
         <p class="privacy-note"><span class="privacy-icon" aria-hidden="true">✓</span><span data-i18n="privacyNote">文件仅在此浏览器中处理，不会上传。</span></p>
         <div id="error" class="error" role="alert" hidden></div>
         <div id="status" class="sr-only" role="status" aria-live="polite"></div>
@@ -114,7 +123,7 @@
         <div id="empty-state" class="empty-state"><span class="empty-mark" aria-hidden="true">{ }</span><strong data-i18n="emptyTitle">正在准备检查器</strong><p data-i18n="emptyDescription">引擎就绪后将自动载入一个 PNG 示例。</p></div>
         <div id="result" class="result" hidden>
           <article class="panel hex-panel">
-            <header><div><span class="panel-kicker">HEX MAP</span><h3 data-i18n="hexTitle">字节视图</h3></div><span class="panel-hint" data-i18n="hexHint">点击右侧 Trace 字段定位字节</span></header>
+            <header><div><span class="panel-kicker">HEX MAP</span><h3 data-i18n="hexTitle">字节视图</h3></div><span class="panel-hint" data-i18n="hexHint">点击字节或右侧 Trace 字段双向定位</span></header>
             <div id="hex" class="hex" aria-label="十六进制内容" data-i18n-aria="hexAria"></div>
           </article>
           <article class="panel inspector-panel">
@@ -189,6 +198,6 @@
     </section>
   </main>
   <footer><span>BinSchema v0.3.0</span><span data-i18n="footerText">MoonBit 构建 · Apache-2.0</span></footer>
-  <script type="module" src="app.js?v=0.3.1"></script>
+  <script type="module" src="app.js?v=0.3.3"></script>
 </body>
 </html>

@@ -20,6 +20,8 @@ BinSchema defines safe binary decoding and encoding once with a composable `Code
 
 ## Install
 
+BinSchema requires the MoonBit compiler `moonc >= 0.10.14`. Run `moon version --all` to inspect the installed toolchain; see the [official installation guide](https://www.moonbitlang.com/download/) to install or update MoonBit.
+
 ```bash
 moon add prowk/binschema@0.3.0
 ```
@@ -109,6 +111,8 @@ python -m http.server 4173 --directory web
 ```
 
 The browser processes files locally and does not upload them.
+
+For a criterion-by-criterion verification map, see the [acceptance checklist](docs/ACCEPTANCE.md).
 
 ## License
 

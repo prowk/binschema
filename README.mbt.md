@@ -20,6 +20,8 @@ BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，�
 
 ## 安装
 
+需要 MoonBit 编译器 `moonc >= 0.10.14`。可用 `moon version --all` 查看当前工具链版本；MoonBit 的安装与更新方式见[官方安装指南](https://www.moonbitlang.com/download/)。
+
 在 MoonBit 项目中添加稳定版本：
 
 ```bash
@@ -229,7 +231,7 @@ cmp README.md README.mbt.md
 
 测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、确定性 property roundtrip、固定二进制 corpus、基于 Schema/Trace 的结构化 mutation、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会在四后端执行这些测试，并验证示例构建、覆盖率流程和 README 同步。
 
-更多设计细节见 [架构说明](docs/ARCHITECTURE.md)、[安全模型](docs/SECURITY.md)、[兼容性策略](docs/COMPATIBILITY.md) 与 [发布流程](docs/RELEASING.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
+更多设计细节见 [验收清单](docs/ACCEPTANCE.md)、[架构说明](docs/ARCHITECTURE.md)、[安全模型](docs/SECURITY.md)、[兼容性策略](docs/COMPATIBILITY.md) 与 [发布流程](docs/RELEASING.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
 
 ## License
 
