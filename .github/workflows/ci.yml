@@ -123,11 +123,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             binutils file pngcheck sox tcpdump
           python3 --version
-          file --version
-          readelf --version | head -n 1
-          pngcheck -V
-          soxi --version
-          tcpdump --version
+          dpkg-query -W binutils file pngcheck sox tcpdump
       - name: Restore dependencies
         run: moon update
       - name: Cross-check generated reference vectors
