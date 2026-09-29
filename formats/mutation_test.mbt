@@ -55,7 +55,14 @@ fn structured_mutation_result(
       }
     Err(error) =>
       if error.offset < 0 || error.offset > input.length() {
-        Err("structured error offset escaped the mutated input bounds")
+        Err(
+          "structured error offset " +
+          error.offset.to_string() +
+          " escaped input length " +
+          input.length().to_string() +
+          " at " +
+          error.path,
+        )
       } else if error.render().length() == 0 {
         Err("structured error rendering must not be empty")
       } else {
@@ -119,7 +126,7 @@ fn is_allocation_length_field(format : @formats.Format, path : String) -> Bool {
     @formats.Pcap => path.contains(".included_length")
     @formats.Bmff => path.contains(".size") || path.contains(".largesize")
     @formats.Dns => path.contains(".rdlength")
-    @formats.Elf => false
+    @formats.Elf => path.contains("section_header_count")
     @formats.Auto => false
   }
 }
@@ -164,6 +171,7 @@ test "mutation: field-boundary truncations stay structured on all formats" {
       (@formats.sample_pcap(), @formats.Pcap),
       (@formats.sample_bmff(), @formats.Bmff),
       (@formats.sample_dns(), @formats.Dns),
+      (@formats.sample_elf(), @formats.Elf),
     ] {
     match trace_truncations_are_structured(input, format) {
       Ok(_) => ()
@@ -181,6 +189,7 @@ test "mutation: allocation length inflation stays rejected" {
       (@formats.sample_pcap(), @formats.Pcap),
       (@formats.sample_bmff(), @formats.Bmff),
       (@formats.sample_dns(), @formats.Dns),
+      (@formats.sample_elf(), @formats.Elf),
     ] {
     match length_expansion_is_rejected(input, format) {
       Ok(_) => ()
@@ -223,6 +232,7 @@ test "mutation: first-byte field flips never escape structured outcomes" {
       (@formats.sample_pcap(), @formats.Pcap),
       (@formats.sample_bmff(), @formats.Bmff),
       (@formats.sample_dns(), @formats.Dns),
+      (@formats.sample_elf(), @formats.Elf),
     ] {
     let report = match mutation_report(input, format) {
       Ok(value) => value
@@ -245,4 +255,53 @@ test "mutation: first-byte field flips never escape structured outcomes" {
     }
     assert_true(cases > 0)
   }
+}
+
+///|
+fn deterministic_mutation_campaign(
+  input : Bytes,
+  format : @formats.Format,
+) -> Result[Int, String] {
+  if input.length() == 0 {
+    return Err("mutation seed must not be empty")
+  }
+  let masks = [1U, 0x80U, 0xffU]
+  let cases = if input.length() < 64 { input.length() } else { 64 }
+  let mut executed = 0
+  for case_index in 0..<cases {
+    let position = (case_index * 37 + 11) % input.length()
+    for mask in masks {
+      let mutated = mutation_replace_byte(
+        input,
+        position,
+        (input[position].to_uint() ^ mask).to_byte(),
+      )
+      match structured_mutation_result(mutated, format) {
+        Ok(_) => ()
+        Err(message) => return Err(message)
+      }
+      executed += 1
+    }
+  }
+  Ok(executed)
+}
+
+///|
+test "mutation: deterministic smoke campaign covers every built-in format" {
+  let mut total = 0
+  for
+    (input, format) in [
+      (@formats.sample_png(), @formats.Png),
+      (@formats.sample_wav(), @formats.Wav),
+      (@formats.sample_pcap(), @formats.Pcap),
+      (@formats.sample_bmff(), @formats.Bmff),
+      (@formats.sample_dns(), @formats.Dns),
+      (@formats.sample_elf(), @formats.Elf),
+    ] {
+    match deterministic_mutation_campaign(input, format) {
+      Ok(count) => total += count
+      Err(message) => fail(message)
+    }
+  }
+  assert_true(total >= 600)
 }

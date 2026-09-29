@@ -105,6 +105,8 @@ fn elf_need(
         @bin.UnexpectedEof,
         if offset < 0 {
           0
+        } else if offset > input.length() {
+          input.length()
         } else {
           offset
         },
@@ -224,7 +226,7 @@ fn elf_range(
     return Err(
       elf_error(
         @bin.UnexpectedEof,
-        if offset > 0x7fffffffUL {
+        if offset > total {
           input_length
         } else {
           offset.to_int()
@@ -376,7 +378,7 @@ fn elf_string_at(
   table : BytesView,
   offset : UInt,
   file_offset : Int,
-) -> Result[String, @bin.BinError] {
+) -> Result[(String, Int), @bin.BinError] {
   let start = offset.reinterpret_as_int()
   if start < 0 || start >= table.length() {
     return Err(
@@ -389,7 +391,7 @@ fn elf_string_at(
     )
   }
   if start == 0 {
-    return Ok("")
+    return Ok(("", 0))
   }
   let bytes : Array[Byte] = []
   let mut index = start
@@ -407,7 +409,7 @@ fn elf_string_at(
       ),
     )
   }
-  Ok(@utf8.decode_lossy(Bytes::from_array(bytes)[:]))
+  Ok((@utf8.decode_lossy(Bytes::from_array(bytes)[:]), bytes.length()))
 }
 
 ///|
@@ -633,7 +635,11 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
       return Err(
         elf_error(
           @bin.UnexpectedEof,
-          table_offset,
+          if table_offset > input.length() {
+            input.length()
+          } else {
+            table_offset
+          },
           "sections.0",
           "ELF section header zero exceeds file bounds",
         ),
@@ -761,6 +767,9 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
           ),
         )
       }
+      let name_cache : @hashmap.HashMap[UInt, String] = @hashmap.HashMap([])
+      let mut expanded_name_bytes = 0UL
+      let expanded_name_limit = table.length().to_uint64() * 2UL
       for index in 0..<sections.length() {
         let section = sections[index]
         let name = if table.length() == 0 {
@@ -777,9 +786,29 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
             )
           }
         } else {
-          match elf_string_at(table, section.name_offset, string_offset) {
-            Ok(value) => value
-            Err(error) => return Err(error)
+          match name_cache.get(section.name_offset) {
+            Some(value) => value
+            None =>
+              match elf_string_at(table, section.name_offset, string_offset) {
+                Ok((value, source_length)) => {
+                  let source_length_u64 = source_length.to_uint64()
+                  if source_length_u64 >
+                    expanded_name_limit - expanded_name_bytes {
+                    return Err(
+                      elf_error(
+                        @bin.LimitExceeded,
+                        string_offset,
+                        "sections.name",
+                        "ELF section-name expansion exceeds the string-table budget",
+                      ),
+                    )
+                  }
+                  expanded_name_bytes += source_length_u64
+                  name_cache[section.name_offset] = value
+                  value
+                }
+                Err(error) => return Err(error)
+              }
           }
         }
         sections[index] = {
@@ -801,7 +830,17 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
 
   let program_header_count = if raw_program_header_count == 0xffffU {
     match section_zero {
-      Some(zero) => zero.info.reinterpret_as_int()
+      Some(zero) =>
+        match
+          elf_bounded_int(
+            elf_uint_as_u64(zero.info),
+            header_size_offset + 4,
+            "program_header_count",
+            "extended ELF program-header count",
+          ) {
+          Ok(value) => value
+          Err(error) => return Err(error)
+        }
       None =>
         return Err(
           elf_error(

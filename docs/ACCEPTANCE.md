@@ -30,8 +30,9 @@
 
 ## 5. 持续集成
 
-- [GitHub Actions CI](https://github.com/prowk/binschema/actions/workflows/ci.yml) 覆盖接口同步、文档生成、发布包审计、格式检查、四后端检查与测试、覆盖率、示例、CLI 和 Wasm-GC 构建。
+- [GitHub Actions CI](https://github.com/prowk/binschema/actions/workflows/ci.yml) 覆盖接口同步、文档生成、发布包审计、格式检查、四后端检查与测试、外部参考工具、mutation fuzz、资源压力检查、覆盖率、示例、CLI 和 Wasm-GC 构建。
 - `latest-toolchain` 作业额外验证最新 MoonBit 工具链的前向兼容性。
+- [持续验证工作流](https://github.com/prowk/binschema/actions/workflows/continuous-verification.yml) 每周运行固定回归 seed 与按 run id 推导的动态 seed，并归档带环境信息的性能和峰值内存记录。
 - Pages 工作流从源码重建并部署浏览器演示站。
 
 ## 6. 可运行示例
@@ -51,10 +52,11 @@ moon run --target native examples/demo_protocol
 
 ## 7. 核心测试
 
-- 根包测试覆盖整数、组合子、边界限制、错误路径、增量解析、property roundtrip 和固定 corpus。
-- `formats/` 覆盖六种格式的正常、截断、损坏和结构化 mutation 路径。
+- 根包测试覆盖整数、组合子、边界限制、错误路径、增量解析、组合式 property roundtrip 和固定 corpus。
+- `formats/` 覆盖六种格式的正常、截断、损坏和结构化 mutation 路径；独立原生 runner 支持固定 seed 的持续 fuzz。
 - CLI、演示协议、Wasm JSON 桥接和浏览器静态资源均有独立测试。
-- 完整核验：`moon test --target all --deny-warn`；覆盖率核验：`moon test --target native --enable-coverage --deny-warn && moon coverage analyze`。
+- 六种格式还使用外部成熟工具交叉验证，证据边界见 `docs/REFERENCE_VALIDATION.md`；资源工作负载与记录规则见 `docs/PERFORMANCE.md`。
+- 完整核验：`moon test --target all --deny-warn`；fuzz smoke：`moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512`；覆盖率在插桩测试后分别用 `moon coverage analyze -p prowk/binschema -- -f summary` 和 `moon coverage analyze -p prowk/binschema/formats -- -f summary` 核验核心库与格式包。
 
 ## 8. Mooncakes 发布
 

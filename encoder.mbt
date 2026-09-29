@@ -20,6 +20,42 @@ pub fn Encoder::new(limits : Limits) -> Encoder {
 }
 
 ///|
+/// 返回当前编码器使用的资源限制，供复合格式执行一致性校验。
+pub fn Encoder::limits(self : Encoder) -> Limits {
+  self.limits
+}
+
+///|
+fn Encoder::region_child(
+  self : Encoder,
+  nested : Bool,
+) -> Result[Encoder, BinError] {
+  if nested && self.limits.max_depth <= 0 {
+    return Err(
+      self.error(LimitExceeded, "maximum encoder nesting depth exceeded"),
+    )
+  }
+  let max_depth = if nested {
+    self.limits.max_depth - 1
+  } else {
+    self.limits.max_depth
+  }
+  Ok({
+    buffer: @buffer.Buffer(),
+    bit_buffer: 0U,
+    bit_count: 0,
+    field_path: self.field_path,
+    limits: {
+      max_input_bytes: self.limits.max_input_bytes,
+      max_collection_length: self.limits.max_collection_length,
+      max_depth,
+      max_output_bytes: self.limits.max_output_bytes,
+      max_trace_entries: self.limits.max_trace_entries,
+    },
+  })
+}
+
+///|
 pub fn Encoder::path(self : Encoder) -> String {
   self.field_path
 }

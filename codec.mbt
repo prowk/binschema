@@ -305,6 +305,15 @@ pub fn[T] bounded(
             decoder.limits,
           )
           match body.decode_from(child) {
+            Err({ kind: UnexpectedEof, offset, path, message, }) =>
+              Err(
+                BinError::new(
+                  InvalidValue,
+                  offset,
+                  path,
+                  "bounded region contains a truncated value: " + message,
+                ),
+              )
             Err(error) => Err(error)
             Ok(value) => {
               if require_eof {
@@ -323,7 +332,10 @@ pub fn[T] bounded(
       }
     },
     fn(encoder, value) {
-      let child = Encoder::new(encoder.limits)
+      let child = match encoder.region_child(true) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
       match body.encode_into(child, value) {
         Err(error) => Err(error)
         Ok(_) =>
@@ -392,7 +404,10 @@ pub fn[T] length_prefixed(
       }
     },
     fn(encoder, value) {
-      let child = Encoder::new(encoder.limits)
+      let child = match encoder.region_child(true) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
       match body.encode_into(child, value) {
         Err(error) => Err(error)
         Ok(_) =>
@@ -490,20 +505,28 @@ pub fn[T] checksum_suffix_view(
         )
       }
       let start = decoder.offset()
-      match body.decode_from(decoder) {
+      let child = Decoder::new_child(
+        decoder.input[start:],
+        decoder.absolute_offset(),
+        decoder.path(),
+        decoder.depth(),
+        decoder.limits,
+      )
+      match body.decode_from(child) {
         Err(error) => Err(error)
         Ok(value) => {
-          if decoder.bit_offset != 0 {
-            return Err(
-              BinError::new(
-                Misaligned,
-                decoder.absolute_offset(),
-                decoder.path(),
-                "checksum body must end on a byte boundary",
-              ),
-            )
+          let consumed = match child.finish_decode(false) {
+            Err(error) => return Err(error)
+            Ok(value) => value
           }
-          let body_bytes = decoder.input[start:decoder.offset()]
+          let body_bytes = match decoder.take_view(consumed) {
+            Err(error) => return Err(error)
+            Ok(value) => value
+          }
+          match decoder.append_trace(child.trace()) {
+            Err(error) => return Err(error)
+            Ok(_) => ()
+          }
           match checksum_codec.named("checksum").decode_from(decoder) {
             Err(error) => Err(error)
             Ok(expected) => {
@@ -526,7 +549,10 @@ pub fn[T] checksum_suffix_view(
       }
     },
     fn(encoder, value) {
-      let child = Encoder::new(encoder.limits)
+      let child = match encoder.region_child(false) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
       match body.encode_into(child, value) {
         Err(error) => Err(error)
         Ok(_) =>

@@ -1,0 +1,54 @@
+name: Continuous verification
+
+on:
+  schedule:
+    - cron: "23 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz-and-resources:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install MoonBit toolchain
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          "$HOME/.moon/bin/moon" version --all
+      - name: Restore dependencies
+        run: moon update
+      - name: Run extended mutation seed matrix
+        run: |
+          set -o pipefail
+          dynamic_seed=$((GITHUB_RUN_ID % 10000000))
+          for seed in 1 17 65537 999983 "$dynamic_seed"; do
+            moon run --target native tools/mutation_fuzz -- \
+              --seed "$seed" --iterations 4096 | tee -a fuzz-results.txt
+          done
+      - name: Record resource workloads
+        run: |
+          set -o pipefail
+          bash scripts/resource-smoke.sh | tee resource-results.jsonl
+      - name: Record verification environment
+        run: |
+          {
+            echo "commit=$(git rev-parse HEAD)"
+            echo "runner_os=$RUNNER_OS"
+            echo "runner_arch=$RUNNER_ARCH"
+            moon version --all
+            uname -a
+            lscpu
+          } > resource-environment.txt
+      - name: Upload resource evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: resource-evidence-${{ github.run_id }}
+          path: |
+            fuzz-results.txt
+            resource-results.jsonl
+            resource-environment.txt
+          if-no-files-found: error
+          retention-days: 30

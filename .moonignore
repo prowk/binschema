@@ -10,14 +10,19 @@
 
 # The browser demo is deployed separately; library consumers do not need it.
 /web/
+/scripts/
+/benchmarks/
+/tools/
 
-# Keep only user-facing architecture, security, compatibility, and release docs.
+# Keep only user-facing project documentation.
 docs/*
 !/docs/ARCHITECTURE.md
 !/docs/ACCEPTANCE.md
 !/docs/SECURITY.md
 !/docs/COMPATIBILITY.md
 !/docs/RELEASING.md
+!/docs/REFERENCE_VALIDATION.md
+!/docs/PERFORMANCE.md
 
 # Keep the publishing policy itself for reproducible archive audits.
 !/.moonignore

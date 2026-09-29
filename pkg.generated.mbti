@@ -216,6 +216,7 @@ pub struct Encoder {
 pub fn Encoder::align_byte(Self, fill_bit? : Bool) -> Result[Unit, BinError]
 pub fn Encoder::finish(Self) -> Result[Bytes, BinError]
 pub fn Encoder::length(Self) -> Int
+pub fn Encoder::limits(Self) -> Limits
 pub fn Encoder::max_collection_length(Self) -> Int
 pub fn Encoder::new(Limits) -> Self
 pub fn Encoder::path(Self) -> String
@@ -252,6 +253,8 @@ pub struct IncrementalDecoder[T] {
   codec : Codec[T]
   limits : Limits
   mut buffer : Array[Byte]
+  mut read_offset : Int
+  mut snapshot : Bytes?
 }
 pub fn[T] IncrementalDecoder::append(Self[T], Bytes) -> Result[Unit, BinError]
 pub fn[T] IncrementalDecoder::buffered_bytes(Self[T]) -> Int
