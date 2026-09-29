@@ -638,6 +638,32 @@ test "incremental decoder supports batched append and rejects zero progress" {
 }
 
 ///|
+test "incremental decoder drains many batched short frames in order" {
+  let frame_count = 4096
+  let input = Bytes::makei(frame_count * 2, fn(index) {
+    if index % 2 == 0 {
+      ((index / 2) >> 8).to_byte()
+    } else {
+      (index / 2).to_byte()
+    }
+  })
+  let limits = @binschema.Limits::new(max_input_bytes=input.length())
+  let stream = @binschema.IncrementalDecoder::new(@binschema.u16_be(), limits~)
+  assert_eq(stream.append(input), Ok(()))
+  for expected in 0..<frame_count {
+    match stream.poll() {
+      @binschema.Done(decoded) => {
+        assert_eq(decoded.value, expected.reinterpret_as_uint())
+        assert_eq(decoded.consumed, 2)
+      }
+      _ => fail("batched short frame must decode")
+    }
+  }
+  assert_eq(stream.buffered_bytes(), 0)
+  assert_true(stream.poll() is @binschema.NeedMore)
+}
+
+///|
 test "incremental decoder enforces buffer limits before appending" {
   let limits = @binschema.Limits::new(
     max_input_bytes=2,

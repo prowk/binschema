@@ -105,6 +105,8 @@ fn elf_need(
         @bin.UnexpectedEof,
         if offset < 0 {
           0
+        } else if offset > input.length() {
+          input.length()
         } else {
           offset
         },
@@ -224,7 +226,7 @@ fn elf_range(
     return Err(
       elf_error(
         @bin.UnexpectedEof,
-        if offset > 0x7fffffffUL {
+        if offset > total {
           input_length
         } else {
           offset.to_int()
@@ -633,7 +635,11 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
       return Err(
         elf_error(
           @bin.UnexpectedEof,
-          table_offset,
+          if table_offset > input.length() {
+            input.length()
+          } else {
+            table_offset
+          },
           "sections.0",
           "ELF section header zero exceeds file bounds",
         ),

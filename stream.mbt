@@ -73,6 +73,8 @@ pub struct IncrementalDecoder[T] {
   codec : Codec[T]
   limits : Limits
   mut buffer : Array[Byte]
+  mut read_offset : Int
+  mut snapshot : Bytes?
 }
 
 ///|
@@ -80,7 +82,7 @@ pub fn[T] IncrementalDecoder::new(
   codec : Codec[T],
   limits? : Limits = Limits::default(),
 ) -> IncrementalDecoder[T] {
-  { codec, limits, buffer: [], }
+  { codec, limits, buffer: [], read_offset: 0, snapshot: None, }
 }
 
 ///|
@@ -88,25 +90,33 @@ pub fn[T] IncrementalDecoder::new(
 pub fn[T] IncrementalDecoder::buffered_bytes(
   self : IncrementalDecoder[T],
 ) -> Int {
-  self.buffer.length()
+  self.buffer.length() - self.read_offset
 }
 
 ///|
 /// 丢弃当前尚未消费的数据。
 pub fn[T] IncrementalDecoder::clear(self : IncrementalDecoder[T]) -> Unit {
   self.buffer = []
+  self.read_offset = 0
+  self.snapshot = None
 }
 
 ///|
-fn[T] IncrementalDecoder::drop_prefix(
-  self : IncrementalDecoder[T],
-  count : Int,
-) -> Unit {
-  let remaining : Array[Byte] = []
-  for index in count..<self.buffer.length() {
-    remaining.push(self.buffer[index])
+fn[T] IncrementalDecoder::compact(self : IncrementalDecoder[T]) -> Unit {
+  if self.read_offset == 0 {
+    return
   }
-  self.buffer = remaining
+  if self.read_offset == self.buffer.length() {
+    self.buffer = []
+  } else {
+    let remaining : Array[Byte] = []
+    for index in self.read_offset..<self.buffer.length() {
+      remaining.push(self.buffer[index])
+    }
+    self.buffer = remaining
+  }
+  self.read_offset = 0
+  self.snapshot = None
 }
 
 ///|
@@ -116,19 +126,22 @@ pub fn[T] IncrementalDecoder::append(
   self : IncrementalDecoder[T],
   chunk : Bytes,
 ) -> Result[Unit, BinError] {
-  if chunk.length() > self.limits.max_input_bytes - self.buffer.length() {
+  let buffered = self.buffered_bytes()
+  if chunk.length() > self.limits.max_input_bytes - buffered {
     return Err(
       BinError::new(
         LimitExceeded,
-        self.buffer.length(),
+        buffered,
         "",
         "incremental buffer exceeds max_input_bytes",
       ),
     )
   }
+  self.compact()
   for byte in chunk {
     self.buffer.push(byte)
   }
+  self.snapshot = None
   Ok(())
 }
 
@@ -139,13 +152,20 @@ pub fn[T] IncrementalDecoder::append(
 pub fn[T] IncrementalDecoder::poll(
   self : IncrementalDecoder[T],
 ) -> DecodeStep[T] {
-  let bytes = Bytes::from_array(self.buffer.copy())
+  let bytes = match self.snapshot {
+    Some(bytes) => bytes
+    None => {
+      let bytes = Bytes::from_array(self.buffer.copy())
+      self.snapshot = Some(bytes)
+      bytes
+    }
+  }
   match
-    probe_decode_with_options(self.codec, bytes, {
+    decode_prefix_view_with_options(self.codec, bytes[self.read_offset:], {
       limits: self.limits,
       require_eof: false,
     }) {
-    Done(decoded) => {
+    Ok(decoded) => {
       if decoded.consumed <= 0 {
         return Failed(
           BinError::new(
@@ -156,11 +176,14 @@ pub fn[T] IncrementalDecoder::poll(
           ),
         )
       }
-      self.drop_prefix(decoded.consumed)
+      self.read_offset += decoded.consumed
+      if self.read_offset == self.buffer.length() {
+        self.clear()
+      }
       Done(decoded)
     }
-    NeedMore => NeedMore
-    Failed(error) => Failed(error)
+    Err({ kind: UnexpectedEof, .. }) => NeedMore
+    Err(error) => Failed(error)
   }
 }
 

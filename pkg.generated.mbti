@@ -253,6 +253,8 @@ pub struct IncrementalDecoder[T] {
   codec : Codec[T]
   limits : Limits
   mut buffer : Array[Byte]
+  mut read_offset : Int
+  mut snapshot : Bytes?
 }
 pub fn[T] IncrementalDecoder::append(Self[T], Bytes) -> Result[Unit, BinError]
 pub fn[T] IncrementalDecoder::buffered_bytes(Self[T]) -> Int

@@ -112,7 +112,7 @@ python -m http.server 4173 --directory web
 
 The browser processes files locally and does not upload them.
 
-For a criterion-by-criterion verification map, see the [acceptance checklist](docs/ACCEPTANCE.md).
+For a criterion-by-criterion verification map, see the [acceptance checklist](docs/ACCEPTANCE.md). CI also cross-checks all six built-in formats with mature system tools; the [reference validation matrix](docs/REFERENCE_VALIDATION.md) records each vector's provenance, assertion, and license boundary. Reproducible workloads and measurement rules are documented in [performance and resource checks](docs/PERFORMANCE.md).
 
 ## License
 
