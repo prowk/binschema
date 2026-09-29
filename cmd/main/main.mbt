@@ -70,21 +70,8 @@ fn has_flag(args : Array[String], start : Int, flag : String) -> Bool {
 }
 
 ///|
-fn enforce_input_limit(input : Bytes, limit : Int) -> Result[Bytes, CliError] {
-  if input.length() > limit {
-    Err(Data("输入文件超过安全上限（\{limit} 字节）"))
-  } else {
-    Ok(input)
-  }
-}
-
-///|
 fn read_input(path : String) -> Result[Bytes, CliError] {
-  let input = @fs.read_file_to_bytes(path) catch {
-    @fs.IOError(message) =>
-      return Err(Io("无法读取文件 “" + path + "”：" + message))
-  }
-  enforce_input_limit(input, @bin.Limits::default().max_input_bytes)
+  read_input_bounded(path, @bin.Limits::default().max_input_bytes)
 }
 
 ///|

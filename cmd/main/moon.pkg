@@ -7,6 +7,11 @@ import {
   "moonbitlang/core/json",
   "moonbitlang/x/fs",
   "moonbitlang/x/sys",
+  "moonbitlang/x/unicode",
 }
 
 pkgtype(kind: "executable")
+
+options(
+  "native-stub": [ "bounded_file.c" ],
+)

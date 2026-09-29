@@ -57,11 +57,6 @@ test "CLI inspection renders text JSON and verification" {
 
 ///|
 test "CLI input budgets and sample selection are enforced" {
-  match enforce_input_limit(b"ab", 2) {
-    Ok(value) => assert_eq(value, b"ab")
-    Err(error) => fail(error.message())
-  }
-  assert_true(enforce_input_limit(b"abc", 2) is Err(Data(_)))
   match sample_bytes("png") {
     Ok(value) => assert_eq(value, @formats.sample_png())
     Err(error) => fail(error.message())
@@ -87,6 +82,22 @@ test "CLI input budgets and sample selection are enforced" {
     Err(error) => fail(error.message())
   }
   assert_true(sample_bytes("auto") is Err(Usage(_)))
+}
+
+///|
+test "CLI bounded reader stops at limit plus one byte" {
+  let path = "binschema-bounded-input.tmp"
+  @fs.write_bytes_to_file(path, b"abc") catch {
+    @fs.IOError(message) => fail(message)
+  }
+  match read_input_bounded(path, 3) {
+    Ok(value) => assert_eq(value, b"abc")
+    Err(error) => fail(error.message())
+  }
+  assert_true(read_input_bounded(path, 2) is Err(Data(_)))
+  @fs.remove_file(path) catch {
+    @fs.IOError(message) => fail(message)
+  }
 }
 
 ///|

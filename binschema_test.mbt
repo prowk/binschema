@@ -220,6 +220,43 @@ test "checksum suffix rejects corrupted payloads" {
 }
 
 ///|
+test "checksum suffix isolates alignment and partial-bit framing" {
+  let sum = fn(bytes : Bytes) {
+    let mut value = 0U
+    for byte in bytes {
+      value = (value + byte.to_uint()) & 0xffU
+    }
+    value
+  }
+  let aligned_body = @binschema.pair(
+    @binschema.u8(),
+    @binschema.pair(@binschema.align(4), @binschema.u8()),
+  )
+  let aligned = @binschema.pair(
+    @binschema.u8(),
+    @binschema.checksum_suffix(aligned_body, @binschema.u8(), sum),
+  )
+  let aligned_value = (0xaaU, (0x11U, ((), 0x22U)))
+  let aligned_bytes = b"\xaa\x11\x00\x00\x00\x22\x33"
+  assert_eq(@binschema.encode(aligned, aligned_value), Ok(aligned_bytes))
+  match @binschema.decode(aligned, aligned_bytes) {
+    Ok(decoded) => assert_eq(decoded.value, aligned_value)
+    Err(error) => fail(error.render())
+  }
+
+  let bits = @binschema.checksum_suffix(
+    @binschema.bits_msb(3),
+    @binschema.u8(),
+    sum,
+  )
+  assert_eq(@binschema.encode(bits, 5U), Ok(b"\xa0\xa0"))
+  match @binschema.decode(bits, b"\xa0\xa0") {
+    Ok(decoded) => assert_eq(decoded.value, 5U)
+    Err(error) => fail(error.render())
+  }
+}
+
+///|
 test "primitive integer boundaries are stable" {
   assert_eq(
     @binschema.encode(@binschema.u64_le(), 0xffffffffffffffffUL),
@@ -525,6 +562,24 @@ test "probe decode distinguishes incomplete invalid and complete inputs" {
   match @binschema.probe_decode(@binschema.bool8(), b"\x02") {
     @binschema.Failed(error) => assert_eq(error.kind, @binschema.InvalidValue)
     _ => fail("invalid value must not be treated as incomplete")
+  }
+}
+
+///|
+test "probe decode rejects truncation inside a complete bounded region" {
+  let codec = @binschema.length_prefixed(
+    @binschema.u8(),
+    @binschema.u16_be(),
+    max_length=8,
+  )
+  match @binschema.probe_decode(codec, b"\x01\x00") {
+    @binschema.Failed(error) => assert_eq(error.kind, @binschema.InvalidValue)
+    _ => fail("a complete but internally truncated region must fail")
+  }
+  let stream = @binschema.IncrementalDecoder::new(codec)
+  match stream.feed(b"\x01\x00") {
+    @binschema.Failed(error) => assert_eq(error.kind, @binschema.InvalidValue)
+    _ => fail("incremental decoding must not wait on an irrecoverable frame")
   }
 }
 
