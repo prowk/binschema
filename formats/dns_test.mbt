@@ -103,3 +103,16 @@ test "DNS encoder derives section counts and validates compressed wire direction
     is Err({ kind: @bin.InvalidValue, .. }),
   )
 }
+
+///|
+test "DNS encoder rejects labels that disagree with preserved wire" {
+  let decoded = match @bin.decode(@formats.dns_codec(), @formats.sample_dns()) {
+    Ok(value) => value.value
+    Err(error) => fail(error.render())
+  }
+  decoded.answers[0].name.labels[0] = b"changed"
+  assert_true(
+    @bin.encode(@formats.dns_codec(), decoded)
+    is Err({ kind: @bin.InvalidValue, .. }),
+  )
+}

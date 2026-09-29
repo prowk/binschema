@@ -341,6 +341,12 @@ test "bounded codecs enforce size eof and nesting depth" {
     })
     is Err({ kind: @binschema.LimitExceeded, .. }),
   )
+  assert_true(
+    @binschema.encode_with_options(nested, 1U, @binschema.EncodeOptions::{
+      limits,
+    })
+    is Err({ kind: @binschema.LimitExceeded, .. }),
+  )
 }
 
 ///|

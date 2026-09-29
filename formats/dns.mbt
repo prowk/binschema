@@ -1,7 +1,6 @@
 ///|
-/// DNS domain name with decoded labels and the exact wire representation that
-/// appeared at the current field. Preserving wire keeps compression pointers
-/// byte-exact across decode -> encode.
+/// DNS 域名同时保存解析后的 labels 与字段原始 wire，以便压缩指针可字节级往返。
+/// 两者必须表示同一个名称；编码器会拒绝不一致的修改。
 pub(all) struct DnsName {
   labels : Array[Bytes]
   wire : Bytes
@@ -615,7 +614,7 @@ fn check_dns_encode_count(
 }
 
 ///|
-pub fn dns_codec() -> @bin.Codec[DnsMessage] {
+fn dns_codec_unchecked() -> @bin.Codec[DnsMessage] {
   @bin.Codec::make(
     fn(decoder) {
       let id = match @bin.u16_be().named("id").decode_from(decoder) {
@@ -755,6 +754,49 @@ pub fn dns_codec() -> @bin.Codec[DnsMessage] {
         }
       }
       Ok(())
+    },
+    kind="dns",
+    render=fn(value) {
+      "DNS id=\{value.id}, q=\{value.questions.length()}, a=\{value.answers.length()}"
+    },
+    schema=dns_schema(),
+  )
+}
+
+///|
+/// DNS 编码保留原始压缩 wire，但会重新解码候选报文，拒绝与 labels 冲突的模型。
+pub fn dns_codec() -> @bin.Codec[DnsMessage] {
+  let unchecked = dns_codec_unchecked()
+  @bin.Codec::make(
+    fn(decoder) { unchecked.decode_from(decoder) },
+    fn(encoder, value) {
+      let limits = encoder.limits()
+      let bytes = match
+        @bin.encode_with_options(unchecked, value, @bin.EncodeOptions::{
+          limits,
+        }) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
+      let decoded = match
+        @bin.decode_with_options(unchecked, bytes, @bin.DecodeOptions::{
+          limits,
+          require_eof: true,
+        }) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
+      if decoded.value != value {
+        return Err(
+          @bin.BinError::new(
+            @bin.InvalidValue,
+            encoder.length(),
+            encoder.path(),
+            "DNS decoded labels disagree with the preserved wire representation",
+          ),
+        )
+      }
+      encoder.write_bytes(bytes[:])
     },
     kind="dns",
     render=fn(value) {

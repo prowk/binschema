@@ -332,7 +332,10 @@ pub fn[T] bounded(
       }
     },
     fn(encoder, value) {
-      let child = Encoder::new(encoder.limits)
+      let child = match encoder.region_child(true) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
       match body.encode_into(child, value) {
         Err(error) => Err(error)
         Ok(_) =>
@@ -401,7 +404,10 @@ pub fn[T] length_prefixed(
       }
     },
     fn(encoder, value) {
-      let child = Encoder::new(encoder.limits)
+      let child = match encoder.region_child(true) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
       match body.encode_into(child, value) {
         Err(error) => Err(error)
         Ok(_) =>
@@ -543,7 +549,10 @@ pub fn[T] checksum_suffix_view(
       }
     },
     fn(encoder, value) {
-      let child = Encoder::new(encoder.limits)
+      let child = match encoder.region_child(false) {
+        Ok(value) => value
+        Err(error) => return Err(error)
+      }
       match body.encode_into(child, value) {
         Err(error) => Err(error)
         Ok(_) =>
