@@ -7,7 +7,7 @@
   <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
 </p>
-<p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
+<p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.1">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
 
 </div>
 
@@ -25,7 +25,7 @@ BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，�
 在 MoonBit 项目中添加稳定版本：
 
 ```bash
-moon add prowk/binschema@0.3.0
+moon add prowk/binschema@0.3.1
 ```
 
 并在调用方的 `moon.pkg` 中导入：

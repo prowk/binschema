@@ -11,6 +11,6 @@ preferred_target = "native"
 supported_targets = "native"
 
 import {
-  "prowk/binschema@0.3.0",
+  "prowk/binschema@0.3.1",
   "moonbitlang/async@0.22.3",
 }

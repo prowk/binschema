@@ -69,8 +69,8 @@ moon run --target native examples/tcp_framing/app -- demo
 
 ## 8. Mooncakes 发布
 
-- 模块名与版本由 `moon.mod` 声明为 `prowk/binschema@0.3.0`。
-- 已发布文档：[mooncakes.io/docs/prowk/binschema@0.3.0](https://mooncakes.io/docs/prowk/binschema@0.3.0)。
+- 模块名与版本由 `moon.mod` 声明为 `prowk/binschema@0.3.1`。
+- 已发布文档：[mooncakes.io/docs/prowk/binschema@0.3.1](https://mooncakes.io/docs/prowk/binschema@0.3.1)。
 - 发布前可用 `moon package --list` 核验归档内容，并按 `docs/RELEASING.md` 执行发布流程。
 
 ## 9. 开源许可证与第三方依赖
