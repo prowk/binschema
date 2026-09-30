@@ -1,0 +1,13 @@
+supported_targets = "native"
+
+import {
+  "prowk/binschema" @bin,
+  "prowk/binschema-tcp-example/protocol",
+  "moonbitlang/async",
+  "moonbitlang/async/aqueue",
+  "moonbitlang/async/socket",
+  "moonbitlang/core/encoding/utf8",
+  "moonbitlang/core/env",
+}
+
+pkgtype(kind: "executable")

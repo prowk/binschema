@@ -1,0 +1,36 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "prowk/binschema-tcp-example/protocol"
+
+import {
+  "moonbitlang/core/debug",
+  "prowk/binschema",
+}
+
+// Values
+pub const MAX_FRAME_BYTES : Int = 65536
+
+pub const MAX_PAYLOAD_BYTES : Int = 4096
+
+pub fn encode_message(Message) -> Result[Bytes, @binschema.BinError]
+
+pub fn frame_codec() -> @binschema.Codec[Message]
+
+pub fn response_for(Message) -> Message?
+
+// Errors
+
+// Types and methods
+pub(all) enum Message {
+  EchoRequest((UInt, Bytes))
+  EchoResponse((UInt, Bytes))
+} derive(Eq, @debug.Debug)
+pub fn Message::equal(Self, Self) -> Bool
+pub fn Message::not_equal(Self, Self) -> Bool
+pub fn Message::payload(Self) -> Bytes
+pub fn Message::render(Self) -> String
+pub fn Message::request_id(Self) -> UInt
+pub fn Message::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

@@ -7,7 +7,7 @@
   <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
 </p>
-<p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
+<p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.1">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
 
 </div>
 
@@ -25,7 +25,7 @@ BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，�
 在 MoonBit 项目中添加稳定版本：
 
 ```bash
-moon add prowk/binschema@0.3.0
+moon add prowk/binschema@0.3.1
 ```
 
 并在调用方的 `moon.pkg` 中导入：
@@ -141,6 +141,14 @@ trace fields: 4
 moon run --target native examples/demo_protocol
 ```
 
+进一步的真实网络集成参见 [`examples/tcp_framing`](examples/tcp_framing)。该示例在独立模块中使用本机 TCP、`IncrementalDecoder`、容量受限队列和结构化并发，演示分片、粘包、校验失败、超长帧、半包超时、背压与连接清理。默认命令会启动临时 loopback 服务端，自动运行全部场景并退出：
+
+```bash
+moon run --target native examples/tcp_framing/app -- demo
+```
+
+也可在两个终端分别运行 `server` 和 `client <scenario>`，完整说明见[示例文档](examples/tcp_framing/README.md)。实验性的 `moonbitlang/async` 被固定版本并隔离在示例模块中，不会进入 BinSchema 核心依赖或公共 API。
+
 ## CLI
 
 ```bash
@@ -207,6 +215,7 @@ Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
 ├─ web/                                   # Wasm-GC 桥接与浏览器检查器
 ├─ examples/custom_packet/                # 最小自定义协议示例
 ├─ examples/demo_protocol/                # 更完整的真实协议示例
+├─ examples/tcp_framing/                  # TCP 拆包、背压、超时与取消集成示例
 └─ docs/                                  # 架构和安全模型
 ```
 
@@ -227,12 +236,15 @@ moon coverage analyze -p prowk/binschema/formats -- -f summary
 moon build --target native cmd/main --release
 moon build --target native examples/custom_packet --release
 moon build --target native examples/demo_protocol --release
+moon test --target native examples/tcp_framing/protocol --deny-warn
+moon test --target native examples/tcp_framing/app --deny-warn
+moon run --target native examples/tcp_framing/app -- demo
 moon build --target wasm-gc web/bridge --release
 bash scripts/resource-smoke.sh
 cmp README.md README.mbt.md
 ```
 
-测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、确定性 property roundtrip、固定二进制 corpus、基于 Schema/Trace 的结构化 mutation、损坏格式样例、CLI 调度和 Wasm JSON 契约。GitHub Actions 会在四后端执行这些测试，并用成熟系统工具交叉检查六种内置格式；来源、断言与许可证见[外部参考验证](docs/REFERENCE_VALIDATION.md)。
+测试覆盖整数边界、大小端、位对齐、资源限制、嵌套深度、组合子错误传播、变长整数异常、确定性 property roundtrip、固定二进制 corpus、基于 Schema/Trace 的结构化 mutation、损坏格式样例、TCP loopback 集成、CLI 调度和 Wasm JSON 契约。GitHub Actions 会在四后端执行核心测试，并在原生后端运行 TCP 集成场景，再用成熟系统工具交叉检查六种内置格式；来源、断言与许可证见[外部参考验证](docs/REFERENCE_VALIDATION.md)。
 
 更多设计细节见 [验收清单](docs/ACCEPTANCE.md)、[架构说明](docs/ARCHITECTURE.md)、[安全模型](docs/SECURITY.md)、[兼容性策略](docs/COMPATIBILITY.md)、[外部参考验证](docs/REFERENCE_VALIDATION.md)、[性能与资源检查](docs/PERFORMANCE.md)与[发布流程](docs/RELEASING.md)。安全问题请按 [安全策略](docs/SECURITY.md) 中的方式报告。
 

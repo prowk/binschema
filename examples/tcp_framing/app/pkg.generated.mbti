@@ -1,0 +1,15 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "prowk/binschema-tcp-example/app"
+
+// Values
+
+// Errors
+
+// Types and methods
+type Logger
+
+type QueueItem
+
+// Type aliases
+
+// Traits

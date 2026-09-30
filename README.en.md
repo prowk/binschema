@@ -7,7 +7,7 @@
   <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
 </p>
-<p><a href="https://prowk.github.io/binschema/">Online Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.0">Mooncakes documentation</a> · <a href="README.md">简体中文</a> · <strong>English</strong></p>
+<p><a href="https://prowk.github.io/binschema/">Online Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.1">Mooncakes documentation</a> · <a href="README.md">简体中文</a> · <strong>English</strong></p>
 
 </div>
 
@@ -23,7 +23,7 @@ BinSchema defines safe binary decoding and encoding once with a composable `Code
 BinSchema requires the MoonBit compiler `moonc >= 0.10.14`. Run `moon version --all` to inspect the installed toolchain; see the [official installation guide](https://www.moonbitlang.com/download/) to install or update MoonBit.
 
 ```bash
-moon add prowk/binschema@0.3.0
+moon add prowk/binschema@0.3.1
 ```
 
 Import it from your package:
@@ -74,6 +74,14 @@ The native CLI also supports `binschema lint <png|wav|pcap|bmff|dns|elf> [--json
 For fragmented network or stream input, `probe_decode` distinguishes `NeedMore` from real decode failures, while `IncrementalDecoder` retains unconsumed trailing bytes for the next frame. The generic incremental decoder retries the codec from the start of the buffered frame on each `poll()`; it is not a continuation-based streaming parser. For many tiny chunks, batch them with `append()` before polling. Protocols using `until_eof` or `remaining_*` should first establish an explicit bounded region.
 
 For a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
+
+For a real network boundary, see [`examples/tcp_framing`](examples/tcp_framing). Its one-command loopback demo covers fragmented and coalesced TCP reads, checksum and size failures, partial-frame timeouts, bounded-queue backpressure, and structured connection cleanup:
+
+```bash
+moon run --target native examples/tcp_framing/app -- demo
+```
+
+The experimental `moonbitlang/async` dependency is pinned and isolated in that example's workspace module; it does not become a BinSchema core dependency or public API.
 
 See the canonical executable documentation in [README.mbt.md](README.mbt.md), architecture notes
 in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in

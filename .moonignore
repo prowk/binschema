@@ -7,6 +7,7 @@
 
 # Maintainer/agent instructions are not part of the runtime package.
 /AGENTS.md
+/moon.work
 
 # The browser demo is deployed separately; library consumers do not need it.
 /web/
