@@ -43,7 +43,9 @@ jobs:
         run: |
           mkdir -p _site
           cp web/index.html web/styles.css web/app.js web/inspector-core.mjs web/favicon.svg _site/
-          cp _build/wasm-gc/release/build/web/bridge/bridge.wasm _site/binschema.wasm
+          bridge_wasm="$(find _build/wasm-gc/release/build -type f -path '*/web/bridge/bridge.wasm' -print -quit)"
+          test -n "$bridge_wasm"
+          cp "$bridge_wasm" _site/binschema.wasm
           touch _site/.nojekyll
       - name: Configure Pages
         uses: actions/configure-pages@v5

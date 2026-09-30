@@ -13,18 +13,19 @@ moon build --target native benchmarks/resource_probe --release --deny-warn
 moon build --target native cmd/main --release --deny-warn
 
 find_executable() {
-  local directory="$1"
+  local package_path="$1"
   local executable
-  executable="$(find "$directory" -maxdepth 1 -type f -perm -111 -print -quit)"
+  executable="$(find _build/native/release/build -type f \
+    -path "*/$package_path/*" -perm -111 -print -quit)"
   if [[ -z "$executable" ]]; then
-    echo "no native executable found under $directory" >&2
+    echo "no native executable found for $package_path" >&2
     exit 1
   fi
   printf '%s\n' "$executable"
 }
 
-probe="$(find_executable _build/native/release/build/benchmarks/resource_probe)"
-cli="$(find_executable _build/native/release/build/cmd/main)"
+probe="$(find_executable benchmarks/resource_probe)"
+cli="$(find_executable cmd/main)"
 
 check_rss() {
   local scenario="$1"

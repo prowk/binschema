@@ -21,6 +21,7 @@
 - `schema.mbt`、`lint.mbt`：结构描述与协议静态检查。
 - `formats/`：ELF、PNG、WAVE、PCAP、ISO BMFF 和 DNS 实现。
 - `cmd/main/` 与 `web/bridge/`：原生 CLI 与 Wasm-GC 浏览器入口。
+- `examples/tcp_framing/`：隔离的 TCP 集成模块，验证拆包、背压、超时、错误定位与连接清理，不改变核心库依赖或 API。
 
 ## 4. README 与可复现使用说明
 
@@ -50,11 +51,19 @@ moon run --target native examples/custom_packet
 moon run --target native examples/demo_protocol
 ```
 
+真实 TCP 集成示例：
+
+```bash
+moon run --target native examples/tcp_framing/app -- demo
+```
+
+该命令在临时 loopback 端口自动验证正常、分片、粘包、坏 checksum、超长声明、半包超时和有界队列背压后退出；也提供独立 `server` / `client` 模式。
+
 ## 7. 核心测试
 
 - 根包测试覆盖整数、组合子、边界限制、错误路径、增量解析、组合式 property roundtrip 和固定 corpus。
 - `formats/` 覆盖六种格式的正常、截断、损坏和结构化 mutation 路径；独立原生 runner 支持固定 seed 的持续 fuzz。
-- CLI、演示协议、Wasm JSON 桥接和浏览器静态资源均有独立测试。
+- CLI、演示协议、TCP loopback 集成、Wasm JSON 桥接和浏览器静态资源均有独立测试。
 - 六种格式还使用外部成熟工具交叉验证，证据边界见 `docs/REFERENCE_VALIDATION.md`；资源工作负载与记录规则见 `docs/PERFORMANCE.md`。
 - 完整核验：`moon test --target all --deny-warn`；fuzz smoke：`moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512`；覆盖率在插桩测试后分别用 `moon coverage analyze -p prowk/binschema -- -f summary` 和 `moon coverage analyze -p prowk/binschema/formats -- -f summary` 核验核心库与格式包。
 

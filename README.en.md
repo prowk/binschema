@@ -75,6 +75,14 @@ For fragmented network or stream input, `probe_decode` distinguishes `NeedMore` 
 
 For a realistic end-to-end example, see [`examples/demo_protocol`](examples/demo_protocol). It combines a magic header, version validation, a count-prefixed message list, tagged message branches, length-prefixed payloads, named traces, and a packet checksum in one codec tree.
 
+For a real network boundary, see [`examples/tcp_framing`](examples/tcp_framing). Its one-command loopback demo covers fragmented and coalesced TCP reads, checksum and size failures, partial-frame timeouts, bounded-queue backpressure, and structured connection cleanup:
+
+```bash
+moon run --target native examples/tcp_framing/app -- demo
+```
+
+The experimental `moonbitlang/async` dependency is pinned and isolated in that example's workspace module; it does not become a BinSchema core dependency or public API.
+
 See the canonical executable documentation in [README.mbt.md](README.mbt.md), architecture notes
 in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
 [docs/SECURITY.md](docs/SECURITY.md), compatibility policy in
