@@ -4,6 +4,14 @@ This module is an executable integration example, not a networking API in the
 BinSchema core package. It shows how one codec can be used at a real TCP
 boundary where reads may split or combine application frames.
 
+## Toolchain and platform
+
+The repository requires `moonc >= 0.10.20`. This audit ran the full demo and tests on
+Windows x86-64 with MSVC 2022; Ubuntu CI also runs them with the latest official
+MoonBit toolchain. Only the Native backend is declared for this module. Windows
+requires MSVC and Windows SDK; Linux requires a C toolchain. Keep the pinned
+`moonbitlang/async@0.22.3` dependency unless a newer version is separately verified.
+
 ## Wire format
 
 ```text

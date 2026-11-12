@@ -73,14 +73,14 @@ pub struct IncrementalDecoder[T] {
   codec : Codec[T]
   limits : Limits
   mut buffer : Array[Byte]
-  mut read_offset : Int
+  mut read_offset : Int32
   mut snapshot : Bytes?
 }
 
 ///|
 pub fn[T] IncrementalDecoder::new(
   codec : Codec[T],
-  limits? : Limits = Limits::default(),
+  limits~ : Limits = Limits::default(),
 ) -> IncrementalDecoder[T] {
   { codec, limits, buffer: [], read_offset: 0, snapshot: None, }
 }
@@ -89,7 +89,7 @@ pub fn[T] IncrementalDecoder::new(
 /// 当前仍未消费的缓冲字节数。
 pub fn[T] IncrementalDecoder::buffered_bytes(
   self : IncrementalDecoder[T],
-) -> Int {
+) -> Int32 {
   self.buffer.length() - self.read_offset
 }
 

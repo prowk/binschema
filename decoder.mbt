@@ -2,11 +2,11 @@
 /// 有界二进制读取器。内部持有 `BytesView`，子区域解析不会复制底层字节。
 pub struct Decoder {
   input : BytesView
-  base_offset : Int
-  mut offset : Int
-  mut bit_offset : Int
+  base_offset : Int32
+  mut offset : Int32
+  mut bit_offset : Int32
   mut field_path : String
-  depth : Int
+  depth : Int32
   limits : Limits
   trace_entries : Array[TraceEntry]
 }
@@ -32,22 +32,22 @@ pub fn Decoder::new_view(input : BytesView, limits : Limits) -> Decoder {
 }
 
 ///|
-pub fn Decoder::offset(self : Decoder) -> Int {
+pub fn Decoder::offset(self : Decoder) -> Int32 {
   self.offset
 }
 
 ///|
-pub fn Decoder::absolute_offset(self : Decoder) -> Int {
+pub fn Decoder::absolute_offset(self : Decoder) -> Int32 {
   self.base_offset + self.offset
 }
 
 ///|
-pub fn Decoder::remaining(self : Decoder) -> Int {
+pub fn Decoder::remaining(self : Decoder) -> Int32 {
   self.input.length() - self.offset
 }
 
 ///|
-pub fn Decoder::total_length(self : Decoder) -> Int {
+pub fn Decoder::total_length(self : Decoder) -> Int32 {
   self.input.length()
 }
 
@@ -62,12 +62,12 @@ pub fn Decoder::trace(self : Decoder) -> Array[TraceEntry] {
 }
 
 ///|
-pub fn Decoder::max_collection_length(self : Decoder) -> Int {
+pub fn Decoder::max_collection_length(self : Decoder) -> Int32 {
   self.limits.max_collection_length
 }
 
 ///|
-pub fn Decoder::max_depth(self : Decoder) -> Int {
+pub fn Decoder::max_depth(self : Decoder) -> Int32 {
   self.limits.max_depth
 }
 
@@ -76,8 +76,8 @@ pub fn Decoder::max_depth(self : Decoder) -> Int {
 /// offset 相对于当前 Decoder 区域起点，而不是当前 cursor。
 pub fn Decoder::view_at(
   self : Decoder,
-  offset : Int,
-  count : Int,
+  offset : Int32,
+  count : Int32,
 ) -> Result[BytesView, BinError] {
   if offset < 0 || count < 0 {
     return Err(
@@ -103,12 +103,12 @@ pub fn Decoder::view_at(
 }
 
 ///|
-fn Decoder::consumed_bytes(self : Decoder) -> Int {
+fn Decoder::consumed_bytes(self : Decoder) -> Int32 {
   self.offset + (if self.bit_offset == 0 { 0 } else { 1 })
 }
 
 ///|
-fn Decoder::trace_end_offset(self : Decoder) -> Int {
+fn Decoder::trace_end_offset(self : Decoder) -> Int32 {
   self.base_offset + self.consumed_bytes()
 }
 
@@ -118,7 +118,7 @@ fn Decoder::trace_end_offset(self : Decoder) -> Int {
 fn Decoder::finish_decode(
   self : Decoder,
   require_eof : Bool,
-) -> Result[Int, BinError] {
+) -> Result[Int32, BinError] {
   let consumed = self.consumed_bytes()
   if self.bit_offset != 0 {
     let unread = 8 - self.bit_offset
@@ -149,16 +149,16 @@ fn Decoder::finish_decode(
 }
 
 ///|
-pub fn Decoder::depth(self : Decoder) -> Int {
+pub fn Decoder::depth(self : Decoder) -> Int32 {
   self.depth
 }
 
 ///|
 fn Decoder::new_child(
   input : BytesView,
-  base_offset : Int,
+  base_offset : Int32,
   path : String,
-  depth : Int,
+  depth : Int32,
   limits : Limits,
 ) -> Decoder {
   {
@@ -195,7 +195,7 @@ fn Decoder::ensure_byte_aligned(self : Decoder) -> Result[Unit, BinError] {
 /// 借用接下来 `count` 个字节，不复制底层缓冲区。
 pub fn Decoder::take_view(
   self : Decoder,
-  count : Int,
+  count : Int32,
 ) -> Result[BytesView, BinError] {
   match self.ensure_byte_aligned() {
     Err(error) => Err(error)
@@ -216,7 +216,7 @@ pub fn Decoder::take_view(
 /// 读取拥有所有权的字节串。需要零拷贝时优先使用 `take_view`。
 pub fn Decoder::take_bytes(
   self : Decoder,
-  count : Int,
+  count : Int32,
 ) -> Result[Bytes, BinError] {
   match self.take_view(count) {
     Err(error) => Err(error)
@@ -236,9 +236,9 @@ pub fn Decoder::read_byte(self : Decoder) -> Result[Byte, BinError] {
 ///|
 pub fn Decoder::read_uint(
   self : Decoder,
-  width : Int,
+  width : Int32,
   endian : Endian,
-) -> Result[UInt, BinError] {
+) -> Result[UInt32, BinError] {
   guard width == 1 || width == 2 || width == 4 else {
     return Err(self.error(Unsupported, "UInt width must be 1, 2, or 4"))
   }
@@ -288,8 +288,8 @@ pub fn Decoder::read_uint64(
 ///|
 pub fn Decoder::read_bits_msb(
   self : Decoder,
-  width : Int,
-) -> Result[UInt, BinError] {
+  width : Int32,
+) -> Result[UInt32, BinError] {
   guard width > 0 && width <= 32 else {
     return Err(self.error(InvalidValue, "bit width must be in 1..32"))
   }
@@ -338,8 +338,8 @@ fn Decoder::record(
   self : Decoder,
   path : String,
   kind : String,
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   render_value : () -> String,
 ) -> Result[Unit, BinError] {
   if self.trace_entries.length() >= self.limits.max_trace_entries {

@@ -2,10 +2,12 @@
 
 本文档将项目证据与赛事验收项逐项对应。所有命令均从仓库根目录运行。
 
+2026-11-12 核对说明：本地 `比赛要求/比赛.md` 为九月赛历史整理；[官网](https://moonbitlang.github.io/Hackathon2026/)当前已进入十一月赛。已有项目必须提供本期实质新增工作，具体报名和验收日期以官方通知为准。本清单对应包含本次修复的源码；当前 GitHub 已公开提交与本地修复的区别、逐项运行证据和完整演示步骤见[复现指南](REPRODUCIBILITY.md)。
+
 ## 1. MoonBit 主实现与工具链版本
 
 - GitHub 将仓库主语言识别为 MoonBit；核心库、格式实现、CLI 和 Wasm 桥接均使用 `.mbt` 源码。
-- 最低支持版本为 `moonc 0.10.14`，CI 会解析实际版本并拒绝更旧的编译器。
+- 最低支持版本为 `moonc 0.10.20`，实际验证版本见 `docs/COMPATIBILITY.md`；Ubuntu CI 会解析版本并拒绝更旧的编译器。
 - 本地核验：`moon version --all`、`moon check --target all --deny-warn`。
 
 ## 2. 公开仓库与提交记录
@@ -32,7 +34,7 @@
 ## 5. 持续集成
 
 - [GitHub Actions CI](https://github.com/prowk/binschema/actions/workflows/ci.yml) 覆盖接口同步、文档生成、发布包审计、格式检查、四后端检查与测试、外部参考工具、mutation fuzz、资源压力检查、覆盖率、示例、CLI 和 Wasm-GC 构建。
-- `latest-toolchain` 作业额外验证最新 MoonBit 工具链的前向兼容性。
+- Ubuntu `test` 与 `windows` 作业安装官方最新发布工具链，在 push、PR、每周定时及手动触发时检查、构建、测试受支持目标，并运行独立的已发布包调用方与 Native 示例。
 - [持续验证工作流](https://github.com/prowk/binschema/actions/workflows/continuous-verification.yml) 每周运行固定回归 seed 与按 run id 推导的动态 seed，并归档带环境信息的性能和峰值内存记录。
 - Pages 工作流从源码重建并部署浏览器演示站。
 
@@ -65,7 +67,7 @@ moon run --target native examples/tcp_framing/app -- demo
 - `formats/` 覆盖六种格式的正常、截断、损坏和结构化 mutation 路径；独立原生 runner 支持固定 seed 的持续 fuzz。
 - CLI、演示协议、TCP loopback 集成、Wasm JSON 桥接和浏览器静态资源均有独立测试。
 - 六种格式还使用外部成熟工具交叉验证，证据边界见 `docs/REFERENCE_VALIDATION.md`；资源工作负载与记录规则见 `docs/PERFORMANCE.md`。
-- 完整核验：`moon test --target all --deny-warn`；fuzz smoke：`moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512`；覆盖率在插桩测试后分别用 `moon coverage analyze -p prowk/binschema -- -f summary` 和 `moon coverage analyze -p prowk/binschema/formats -- -f summary` 核验核心库与格式包。
+- 完整核验：`moon test --target all --deny-warn`；fuzz smoke：`moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512`；覆盖率在插桩测试后分别用 `moon coverage report -p prowk/binschema -f summary` 和 `moon coverage report -p prowk/binschema/formats -f summary` 核验核心库与格式包。
 
 ## 8. Mooncakes 发布
 
@@ -76,5 +78,5 @@ moon run --target native examples/tcp_framing/app -- demo
 ## 9. 开源许可证与第三方依赖
 
 - 项目采用 OSI 认可的 [Apache License 2.0](../LICENSE)，`moon.mod` 同步声明 `license = "Apache-2.0"`。
-- 项目依赖在 `moon.mod` 中显式声明并由 `.mooncakes/.moon-lock` 锁定；发布包审计会排除仓库专用资源。
+- 项目依赖版本在各模块的 `moon.mod` 中显式声明；`.mooncakes/` 是忽略提交的生成缓存，不能作为已提交的依赖锁文件证据。发布包审计会排除仓库专用资源。
 - 当前实现未直接移植或复制其他开源项目的源代码；若未来引入此类代码，必须保留原始版权、许可证和归属声明。

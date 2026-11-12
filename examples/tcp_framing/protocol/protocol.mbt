@@ -1,17 +1,18 @@
 ///|
 /// TCP 示例的最大包体长度。长度字段超过此值时会在等待包体前立即失败。
-pub const MAX_FRAME_BYTES : Int = 64 * 1024
+pub const MAX_FRAME_BYTES : Int32 = 64 * 1024
 
 ///|
 /// 单条业务消息允许携带的最大 payload。
-pub const MAX_PAYLOAD_BYTES : Int = 4 * 1024
+pub const MAX_PAYLOAD_BYTES : Int32 = 4 * 1024
 
 ///|
 /// 示例协议的请求与响应共用同一份线格式。
+#derive(Eq, @debug.Debug)
 pub(all) enum Message {
-  EchoRequest((UInt, Bytes))
-  EchoResponse((UInt, Bytes))
-} derive(Eq, @debug.Debug)
+  EchoRequest((UInt32, Bytes))
+  EchoResponse((UInt32, Bytes))
+}
 
 ///|
 pub extend Message with Eq::{not_equal, equal}
@@ -20,7 +21,7 @@ pub extend Message with Eq::{not_equal, equal}
 pub extend Message with @debug.Debug::{to_repr}
 
 ///|
-pub fn Message::request_id(self : Message) -> UInt {
+pub fn Message::request_id(self : Message) -> UInt32 {
   match self {
     EchoRequest((request_id, _)) | EchoResponse((request_id, _)) => request_id
   }
@@ -102,7 +103,7 @@ fn message_codec() -> @bin.Codec[Message] {
 }
 
 ///|
-fn checksum8(bytes : BytesView) -> UInt {
+fn checksum8(bytes : BytesView) -> UInt32 {
   let mut sum = 0U
   for byte in bytes {
     sum = (sum + byte.to_uint()) & 0xffU

@@ -7,13 +7,10 @@ on:
     paths:
       - "web/**"
       - "formats/**"
-      - "codec.mbt"
-      - "decoder.mbt"
-      - "encoder.mbt"
-      - "primitives.mbt"
-      - "types.mbt"
-      - "varint.mbt"
+      - "*.mbt"
       - "moon.mod"
+      - "moon.pkg"
+      - "moon.work"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -35,10 +32,16 @@ jobs:
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          "$HOME/.moon/bin/moon" version --all
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
       - name: Restore dependencies
         run: moon update
       - name: Build Wasm-GC bridge
-        run: moon build --target wasm-gc web/bridge --release
+        run: moon build --target wasm-gc web/bridge --release --deny-warn
+      - name: Verify Wasm-GC exports
+        run: node web/check-wasm.mjs
       - name: Assemble site
         run: |
           mkdir -p _site

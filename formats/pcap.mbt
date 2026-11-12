@@ -1,10 +1,11 @@
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct PcapPacket {
-  timestamp_seconds : UInt
-  timestamp_fraction : UInt
-  original_length : UInt
+  timestamp_seconds : UInt32
+  timestamp_fraction : UInt32
+  original_length : UInt32
   data : Bytes
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend PcapPacket with Eq::{not_equal, equal}
@@ -16,17 +17,18 @@ pub extend PcapPacket with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend PcapPacket with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct PcapFile {
   endian : @bin.Endian
   nanosecond_timestamps : Bool
-  version_major : UInt
-  version_minor : UInt
-  timezone_offset : Int
-  timestamp_accuracy : UInt
-  snapshot_length : UInt
-  link_type : UInt
+  version_major : UInt32
+  version_minor : UInt32
+  timezone_offset : Int32
+  timestamp_accuracy : UInt32
+  snapshot_length : UInt32
+  link_type : UInt32
   packets : Array[PcapPacket]
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend PcapFile with Eq::{not_equal, equal}
@@ -38,7 +40,7 @@ pub extend PcapFile with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend PcapFile with ToJson::{to_json}
 
 ///|
-fn pcap_uint16(endian : @bin.Endian) -> @bin.Codec[UInt] {
+fn pcap_uint16(endian : @bin.Endian) -> @bin.Codec[UInt32] {
   match endian {
     @bin.Big => @bin.u16_be()
     @bin.Little => @bin.u16_le()
@@ -46,7 +48,7 @@ fn pcap_uint16(endian : @bin.Endian) -> @bin.Codec[UInt] {
 }
 
 ///|
-fn pcap_uint32(endian : @bin.Endian) -> @bin.Codec[UInt] {
+fn pcap_uint32(endian : @bin.Endian) -> @bin.Codec[UInt32] {
   match endian {
     @bin.Big => @bin.u32_be()
     @bin.Little => @bin.u32_le()
@@ -54,7 +56,7 @@ fn pcap_uint32(endian : @bin.Endian) -> @bin.Codec[UInt] {
 }
 
 ///|
-fn pcap_int32(endian : @bin.Endian) -> @bin.Codec[Int] {
+fn pcap_int32(endian : @bin.Endian) -> @bin.Codec[Int32] {
   match endian {
     @bin.Big => @bin.i32_be()
     @bin.Little => @bin.i32_le()
@@ -88,9 +90,9 @@ fn classify_pcap_magic(bytes : Bytes) -> Result[(@bin.Endian, Bool), String] {
 
 ///|
 fn validate_pcap_header(
-  major : UInt,
-  minor : UInt,
-  snapshot : UInt,
+  major : UInt32,
+  minor : UInt32,
+  snapshot : UInt32,
 ) -> Result[Unit, String] {
   if major != 2U || minor != 4U {
     return Err("only PCAP version 2.4 is supported")
@@ -104,7 +106,7 @@ fn validate_pcap_header(
 ///|
 fn validate_pcap_packet(
   packet : PcapPacket,
-  snapshot : UInt,
+  snapshot : UInt32,
   nano : Bool,
 ) -> Result[Unit, String] {
   let included = packet.data.length().reinterpret_as_uint()

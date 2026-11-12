@@ -1,9 +1,10 @@
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct PngChunk {
   kind : String
   data : Bytes
-  crc : UInt
-} derive(Eq, Debug, ToJson)
+  crc : UInt32
+}
 
 ///|
 pub extend PngChunk with Eq::{not_equal, equal}
@@ -15,9 +16,10 @@ pub extend PngChunk with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend PngChunk with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct PngFile {
   chunks : Array[PngChunk]
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend PngFile with Eq::{not_equal, equal}
@@ -43,7 +45,7 @@ fn ascii_chunk_type(bytes : Bytes) -> Result[String, String] {
 }
 
 ///|
-fn png_uint32_at(bytes : Bytes, offset : Int) -> UInt {
+fn png_uint32_at(bytes : Bytes, offset : Int32) -> UInt32 {
   (bytes[offset].to_uint() << 24) |
   (bytes[offset + 1].to_uint() << 16) |
   (bytes[offset + 2].to_uint() << 8) |
@@ -52,7 +54,7 @@ fn png_uint32_at(bytes : Bytes, offset : Int) -> UInt {
 
 ///|
 fn validate_png_chunk(
-  index : Int,
+  index : Int32,
   kind : String,
   data : Bytes,
 ) -> Result[Unit, String] {

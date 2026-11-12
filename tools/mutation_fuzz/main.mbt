@@ -1,5 +1,5 @@
 ///|
-fn parse_number(raw : String, name : String) -> Result[Int, String] {
+fn parse_number(raw : String, name : String) -> Result[Int32, String] {
   if raw.length() == 0 {
     return Err(name + " 不能为空")
   }
@@ -18,7 +18,7 @@ fn parse_number(raw : String, name : String) -> Result[Int, String] {
 }
 
 ///|
-fn parse_options(args : Array[String]) -> Result[(Int, Int), String] {
+fn parse_options(args : Array[String]) -> Result[(Int32, Int32), String] {
   let mut seed = 1
   let mut iterations = 256
   let mut index = 1
@@ -44,7 +44,7 @@ fn parse_options(args : Array[String]) -> Result[(Int, Int), String] {
 }
 
 ///|
-fn next_state(value : UInt) -> UInt {
+fn next_state(value : UInt32) -> UInt32 {
   let mut state = if value == 0U { 0x9e3779b9U } else { value }
   state = state ^ (state << 13)
   state = state ^ (state >> 17)
@@ -52,7 +52,7 @@ fn next_state(value : UInt) -> UInt {
 }
 
 ///|
-fn sample_for(index : Int) -> (Bytes, @formats.Format) {
+fn sample_for(index : Int32) -> (Bytes, @formats.Format) {
   match index % 6 {
     0 => (@formats.sample_png(), @formats.Png)
     1 => (@formats.sample_wav(), @formats.Wav)
@@ -64,7 +64,7 @@ fn sample_for(index : Int) -> (Bytes, @formats.Format) {
 }
 
 ///|
-fn mutate(input : Bytes, state : UInt) -> Bytes {
+fn mutate(input : Bytes, state : UInt32) -> Bytes {
   let position = (state % input.length().reinterpret_as_uint()).reinterpret_as_int()
   if (state >> 8) % 4U == 3U {
     let truncated : Array[Byte] = []
@@ -108,7 +108,7 @@ fn validate_outcome(
 }
 
 ///|
-fn run(seed : Int, iterations : Int) -> Result[Unit, String] {
+fn run(seed : Int32, iterations : Int32) -> Result[Unit, String] {
   let mut state = seed.reinterpret_as_uint()
   for iteration in 0..<iterations {
     let (sample, format) = sample_for(iteration)

@@ -5,6 +5,12 @@ on:
     branches:
       - main
   pull_request:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -21,7 +27,7 @@ jobs:
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
           version_output="$("$HOME/.moon/bin/moon" version --all)"
           echo "$version_output"
-          minimum_moonc_version="0.10.14"
+          minimum_moonc_version="0.10.20"
           moonc_version="$(printf '%s\n' "$version_output" | sed -n 's/^moonc v\([0-9][0-9.]*\).*/\1/p')"
           test -n "$moonc_version" || {
             echo "unable to determine moonc version"
@@ -31,22 +37,26 @@ jobs:
             echo "moonc $moonc_version is older than required $minimum_moonc_version"
             exit 1
           fi
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
       - name: Restore dependencies
         run: moon update
       - name: Verify generated interfaces are committed
         run: |
           moon info --target all
+          python scripts/sync-interfaces.py
           git diff --exit-code
       - name: Verify module/API version synchronization
         run: |
-          module_version=$(sed -n 's/^version = "\(.*\)"/\1/p' moon.mod)
-          api_version=$(sed -n 's/^pub const VERSION : String = "\(.*\)"/\1/p' binschema.mbt)
-          test -n "$module_version"
-          test -n "$api_version"
-          if [ "$module_version" != "$api_version" ]; then
-            echo "version mismatch: moon.mod=$module_version binschema.mbt=$api_version"
-            exit 1
-          fi
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          module_version = re.search(r'^version = "([^"]+)"', Path('moon.mod').read_text(encoding='utf-8'), re.M)[1]
+          api_version = re.search(r'^pub const VERSION : String = "([^"]+)"', Path('binschema.mbt').read_text(encoding='utf-8'), re.M)[1]
+          if module_version != api_version:
+              raise SystemExit(f'version mismatch: moon.mod={module_version} binschema.mbt={api_version}')
+          PY
       - name: Build API documentation
         run: moon doc
       - name: Audit publish package
@@ -66,19 +76,23 @@ jobs:
           fi
       - name: Check all backends
         run: moon check --target all --deny-warn
+      - name: Build all supported targets
+        run: moon build --target all --release --deny-warn
       - name: Test all backends including property and corpus suites
         run: moon test --target all --deny-warn
       - name: Run deterministic mutation fuzz smoke
         run: moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512
       - name: Verify executable README
         run: moon test README.mbt.md --target native --deny-warn
+      - name: Verify published README consumer
+        run: python scripts/check-readme-consumer.py
       - name: Compile native benchmarks
         run: moon bench --build-only --target native --deny-warn
       - name: Verify coverage workflow
         run: |
           moon test --target native --enable-coverage --deny-warn
-          moon coverage analyze -p prowk/binschema -- -f summary
-          moon coverage analyze -p prowk/binschema/formats -- -f summary
+          moon coverage report -p prowk/binschema -f summary
+          moon coverage report -p prowk/binschema/formats -f summary
       - name: Verify formatting
         run: moon fmt --check
       - name: Verify README synchronization
@@ -99,28 +113,52 @@ jobs:
           moon test --target native examples/tcp_framing/app --deny-warn
       - name: Run TCP loopback integration scenarios
         run: moon run --target native examples/tcp_framing/app -- demo
+      - name: Reproduce README examples and CLI file workflows
+        run: python scripts/compatibility-smoke.py
       - name: Build Wasm-GC bridge
         run: moon build --target wasm-gc web/bridge --release
       - name: Verify playground assets
         run: |
           node --check web/app.js
           node web/check-static.mjs
+          node web/check-wasm.mjs
 
       - name: Verify resource regression smoke
         run: bash scripts/resource-smoke.sh
 
-  latest-toolchain:
-    runs-on: ubuntu-latest
+  windows:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
       - name: Install latest MoonBit
+        shell: pwsh
         run: |
-          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
-          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          $env:MOONBIT_INSTALL_VERSION = 'latest'
+          irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          "$HOME/.moon/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          & "$HOME/.moon/bin/moon.exe" version --all
       - name: Restore dependencies
         run: moon update
-      - name: Check forward compatibility
+      - name: Check all supported targets
         run: moon check --target all --deny-warn
+      - name: Build all supported targets
+        run: moon build --target all --release --deny-warn
+      - name: Test all supported targets
+        run: moon test --target all --deny-warn
+      - name: Verify executable README
+        run: moon test README.mbt.md --target native --deny-warn
+      - name: Verify published README consumer
+        run: python scripts/check-readme-consumer.py
+      - name: Reproduce README examples and CLI file workflows
+        run: python scripts/compatibility-smoke.py
+      - name: Verify Wasm-GC exports
+        run: node web/check-wasm.mjs
+      - name: Verify formatting
+        run: moon fmt --check
 
   reference-validation:
     runs-on: ubuntu-latest
@@ -130,6 +168,7 @@ jobs:
         run: |
           curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
           echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+          "$HOME/.moon/bin/moon" version --all
       - name: Install independent reference tools
         run: |
           sudo apt-get update

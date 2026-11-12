@@ -7,9 +7,9 @@ import {
 }
 
 // Values
-pub const MAX_FRAME_BYTES : Int = 65536
+pub const MAX_FRAME_BYTES : Int32 = 65536
 
-pub const MAX_PAYLOAD_BYTES : Int = 4096
+pub const MAX_PAYLOAD_BYTES : Int32 = 4096
 
 pub fn encode_message(Message) -> Result[Bytes, @binschema.BinError]
 
@@ -20,15 +20,16 @@ pub fn response_for(Message) -> Message?
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug)
 pub(all) enum Message {
-  EchoRequest((UInt, Bytes))
-  EchoResponse((UInt, Bytes))
-} derive(Eq, @debug.Debug)
+  EchoRequest((UInt32, Bytes))
+  EchoResponse((UInt32, Bytes))
+}
 pub fn Message::equal(Self, Self) -> Bool
 pub fn Message::not_equal(Self, Self) -> Bool
 pub fn Message::payload(Self) -> Bytes
 pub fn Message::render(Self) -> String
-pub fn Message::request_id(Self) -> UInt
+pub fn Message::request_id(Self) -> UInt32
 pub fn Message::to_repr(Self) -> @debug.Repr
 
 // Type aliases

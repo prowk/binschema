@@ -27,18 +27,18 @@ fn InputPath::from_string(path : String) -> InputPath {
 extern "C" fn input_file_open(path : InputPath) -> InputFileHandle = "binschema_input_file_open"
 
 ///|
-extern "C" fn input_file_is_null(file : InputFileHandle) -> Int = "binschema_input_file_is_null"
+extern "C" fn input_file_is_null(file : InputFileHandle) -> Int32 = "binschema_input_file_is_null"
 
 ///|
 #borrow(file, buffer)
 extern "C" fn input_file_read(
   file : InputFileHandle,
   buffer : Bytes,
-  count : Int,
-) -> Int = "binschema_input_file_read"
+  count : Int32,
+) -> Int32 = "binschema_input_file_read"
 
 ///|
-extern "C" fn input_file_close(file : InputFileHandle) -> Int = "binschema_input_file_close"
+extern "C" fn input_file_close(file : InputFileHandle) -> Int32 = "binschema_input_file_close"
 
 ///|
 extern "C" fn input_file_error_message() -> Bytes = "binschema_input_file_error_message"
@@ -50,7 +50,7 @@ fn input_file_error() -> String {
 
 ///|
 /// 分块读取文件，并且在分配超过上限前停止。
-fn read_input_bounded(path : String, limit : Int) -> Result[Bytes, CliError] {
+fn read_input_bounded(path : String, limit : Int32) -> Result[Bytes, CliError] {
   if limit < 0 {
     return Err(Data("输入文件上限不能为负数"))
   }

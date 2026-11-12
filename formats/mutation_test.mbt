@@ -1,5 +1,5 @@
 ///|
-fn mutation_prefix(input : Bytes, length : Int) -> Bytes {
+fn mutation_prefix(input : Bytes, length : Int32) -> Bytes {
   let output : Array[Byte] = []
   for index in 0..<length {
     output.push(input[index])
@@ -8,7 +8,7 @@ fn mutation_prefix(input : Bytes, length : Int) -> Bytes {
 }
 
 ///|
-fn mutation_replace_byte(input : Bytes, index : Int, value : Byte) -> Bytes {
+fn mutation_replace_byte(input : Bytes, index : Int32, value : Byte) -> Bytes {
   let output : Array[Byte] = []
   for position, byte in input {
     output.push(if position == index { value } else { byte })
@@ -19,8 +19,8 @@ fn mutation_replace_byte(input : Bytes, index : Int, value : Byte) -> Bytes {
 ///|
 fn mutation_fill_range(
   input : Bytes,
-  start : Int,
-  end : Int,
+  start : Int32,
+  end : Int32,
   value : Byte,
 ) -> Bytes {
   let output : Array[Byte] = []
@@ -261,7 +261,7 @@ test "mutation: first-byte field flips never escape structured outcomes" {
 fn deterministic_mutation_campaign(
   input : Bytes,
   format : @formats.Format,
-) -> Result[Int, String] {
+) -> Result[Int32, String] {
   if input.length() == 0 {
     return Err("mutation seed must not be empty")
   }

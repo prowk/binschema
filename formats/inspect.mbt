@@ -1,5 +1,6 @@
 ///|
 /// 内置的示例格式。Auto 仅用于自动检测入口。
+#derive(Eq, Debug, ToJson)
 pub(all) enum Format {
   Auto
   Png
@@ -8,7 +9,7 @@ pub(all) enum Format {
   Bmff
   Dns
   Elf
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend Format with Eq::{not_equal, equal}
@@ -20,10 +21,11 @@ pub extend Format with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend Format with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct SummaryItem {
   key : String
   value : String
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend SummaryItem with Eq::{not_equal, equal}
@@ -36,14 +38,15 @@ pub extend SummaryItem with ToJson::{to_json}
 
 ///|
 /// 与 CLI、Web 演示共享的稳定检查结果。
+#derive(Eq, Debug, ToJson)
 pub(all) struct Inspection {
   format : String
-  size : Int
+  size : Int32
   roundtrip_equal : Bool
   summary : Array[SummaryItem]
   schema : @bin.SchemaNode
   trace : Array[@bin.TraceEntry]
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend Inspection with Eq::{not_equal, equal}
@@ -133,7 +136,7 @@ fn item(key : String, value : String) -> SummaryItem {
 }
 
 ///|
-fn uint32_be_at(bytes : Bytes, offset : Int) -> UInt {
+fn uint32_be_at(bytes : Bytes, offset : Int32) -> UInt32 {
   (bytes[offset].to_uint() << 24) |
   (bytes[offset + 1].to_uint() << 16) |
   (bytes[offset + 2].to_uint() << 8) |
@@ -343,7 +346,7 @@ fn inspect_elf(input : Bytes) -> Result[Inspection, @bin.BinError] {
 ///|
 pub fn inspect(
   input : Bytes,
-  format? : Format = Auto,
+  format~ : Format = Auto,
 ) -> Result[Inspection, @bin.BinError] {
   let selected = match format {
     Auto =>
@@ -375,7 +378,7 @@ pub fn inspect(
 ///|
 pub fn Inspection::to_json_string(
   self : Inspection,
-  pretty? : Bool = false,
+  pretty~ : Bool = false,
 ) -> String {
   if pretty {
     @json.to_json(self).stringify(indent=2)

@@ -8,7 +8,14 @@ const root = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(root, "index.html"), "utf8");
 const app = readFileSync(join(root, "app.js"), "utf8");
 const workflow = readFileSync(join(root, "..", ".github", "workflows", "pages.yml"), "utf8");
+const moduleVersion = /^version\s*=\s*"([^"]+)"/m.exec(readFileSync(join(root, "..", "moon.mod"), "utf8"))[1];
 readFileSync(join(root, "favicon.svg"), "utf8");
+
+// 页面版本和文档入口必须与发布清单同步，避免评委进入旧版文档。
+assert(html.includes(`<span>BinSchema v${moduleVersion}</span>`), "页脚版本必须与 moon.mod 一致");
+for (const match of html.matchAll(/https:\/\/mooncakes\.io\/docs\/prowk\/binschema@([\d.]+)/g)) {
+  assert.equal(match[1], moduleVersion, "Mooncakes 链接必须指向当前发布版本");
+}
 
 const ids = [...html.matchAll(/\bid="([^"]+)"/g)].map((match) => match[1]);
 assert.equal(new Set(ids).size, ids.length, "HTML id 必须唯一");

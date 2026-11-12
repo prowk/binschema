@@ -1,9 +1,10 @@
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct WavChunk {
   id : String
   data : Bytes
   padding : Byte?
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend WavChunk with Eq::{not_equal, equal}
@@ -15,14 +16,15 @@ pub extend WavChunk with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend WavChunk with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct WavFormat {
-  audio_format : UInt
-  channels : UInt
-  sample_rate : UInt
-  byte_rate : UInt
-  block_align : UInt
-  bits_per_sample : UInt
-} derive(Eq, Debug, ToJson)
+  audio_format : UInt32
+  channels : UInt32
+  sample_rate : UInt32
+  byte_rate : UInt32
+  block_align : UInt32
+  bits_per_sample : UInt32
+}
 
 ///|
 pub extend WavFormat with Eq::{not_equal, equal}
@@ -34,11 +36,12 @@ pub extend WavFormat with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend WavFormat with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct WavFile {
-  riff_size : UInt
+  riff_size : UInt32
   chunks : Array[WavChunk]
   format : WavFormat?
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend WavFile with Eq::{not_equal, equal}
@@ -53,7 +56,7 @@ pub extend WavFile with ToJson::{to_json}
 fn ascii_id(
   bytes : Bytes,
   field : String,
-  offset : Int,
+  offset : Int32,
 ) -> Result[String, @bin.BinError] {
   if bytes.length() != 4 {
     return Err(

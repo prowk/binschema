@@ -3,6 +3,7 @@ package "prowk/binschema/formats"
 
 import {
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
   "prowk/binschema",
 }
 
@@ -40,126 +41,136 @@ pub fn wav_codec() -> @binschema.Codec[WavFile]
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct BmffBox {
   kind : Bytes
   extended_size : Bool
   size_to_eof : Bool
   user_type : Bytes?
   payload : Bytes
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn BmffBox::equal(Self, Self) -> Bool
 pub fn BmffBox::not_equal(Self, Self) -> Bool
-pub fn BmffBox::to_json(Self) -> Json
+pub fn BmffBox::to_json(Self) -> @json.Json
 pub fn BmffBox::to_repr(Self) -> @debug.Repr
 pub fn BmffBox::type_name(Self) -> String
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct BmffFile {
   boxes : Array[BmffBox]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn BmffFile::equal(Self, Self) -> Bool
 pub fn BmffFile::not_equal(Self, Self) -> Bool
-pub fn BmffFile::to_json(Self) -> Json
+pub fn BmffFile::to_json(Self) -> @json.Json
 pub fn BmffFile::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct DnsMessage {
-  id : UInt
-  flags : UInt
+  id : UInt32
+  flags : UInt32
   questions : Array[DnsQuestion]
   answers : Array[DnsRecord]
   authorities : Array[DnsRecord]
   additionals : Array[DnsRecord]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn DnsMessage::equal(Self, Self) -> Bool
 pub fn DnsMessage::not_equal(Self, Self) -> Bool
-pub fn DnsMessage::to_json(Self) -> Json
+pub fn DnsMessage::to_json(Self) -> @json.Json
 pub fn DnsMessage::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct DnsName {
   labels : Array[Bytes]
   wire : Bytes
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn DnsName::display(Self) -> String
 pub fn DnsName::equal(Self, Self) -> Bool
 pub fn DnsName::not_equal(Self, Self) -> Bool
-pub fn DnsName::to_json(Self) -> Json
+pub fn DnsName::to_json(Self) -> @json.Json
 pub fn DnsName::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct DnsQuestion {
   name : DnsName
-  qtype : UInt
-  qclass : UInt
-} derive(Eq, ToJson, @debug.Debug)
+  qtype : UInt32
+  qclass : UInt32
+}
 pub fn DnsQuestion::equal(Self, Self) -> Bool
 pub fn DnsQuestion::not_equal(Self, Self) -> Bool
-pub fn DnsQuestion::to_json(Self) -> Json
+pub fn DnsQuestion::to_json(Self) -> @json.Json
 pub fn DnsQuestion::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct DnsRecord {
   name : DnsName
-  rr_type : UInt
-  rr_class : UInt
-  ttl : UInt
+  rr_type : UInt32
+  rr_class : UInt32
+  ttl : UInt32
   rdata : Bytes
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn DnsRecord::equal(Self, Self) -> Bool
 pub fn DnsRecord::not_equal(Self, Self) -> Bool
-pub fn DnsRecord::to_json(Self) -> Json
+pub fn DnsRecord::to_json(Self) -> @json.Json
 pub fn DnsRecord::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum ElfClass {
   Elf32
   Elf64
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ElfClass::equal(Self, Self) -> Bool
 pub fn ElfClass::name(Self) -> String
 pub fn ElfClass::not_equal(Self, Self) -> Bool
-pub fn ElfClass::to_json(Self) -> Json
+pub fn ElfClass::to_json(Self) -> @json.Json
 pub fn ElfClass::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct ElfFile {
   class : ElfClass
   endian : @binschema.Endian
-  os_abi : UInt
-  abi_version : UInt
-  file_type : UInt
-  machine : UInt
-  version : UInt
+  os_abi : UInt32
+  abi_version : UInt32
+  file_type : UInt32
+  machine : UInt32
+  version : UInt32
   entry : UInt64
   program_header_offset : UInt64
   section_header_offset : UInt64
-  flags : UInt
-  header_size : Int
-  program_header_entry_size : Int
-  program_header_count : Int
-  section_header_entry_size : Int
-  section_header_count : Int
-  section_name_index : Int
+  flags : UInt32
+  header_size : Int32
+  program_header_entry_size : Int32
+  program_header_count : Int32
+  section_header_entry_size : Int32
+  section_header_count : Int32
+  section_name_index : Int32
   sections : Array[ElfSection]
   raw : Bytes
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ElfFile::equal(Self, Self) -> Bool
 pub fn ElfFile::not_equal(Self, Self) -> Bool
-pub fn ElfFile::to_json(Self) -> Json
+pub fn ElfFile::to_json(Self) -> @json.Json
 pub fn ElfFile::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct ElfSection {
   name : String
-  name_offset : UInt
-  section_type : UInt
+  name_offset : UInt32
+  section_type : UInt32
   flags : UInt64
   address : UInt64
   offset : UInt64
   size : UInt64
-  link : UInt
-  info : UInt
+  link : UInt32
+  info : UInt32
   alignment : UInt64
   entry_size : UInt64
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ElfSection::equal(Self, Self) -> Bool
 pub fn ElfSection::not_equal(Self, Self) -> Bool
-pub fn ElfSection::to_json(Self) -> Json
+pub fn ElfSection::to_json(Self) -> @json.Json
 pub fn ElfSection::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum Format {
   Auto
   Png
@@ -168,113 +179,122 @@ pub(all) enum Format {
   Bmff
   Dns
   Elf
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Format::equal(Self, Self) -> Bool
 pub fn Format::name(Self) -> String
 pub fn Format::not_equal(Self, Self) -> Bool
 pub fn Format::parse(String) -> Result[Self, String]
-pub fn Format::to_json(Self) -> Json
+pub fn Format::to_json(Self) -> @json.Json
 pub fn Format::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct Inspection {
   format : String
-  size : Int
+  size : Int32
   roundtrip_equal : Bool
   summary : Array[SummaryItem]
   schema : @binschema.SchemaNode
   trace : Array[@binschema.TraceEntry]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Inspection::equal(Self, Self) -> Bool
 pub fn Inspection::not_equal(Self, Self) -> Bool
-pub fn Inspection::to_json(Self) -> Json
+pub fn Inspection::to_json(Self) -> @json.Json
 pub fn Inspection::to_json_string(Self, pretty? : Bool) -> String
 pub fn Inspection::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct PcapFile {
   endian : @binschema.Endian
   nanosecond_timestamps : Bool
-  version_major : UInt
-  version_minor : UInt
-  timezone_offset : Int
-  timestamp_accuracy : UInt
-  snapshot_length : UInt
-  link_type : UInt
+  version_major : UInt32
+  version_minor : UInt32
+  timezone_offset : Int32
+  timestamp_accuracy : UInt32
+  snapshot_length : UInt32
+  link_type : UInt32
   packets : Array[PcapPacket]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn PcapFile::equal(Self, Self) -> Bool
 pub fn PcapFile::not_equal(Self, Self) -> Bool
-pub fn PcapFile::to_json(Self) -> Json
+pub fn PcapFile::to_json(Self) -> @json.Json
 pub fn PcapFile::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct PcapPacket {
-  timestamp_seconds : UInt
-  timestamp_fraction : UInt
-  original_length : UInt
+  timestamp_seconds : UInt32
+  timestamp_fraction : UInt32
+  original_length : UInt32
   data : Bytes
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn PcapPacket::equal(Self, Self) -> Bool
 pub fn PcapPacket::not_equal(Self, Self) -> Bool
-pub fn PcapPacket::to_json(Self) -> Json
+pub fn PcapPacket::to_json(Self) -> @json.Json
 pub fn PcapPacket::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct PngChunk {
   kind : String
   data : Bytes
-  crc : UInt
-} derive(Eq, ToJson, @debug.Debug)
+  crc : UInt32
+}
 pub fn PngChunk::equal(Self, Self) -> Bool
 pub fn PngChunk::not_equal(Self, Self) -> Bool
-pub fn PngChunk::to_json(Self) -> Json
+pub fn PngChunk::to_json(Self) -> @json.Json
 pub fn PngChunk::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct PngFile {
   chunks : Array[PngChunk]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn PngFile::equal(Self, Self) -> Bool
 pub fn PngFile::not_equal(Self, Self) -> Bool
-pub fn PngFile::to_json(Self) -> Json
+pub fn PngFile::to_json(Self) -> @json.Json
 pub fn PngFile::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct SummaryItem {
   key : String
   value : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SummaryItem::equal(Self, Self) -> Bool
 pub fn SummaryItem::not_equal(Self, Self) -> Bool
-pub fn SummaryItem::to_json(Self) -> Json
+pub fn SummaryItem::to_json(Self) -> @json.Json
 pub fn SummaryItem::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct WavChunk {
   id : String
   data : Bytes
   padding : Byte?
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn WavChunk::equal(Self, Self) -> Bool
 pub fn WavChunk::not_equal(Self, Self) -> Bool
-pub fn WavChunk::to_json(Self) -> Json
+pub fn WavChunk::to_json(Self) -> @json.Json
 pub fn WavChunk::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct WavFile {
-  riff_size : UInt
+  riff_size : UInt32
   chunks : Array[WavChunk]
   format : WavFormat?
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn WavFile::equal(Self, Self) -> Bool
 pub fn WavFile::not_equal(Self, Self) -> Bool
-pub fn WavFile::to_json(Self) -> Json
+pub fn WavFile::to_json(Self) -> @json.Json
 pub fn WavFile::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct WavFormat {
-  audio_format : UInt
-  channels : UInt
-  sample_rate : UInt
-  byte_rate : UInt
-  block_align : UInt
-  bits_per_sample : UInt
-} derive(Eq, ToJson, @debug.Debug)
+  audio_format : UInt32
+  channels : UInt32
+  sample_rate : UInt32
+  byte_rate : UInt32
+  block_align : UInt32
+  bits_per_sample : UInt32
+}
 pub fn WavFormat::equal(Self, Self) -> Bool
 pub fn WavFormat::not_equal(Self, Self) -> Bool
-pub fn WavFormat::to_json(Self) -> Json
+pub fn WavFormat::to_json(Self) -> @json.Json
 pub fn WavFormat::to_repr(Self) -> @debug.Repr
 
 // Type aliases
