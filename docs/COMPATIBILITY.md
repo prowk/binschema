@@ -30,6 +30,10 @@ Feature flags enabled: rr_moon_mod,rr_moon_pkg
 - `async@0.22.3` emits an upstream MSVC C4005 `EINVAL` redefinition warning; it does not block compilation, `--deny-warn` MoonBit checks, or TCP execution.
 - Linux system reference/resource scripts remain Ubuntu CI gates and were not executed in this Windows audit. macOS is not covered by this local verification. The web bridge requires Wasm-GC plus JS string builtins/imported string constants; Node.js 22.14.0 could not instantiate it, while Node.js 24.22.3 passed.
 
+## v0.3.2 release verification
+
+The compatibility fixes passed [CI for PR #39](https://github.com/prowk/binschema/actions/runs/43232733318) on Ubuntu, Windows and the independent reference validation job. Release-source CI uses `python scripts/check-readme-consumer.py --source`; after publication the default mode verifies the actual Mooncakes package. This separates pre-publication source compatibility from registry installation evidence.
+
 ## Public API
 
 The generated `pkg.generated.mbti` files are the reviewable public API snapshot. CI runs

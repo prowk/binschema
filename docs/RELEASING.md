@@ -23,7 +23,7 @@ moon package --list
 moon check --target all --deny-warn
 moon test --target all --deny-warn
 moon test README.mbt.md --target native --deny-warn
-python scripts/check-readme-consumer.py
+python scripts/check-readme-consumer.py --source
 moon bench --build-only --target native --deny-warn
 moon test --target native --enable-coverage --deny-warn
 moon coverage report -p prowk/binschema -f summary
@@ -66,7 +66,7 @@ cross-machine performance guarantee.
 2. Create an annotated tag matching the release version (for example, `v0.3.0` for version `0.3.0`) on the release commit.
 3. Publish the MoonBit module using the normal registry release flow.
 4. Create a GitHub Release from the same tag and copy the relevant changelog section.
-5. Verify a clean consumer project can install the released version and compile a minimal codec.
+5. Run `python scripts/check-readme-consumer.py` without `--source` to verify a clean consumer installs the published version and runs the documented APIs on all four backends.
 
 ## 4. After release
 

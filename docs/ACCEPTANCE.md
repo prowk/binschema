@@ -34,7 +34,7 @@
 ## 5. 持续集成
 
 - [GitHub Actions CI](https://github.com/prowk/binschema/actions/workflows/ci.yml) 覆盖接口同步、文档生成、发布包审计、格式检查、四后端检查与测试、外部参考工具、mutation fuzz、资源压力检查、覆盖率、示例、CLI 和 Wasm-GC 构建。
-- Ubuntu `test` 与 `windows` 作业安装官方最新发布工具链，在 push、PR、每周定时及手动触发时检查、构建、测试受支持目标，并运行独立的已发布包调用方与 Native 示例。
+- Ubuntu `test` 与 `windows` 作业安装官方最新发布工具链，在 push、PR、每周定时及手动触发时检查、构建、测试受支持目标，并运行独立源码调用方与 Native 示例；发布后另用默认模式检查真实 Mooncakes 包。
 - [持续验证工作流](https://github.com/prowk/binschema/actions/workflows/continuous-verification.yml) 每周运行固定回归 seed 与按 run id 推导的动态 seed，并归档带环境信息的性能和峰值内存记录。
 - Pages 工作流从源码重建并部署浏览器演示站。
 
@@ -71,8 +71,8 @@ moon run --target native examples/tcp_framing/app -- demo
 
 ## 8. Mooncakes 发布
 
-- 模块名与版本由 `moon.mod` 声明为 `prowk/binschema@0.3.1`。
-- 已发布文档：[mooncakes.io/docs/prowk/binschema@0.3.1](https://mooncakes.io/docs/prowk/binschema@0.3.1)。
+- 模块名与版本由 `moon.mod` 声明为 `prowk/binschema@0.3.2`。
+- 已发布文档：[mooncakes.io/docs/prowk/binschema@0.3.2](https://mooncakes.io/docs/prowk/binschema@0.3.2)。
 - 发布前可用 `moon package --list` 核验归档内容，并按 `docs/RELEASING.md` 执行发布流程。
 
 ## 9. 开源许可证与第三方依赖

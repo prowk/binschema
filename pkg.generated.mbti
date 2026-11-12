@@ -8,7 +8,7 @@ import {
 }
 
 // Values
-pub const VERSION : String = "0.3.1"
+pub const VERSION : String = "0.3.2"
 
 pub fn align(Int32) -> Codec[Unit]
 

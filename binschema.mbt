@@ -1,6 +1,6 @@
 ///|
 /// BinSchema 的版本号。
-pub const VERSION : String = "0.3.1"
+pub const VERSION : String = "0.3.2"
 
 ///|
 /// 使用安全默认限制解码完整输入。
