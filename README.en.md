@@ -7,7 +7,7 @@
   <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
 </p>
-<p><a href="https://prowk.github.io/binschema/">Online Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.1">Mooncakes documentation</a> · <a href="README.md">简体中文</a> · <strong>English</strong></p>
+<p><a href="https://prowk.github.io/binschema/">Online Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.2">Mooncakes documentation</a> · <a href="README.md">简体中文</a> · <strong>English</strong></p>
 
 </div>
 
@@ -41,7 +41,7 @@ The core library and `formats` support all four backends. CLI and protocol/TCP e
 CI installs the latest official release and records full versions on push, PR, weekly schedule and manual runs, checking/building/testing the supported targets on Ubuntu and Windows, running the examples, and loading the actual Wasm exports. After a toolchain upgrade, run `moon clean` if coverage reports conflicting trace metadata from old artifacts. See [the compatibility record](docs/COMPATIBILITY.md).
 
 ```bash
-moon add prowk/binschema@0.3.1
+moon add prowk/binschema@0.3.2
 ```
 
 Import it from your package:

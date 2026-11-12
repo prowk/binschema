@@ -7,7 +7,7 @@
   <a href="https://github.com/prowk/binschema/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/prowk/binschema/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/github/license/prowk/binschema?style=flat-square"></a>
 </p>
-<p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.1">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
+<p><a href="https://prowk.github.io/binschema/">在线 Playground</a> · <a href="https://mooncakes.io/docs/prowk/binschema@0.3.2">Mooncakes 文档</a> · <strong>简体中文</strong> · <a href="README.en.md">English</a></p>
 
 </div>
 
@@ -45,7 +45,7 @@ CI 在 push、PR、每周定时及手动触发时安装官方最新发布工具�
 在 MoonBit 项目中添加稳定版本：
 
 ```bash
-moon add prowk/binschema@0.3.1
+moon add prowk/binschema@0.3.2
 ```
 
 并在调用方的 `moon.pkg` 中导入：
@@ -255,7 +255,7 @@ moon build --target all --release --deny-warn
 moon test --target all --deny-warn
 moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512
 moon test README.mbt.md --target native --deny-warn
-python scripts/check-readme-consumer.py
+python scripts/check-readme-consumer.py --source
 moon bench --build-only --target native --deny-warn
 moon test --target native --enable-coverage --deny-warn
 moon coverage report -p prowk/binschema -f summary

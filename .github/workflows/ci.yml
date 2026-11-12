@@ -84,8 +84,8 @@ jobs:
         run: moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512
       - name: Verify executable README
         run: moon test README.mbt.md --target native --deny-warn
-      - name: Verify published README consumer
-        run: python scripts/check-readme-consumer.py
+      - name: Verify README consumer against release source
+        run: python scripts/check-readme-consumer.py --source
       - name: Compile native benchmarks
         run: moon bench --build-only --target native --deny-warn
       - name: Verify coverage workflow
@@ -151,8 +151,8 @@ jobs:
         run: moon test --target all --deny-warn
       - name: Verify executable README
         run: moon test README.mbt.md --target native --deny-warn
-      - name: Verify published README consumer
-        run: python scripts/check-readme-consumer.py
+      - name: Verify README consumer against release source
+        run: python scripts/check-readme-consumer.py --source
       - name: Reproduce README examples and CLI file workflows
         run: python scripts/compatibility-smoke.py
       - name: Verify Wasm-GC exports

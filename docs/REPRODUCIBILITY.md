@@ -12,7 +12,7 @@ BinSchema 的核心功能能够运行，已有可运行示例、必要测试和�
 2. 独立 Mooncakes 调用方：实际安装 `prowk/binschema@0.3.1`，不使用本地 workspace 替换依赖。
 3. 已部署的 [Playground](https://prowk.github.io/binschema/)：下载实际 Wasm 验证导出，并使用本机 Chrome 检查页面交互。
 
-本文件及本次修复在核对时尚未提交、推送或部署。下列修复后步骤适用于包含这些更改的提交，不能把本地验证结果当作当前公开分支的 CI 结果。
+首次审计时修复尚未提交。随后修复已通过 [PR #39](https://github.com/prowk/binschema/pull/39) 合入；[CI 记录](https://github.com/prowk/binschema/actions/runs/43232733318) 中 Ubuntu、Windows 和外部参考验证全部通过。以下公开版本结果保留为 `eea380a` 的历史审计；v0.3.2 使用修正后的复现流程。
 
 ## 当前赛事要求
 
@@ -29,7 +29,7 @@ BinSchema 的核心功能能够运行，已有可运行示例、必要测试和�
 
 官网目前说明每队不超过 3 人，报名和验收日期以官方通知为准；已有项目可参与，但重复提交、拆分项目或仅做简单修改不计入验收与奖励。报名表、一页项目说明、交流群加入情况和审核状态不属于本仓库运行验证，仍需参赛者确认。完整飞书章程本次未能读取，不能据此宣称已获得官方验收或参赛资格确认。
 
-## 公开版本的逐项结果
+## 首次审计公开版本 eea380a 的逐项结果
 
 | 流程 | 实测结果 | 对评委复现的影响与处理 |
 | --- | --- | --- |
@@ -106,12 +106,12 @@ python scripts/compatibility-smoke.py
 ```bash
 moon new binschema-user
 cd binschema-user
-moon add prowk/binschema@0.3.1
+moon add prowk/binschema@0.3.2
 ```
 
 将中文 README 的导入段加入 `moon.pkg`，保持别名为 `@binschema`，然后将快速开始代码保存为 `quickstart_test.mbt`，执行 `moon test --target native`。仅用于测试时，可把导入标记为 `for "test"`，避免严格检查中的未使用导入警告。
 
-维护者可从本仓库运行以下检查。它会创建独立临时模块，从 README 原样提取导入与两个 `mbt check` 示例，使用 Mooncakes 发布包在四后端运行，不会以本地 workspace 替代依赖：
+维护者发布后可从本仓库运行以下检查。默认模式创建独立临时模块，从 README 原样提取导入与两个 `mbt check` 示例，使用 Mooncakes 发布包在四后端运行，不会以本地 workspace 替代依赖。发布前 CI 显式传入 `--source` 验证当前源码，以便尚未上传的新版本也能先完成 CI；该模式不宣称已安装注册表发布包：
 
 ```bash
 python scripts/check-readme-consumer.py
