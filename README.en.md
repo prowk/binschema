@@ -22,23 +22,7 @@ BinSchema defines safe binary decoding and encoding once with a composable `Code
 
 BinSchema requires the MoonBit compiler `moonc >= 0.10.20`. Run `moon version --all` to inspect the installed toolchain; see the [official installation guide](https://www.moonbitlang.com/download/) to install or update MoonBit.
 
-
-### Verified toolchain and platforms
-
-On 2026-11-12 the official Windows installer was run with `latest`. Actual `moon version --all` output (local executable paths omitted):
-
-```text
-moon 0.1.20261104 (940aa18 2026-11-04)
-moonc v0.10.20+65efd5b93 (2026-11-05)
-moonrun 0.1.20261104 (940aa18 2026-11-04)
-Feature flags enabled: rr_moon_mod,rr_moon_pkg
-```
-
-Local validation used Windows x86-64 and MSVC 2022. Checks, release builds and tests passed on all four declared backends: Wasm 109, Wasm-GC 114, JS 109 and Native 123 tests. Both protocol examples, the CLI and all TCP loopback scenarios ran successfully. Existing pinned dependencies `moonbitlang/x@0.5.5` and the isolated `moonbitlang/async@0.22.3` remain compatible.
-
-The core library and `formats` support all four backends. CLI and protocol/TCP examples require Native; the browser bridge requires Wasm-GC. Native builds need a C toolchain (MSVC and Windows SDK on Windows). Ubuntu is continuously checked in CI; macOS was not locally verified in this audit. Browser use requires Wasm-GC, JavaScript string builtins and imported string constants. Artifact smoke tests use Node.js 24; Node.js 22.14.0 could not load this bridge. Resource and independent-reference scripts require Linux tools and run in Ubuntu CI.
-
-CI installs the latest official release and records full versions on push, PR, weekly schedule and manual runs, checking/building/testing the supported targets on Ubuntu and Windows, running the examples, and loading the actual Wasm exports. After a toolchain upgrade, run `moon clean` if coverage reports conflicting trace metadata from old artifacts. See [the compatibility record](docs/COMPATIBILITY.md).
+The core library and `formats` support Wasm, Wasm-GC, JavaScript and Native. The CLI and protocol examples use Native; the browser bridge uses Wasm-GC. Native builds need a C toolchain (MSVC and Windows SDK on Windows). The browser inspector requires Wasm-GC and JavaScript string builtins. See [compatibility documentation](docs/COMPATIBILITY.md) for platform limitations and toolchain verification records.
 
 ```bash
 moon add prowk/binschema@0.3.2
@@ -107,9 +91,7 @@ in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), security guidance in
 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md), and the release checklist in
 [docs/RELEASING.md](docs/RELEASING.md).
 
-The [reproduction guide](docs/REPRODUCIBILITY.md) records the public GitHub commit audit,
-known documentation issues, and the complete reviewer demo. The published-package README
-examples are also tested in an independent consumer with `python scripts/check-readme-consumer.py`.
+See the [usage guide](docs/REPRODUCIBILITY.md) for complete source build and demo steps.
 
 ## Real-format support scope
 

@@ -22,25 +22,7 @@ BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，�
 
 需要 MoonBit 编译器 `moonc >= 0.10.20`。可用 `moon version --all` 查看当前工具链版本；MoonBit 的安装与更新方式见[官方安装指南](https://www.moonbitlang.com/download/)。
 
-### 已验证工具链与平台
-
-2026-11-12 按官方 Windows 安装脚本更新至 `latest`，实际 `moon version --all` 输出如下（省略本机可执行文件路径）：
-
-```text
-moon 0.1.20261104 (940aa18 2026-11-04)
-moonc v0.10.20+65efd5b93 (2026-11-05)
-moonrun 0.1.20261104 (940aa18 2026-11-04)
-Feature flags enabled: rr_moon_mod,rr_moon_pkg
-```
-
-本次本地验证环境为 Windows x86-64 + MSVC 2022；四后端检查、release 构建和测试均通过（Wasm 109、Wasm-GC 114、JS 109、Native 123 项）。原生 CLI、两个协议示例及 TCP loopback 全场景均已运行。`moonbitlang/x@0.5.5` 与独立示例的 `moonbitlang/async@0.22.3` 在该版本可用，保持固定依赖。
-
-- 核心库与 `formats` 支持 Wasm、Wasm-GC、JavaScript、Native；CLI、协议示例和 TCP 示例只支持 Native，Web 桥接只支持 Wasm-GC。
-- Native 需要 C 工具链；Windows 使用 MSVC + Windows SDK，Linux 使用系统 C 编译器。Linux 由 CI 持续检查，本次未在本机验证 macOS。
-- Web 检查器要求浏览器支持 Wasm-GC、JavaScript string builtins 和 imported string constants。产物冒烟检查使用 Node.js 24；本机 Node.js 22.14.0 无法直接加载该桥接产物。
-- `scripts/resource-smoke.sh` 和外部格式参考验证依赖 Linux 系统工具，在 Ubuntu CI 执行。升级工具链后若 coverage 报 trace metadata 冲突，先运行 `moon clean` 再重跑，避免旧产物混入。
-
-CI 在 push、PR、每周定时及手动触发时安装官方最新发布工具链，记录完整版本，在 Ubuntu 和 Windows 执行受支持目标的检查、构建、测试及核心示例，并实际加载 Wasm 桥接验证导出契约。完整记录见[兼容性策略](docs/COMPATIBILITY.md)。
+核心库和 `formats` 支持 Wasm、Wasm-GC、JavaScript、Native；CLI 和协议示例使用 Native，Web 桥接使用 Wasm-GC。Native 构建需要 C 工具链，Windows 使用 MSVC 和 Windows SDK。Web 检查器需要支持 Wasm-GC 和 JavaScript string builtins 的浏览器。工具链验证记录和完整平台限制见[兼容性文档](docs/COMPATIBILITY.md)。
 
 在 MoonBit 项目中添加稳定版本：
 
@@ -132,7 +114,7 @@ test "README incremental decode" {
 
 ## 可复现的自定义协议示例
 
-首次从源码使用时，先执行 `git clone https://github.com/prowk/binschema.git` 和 `cd binschema`。完整的评委复现步骤、预期结果及本次公开版本审计见[复现指南](docs/REPRODUCIBILITY.md)。
+首次从源码使用时，先执行 `git clone https://github.com/prowk/binschema.git` 和 `cd binschema`。完整构建、运行步骤和预期结果见[使用指南](docs/REPRODUCIBILITY.md)。
 
 仓库中的 [`examples/custom_packet`](examples/custom_packet) 定义了如下布局：
 
