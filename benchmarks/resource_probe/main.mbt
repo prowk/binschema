@@ -5,13 +5,13 @@ fn fail_probe(message : String) -> Unit {
 }
 
 ///|
-fn push_u16(output : Array[Byte], value : UInt) -> Unit {
+fn push_u16(output : Array[Byte], value : UInt32) -> Unit {
   output.push(value.to_byte())
   output.push((value >> 8).to_byte())
 }
 
 ///|
-fn push_u32(output : Array[Byte], value : UInt) -> Unit {
+fn push_u32(output : Array[Byte], value : UInt32) -> Unit {
   for shift in [0, 8, 16, 24] {
     output.push((value >> shift).to_byte())
   }
@@ -27,8 +27,8 @@ fn push_u64(output : Array[Byte], value : UInt64) -> Unit {
 ///|
 fn push_section(
   output : Array[Byte],
-  name_offset : UInt,
-  section_type : UInt,
+  name_offset : UInt32,
+  section_type : UInt32,
   offset : UInt64,
   size : UInt64,
 ) -> Unit {
@@ -45,7 +45,7 @@ fn push_section(
 }
 
 ///|
-fn repeated_name_elf(name_length : Int, reference_count : Int) -> Bytes {
+fn repeated_name_elf(name_length : Int32, reference_count : Int32) -> Bytes {
   let section_count = reference_count + 2
   let string_table_size = name_length + 2
   let section_table_offset = 64 + string_table_size

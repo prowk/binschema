@@ -4,34 +4,35 @@ package "prowk/binschema"
 import {
   "moonbitlang/core/buffer",
   "moonbitlang/core/debug",
+  "moonbitlang/core/json",
 }
 
 // Values
 pub const VERSION : String = "0.3.1"
 
-pub fn align(Int) -> Codec[Unit]
+pub fn align(Int32) -> Codec[Unit]
 
-pub fn bits_msb(Int) -> Codec[UInt]
+pub fn bits_msb(Int32) -> Codec[UInt32]
 
 pub fn bool8() -> Codec[Bool]
 
-pub fn[T] bounded(Int, Codec[T], require_eof? : Bool) -> Codec[T]
+pub fn[T] bounded(Int32, Codec[T], require_eof? : Bool) -> Codec[T]
 
-pub fn bytes_fixed(Int) -> Codec[Bytes]
+pub fn bytes_fixed(Int32) -> Codec[Bytes]
 
 pub fn bytes_to_hex(Bytes) -> String
 
-pub fn bytes_to_hex_preview(Bytes, Int) -> String
+pub fn bytes_to_hex_preview(Bytes, Int32) -> String
 
-pub fn bytes_view_fixed(Int) -> Codec[BytesView]
+pub fn bytes_view_fixed(Int32) -> Codec[BytesView]
 
-pub fn bytes_view_to_hex_preview(BytesView, Int) -> String
+pub fn bytes_view_to_hex_preview(BytesView, Int32) -> String
 
-pub fn[T] checksum_suffix(Codec[T], Codec[UInt], (Bytes) -> UInt) -> Codec[T]
+pub fn[T] checksum_suffix(Codec[T], Codec[UInt32], (Bytes) -> UInt32) -> Codec[T]
 
-pub fn[T] checksum_suffix_view(Codec[T], Codec[UInt], (BytesView) -> UInt) -> Codec[T]
+pub fn[T] checksum_suffix_view(Codec[T], Codec[UInt32], (BytesView) -> UInt32) -> Codec[T]
 
-pub fn[T] count_prefixed(Codec[UInt], Codec[T], max_count? : Int) -> Codec[Array[T]]
+pub fn[T] count_prefixed(Codec[UInt32], Codec[T], max_count? : Int32) -> Codec[Array[T]]
 
 pub fn[T] decode(Codec[T], Bytes) -> Result[Decoded[T], BinError]
 
@@ -53,31 +54,31 @@ pub fn[T] encode(Codec[T], T) -> Result[Bytes, BinError]
 
 pub fn[T] encode_with_options(Codec[T], T, EncodeOptions) -> Result[Bytes, BinError]
 
-pub fn i16_be() -> Codec[Int]
+pub fn i16_be() -> Codec[Int32]
 
-pub fn i16_le() -> Codec[Int]
+pub fn i16_le() -> Codec[Int32]
 
-pub fn i32_be() -> Codec[Int]
+pub fn i32_be() -> Codec[Int32]
 
-pub fn i32_le() -> Codec[Int]
+pub fn i32_le() -> Codec[Int32]
 
 pub fn i64_be() -> Codec[Int64]
 
 pub fn i64_le() -> Codec[Int64]
 
-pub fn i8() -> Codec[Int]
+pub fn i8() -> Codec[Int32]
 
-pub fn[T] length_prefixed(Codec[UInt], Codec[T], max_length? : Int) -> Codec[T]
+pub fn[T] length_prefixed(Codec[UInt32], Codec[T], max_length? : Int32) -> Codec[T]
 
 pub fn lint_schema(SchemaNode) -> Array[LintIssue]
 
 pub fn magic(Bytes) -> Codec[Unit]
 
-pub fn nul_terminated_bytes(max_length? : Int) -> Codec[Bytes]
+pub fn nul_terminated_bytes(max_length? : Int32) -> Codec[Bytes]
 
 pub fn[T] optional_if(Codec[Bool], Codec[T]) -> Codec[T?]
 
-pub fn padding(Int) -> Codec[Unit]
+pub fn padding(Int32) -> Codec[Unit]
 
 pub fn[A, B] pair(Codec[A], Codec[B]) -> Codec[(A, B)]
 
@@ -89,25 +90,25 @@ pub fn remaining_bytes() -> Codec[Bytes]
 
 pub fn remaining_view() -> Codec[BytesView]
 
-pub fn[T] repeat(Int, Codec[T]) -> Codec[Array[T]]
+pub fn[T] repeat(Int32, Codec[T]) -> Codec[Array[T]]
 
 pub fn sleb128() -> Codec[Int64]
 
-pub fn[T] tagged(Codec[UInt], (UInt) -> Result[Codec[T], String], (T) -> Result[UInt, String], render~ : (T) -> String) -> Codec[T]
+pub fn[T] tagged(Codec[UInt32], (UInt32) -> Result[Codec[T], String], (T) -> Result[UInt32, String], render~ : (T) -> String) -> Codec[T]
 
-pub fn u16_be() -> Codec[UInt]
+pub fn u16_be() -> Codec[UInt32]
 
-pub fn u16_le() -> Codec[UInt]
+pub fn u16_le() -> Codec[UInt32]
 
-pub fn u32_be() -> Codec[UInt]
+pub fn u32_be() -> Codec[UInt32]
 
-pub fn u32_le() -> Codec[UInt]
+pub fn u32_le() -> Codec[UInt32]
 
 pub fn u64_be() -> Codec[UInt64]
 
 pub fn u64_le() -> Codec[UInt64]
 
-pub fn u8() -> Codec[UInt]
+pub fn u8() -> Codec[UInt32]
 
 pub fn uleb128() -> Codec[UInt64]
 
@@ -116,17 +117,18 @@ pub fn[T] until_eof(Codec[T]) -> Codec[Array[T]]
 // Errors
 
 // Types and methods
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct BinError {
   kind : ErrorKind
-  offset : Int
+  offset : Int32
   path : String
   message : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn BinError::equal(Self, Self) -> Bool
-pub fn BinError::new(ErrorKind, Int, String, String) -> Self
+pub fn BinError::new(ErrorKind, Int32, String, String) -> Self
 pub fn BinError::not_equal(Self, Self) -> Bool
 pub fn BinError::render(Self) -> String
-pub fn BinError::to_json(Self) -> Json
+pub fn BinError::to_json(Self) -> @json.Json
 pub fn BinError::to_repr(Self) -> @debug.Repr
 
 pub struct Codec[T] {
@@ -146,10 +148,11 @@ pub fn[T] Codec::schema_node(Self[T]) -> SchemaNode
 pub fn[T] Codec::validate(Self[T], (T) -> Bool, String) -> Self[T]
 pub fn[A, B] Codec::xmap(Self[A], (A) -> Result[B, String], (B) -> Result[A, String], render~ : (B) -> String) -> Self[B]
 
+#derive(Eq, @debug.Debug)
 pub(all) struct DecodeOptions {
   limits : Limits
   require_eof : Bool
-} derive(Eq, @debug.Debug)
+}
 pub fn DecodeOptions::default() -> Self
 pub fn DecodeOptions::equal(Self, Self) -> Bool
 pub fn DecodeOptions::not_equal(Self, Self) -> Bool
@@ -161,46 +164,48 @@ pub(all) enum DecodeStep[T] {
   Failed(BinError)
 }
 
+#derive(@debug.Debug)
 pub struct Decoded[T] {
   value : T
-  consumed : Int
+  consumed : Int32
   trace : Array[TraceEntry]
-} derive(@debug.Debug)
+}
 pub fn[T : @debug.Debug] Decoded::to_repr(Self[T]) -> @debug.Repr
 
 pub struct Decoder {
   input : BytesView
-  base_offset : Int
-  mut offset : Int
-  mut bit_offset : Int
+  base_offset : Int32
+  mut offset : Int32
+  mut bit_offset : Int32
   mut field_path : String
-  depth : Int
+  depth : Int32
   limits : Limits
   trace_entries : Array[TraceEntry]
 }
-pub fn Decoder::absolute_offset(Self) -> Int
+pub fn Decoder::absolute_offset(Self) -> Int32
 pub fn Decoder::align_byte(Self) -> Unit
-pub fn Decoder::depth(Self) -> Int
-pub fn Decoder::max_collection_length(Self) -> Int
-pub fn Decoder::max_depth(Self) -> Int
+pub fn Decoder::depth(Self) -> Int32
+pub fn Decoder::max_collection_length(Self) -> Int32
+pub fn Decoder::max_depth(Self) -> Int32
 pub fn Decoder::new(Bytes, Limits) -> Self
 pub fn Decoder::new_view(BytesView, Limits) -> Self
-pub fn Decoder::offset(Self) -> Int
+pub fn Decoder::offset(Self) -> Int32
 pub fn Decoder::path(Self) -> String
-pub fn Decoder::read_bits_msb(Self, Int) -> Result[UInt, BinError]
+pub fn Decoder::read_bits_msb(Self, Int32) -> Result[UInt32, BinError]
 pub fn Decoder::read_byte(Self) -> Result[Byte, BinError]
-pub fn Decoder::read_uint(Self, Int, Endian) -> Result[UInt, BinError]
+pub fn Decoder::read_uint(Self, Int32, Endian) -> Result[UInt32, BinError]
 pub fn Decoder::read_uint64(Self, Endian) -> Result[UInt64, BinError]
-pub fn Decoder::remaining(Self) -> Int
-pub fn Decoder::take_bytes(Self, Int) -> Result[Bytes, BinError]
-pub fn Decoder::take_view(Self, Int) -> Result[BytesView, BinError]
-pub fn Decoder::total_length(Self) -> Int
+pub fn Decoder::remaining(Self) -> Int32
+pub fn Decoder::take_bytes(Self, Int32) -> Result[Bytes, BinError]
+pub fn Decoder::take_view(Self, Int32) -> Result[BytesView, BinError]
+pub fn Decoder::total_length(Self) -> Int32
 pub fn Decoder::trace(Self) -> Array[TraceEntry]
-pub fn Decoder::view_at(Self, Int, Int) -> Result[BytesView, BinError]
+pub fn Decoder::view_at(Self, Int32, Int32) -> Result[BytesView, BinError]
 
+#derive(Eq, @debug.Debug)
 pub(all) struct EncodeOptions {
   limits : Limits
-} derive(Eq, @debug.Debug)
+}
 pub fn EncodeOptions::default() -> Self
 pub fn EncodeOptions::equal(Self, Self) -> Bool
 pub fn EncodeOptions::not_equal(Self, Self) -> Bool
@@ -208,32 +213,34 @@ pub fn EncodeOptions::to_repr(Self) -> @debug.Repr
 
 pub struct Encoder {
   buffer : @buffer.Buffer
-  mut bit_buffer : UInt
-  mut bit_count : Int
+  mut bit_buffer : UInt32
+  mut bit_count : Int32
   mut field_path : String
   limits : Limits
 }
 pub fn Encoder::align_byte(Self, fill_bit? : Bool) -> Result[Unit, BinError]
 pub fn Encoder::finish(Self) -> Result[Bytes, BinError]
-pub fn Encoder::length(Self) -> Int
+pub fn Encoder::length(Self) -> Int32
 pub fn Encoder::limits(Self) -> Limits
-pub fn Encoder::max_collection_length(Self) -> Int
+pub fn Encoder::max_collection_length(Self) -> Int32
 pub fn Encoder::new(Limits) -> Self
 pub fn Encoder::path(Self) -> String
-pub fn Encoder::write_bits_msb(Self, UInt, Int) -> Result[Unit, BinError]
+pub fn Encoder::write_bits_msb(Self, UInt32, Int32) -> Result[Unit, BinError]
 pub fn Encoder::write_bytes(Self, BytesView) -> Result[Unit, BinError]
-pub fn Encoder::write_uint(Self, UInt, Int, Endian) -> Result[Unit, BinError]
+pub fn Encoder::write_uint(Self, UInt32, Int32, Endian) -> Result[Unit, BinError]
 pub fn Encoder::write_uint64(Self, UInt64, Endian) -> Result[Unit, BinError]
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum Endian {
   Big
   Little
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn Endian::equal(Self, Self) -> Bool
 pub fn Endian::not_equal(Self, Self) -> Bool
-pub fn Endian::to_json(Self) -> Json
+pub fn Endian::to_json(Self) -> @json.Json
 pub fn Endian::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum ErrorKind {
   UnexpectedEof
   Misaligned
@@ -242,89 +249,94 @@ pub(all) enum ErrorKind {
   ChecksumMismatch
   TrailingBytes
   Unsupported
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn ErrorKind::equal(Self, Self) -> Bool
 pub fn ErrorKind::name(Self) -> String
 pub fn ErrorKind::not_equal(Self, Self) -> Bool
-pub fn ErrorKind::to_json(Self) -> Json
+pub fn ErrorKind::to_json(Self) -> @json.Json
 pub fn ErrorKind::to_repr(Self) -> @debug.Repr
 
 pub struct IncrementalDecoder[T] {
   codec : Codec[T]
   limits : Limits
   mut buffer : Array[Byte]
-  mut read_offset : Int
+  mut read_offset : Int32
   mut snapshot : Bytes?
 }
 pub fn[T] IncrementalDecoder::append(Self[T], Bytes) -> Result[Unit, BinError]
-pub fn[T] IncrementalDecoder::buffered_bytes(Self[T]) -> Int
+pub fn[T] IncrementalDecoder::buffered_bytes(Self[T]) -> Int32
 pub fn[T] IncrementalDecoder::clear(Self[T]) -> Unit
 pub fn[T] IncrementalDecoder::feed(Self[T], Bytes) -> DecodeStep[T]
 pub fn[T] IncrementalDecoder::new(Codec[T], limits? : Limits) -> Self[T]
 pub fn[T] IncrementalDecoder::poll(Self[T]) -> DecodeStep[T]
 
+#derive(Eq, @debug.Debug)
 pub struct Limits {
-  max_input_bytes : Int
-  max_collection_length : Int
-  max_depth : Int
-  max_output_bytes : Int
-  max_trace_entries : Int
-} derive(Eq, @debug.Debug)
+  max_input_bytes : Int32
+  max_collection_length : Int32
+  max_depth : Int32
+  max_output_bytes : Int32
+  max_trace_entries : Int32
+}
 pub fn Limits::default() -> Self
 pub fn Limits::equal(Self, Self) -> Bool
-pub fn Limits::new(max_input_bytes? : Int, max_collection_length? : Int, max_depth? : Int, max_output_bytes? : Int, max_trace_entries? : Int) -> Self
+pub fn Limits::new(max_input_bytes? : Int32, max_collection_length? : Int32, max_depth? : Int32, max_output_bytes? : Int32, max_trace_entries? : Int32) -> Self
 pub fn Limits::not_equal(Self, Self) -> Bool
 pub fn Limits::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct LintIssue {
   code : String
   severity : LintSeverity
   path : String
   message : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn LintIssue::equal(Self, Self) -> Bool
 pub fn LintIssue::not_equal(Self, Self) -> Bool
 pub fn LintIssue::render(Self) -> String
-pub fn LintIssue::to_json(Self) -> Json
+pub fn LintIssue::to_json(Self) -> @json.Json
 pub fn LintIssue::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) enum LintSeverity {
   LintWarning
   LintError
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn LintSeverity::equal(Self, Self) -> Bool
 pub fn LintSeverity::name(Self) -> String
 pub fn LintSeverity::not_equal(Self, Self) -> Bool
-pub fn LintSeverity::to_json(Self) -> Json
+pub fn LintSeverity::to_json(Self) -> @json.Json
 pub fn LintSeverity::to_repr(Self) -> @debug.Repr
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub(all) struct SchemaNode {
   name : String
   kind : String
   constraints : Array[String]
   children : Array[SchemaNode]
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn SchemaNode::copy(Self) -> Self
 pub fn SchemaNode::equal(Self, Self) -> Bool
 pub fn SchemaNode::leaf(String) -> Self
 pub fn SchemaNode::node(String, Array[Self], constraints? : Array[String]) -> Self
 pub fn SchemaNode::not_equal(Self, Self) -> Bool
 pub fn SchemaNode::render(Self) -> String
-pub fn SchemaNode::to_json(Self) -> Json
+pub fn SchemaNode::to_json(Self) -> @json.Json
 pub fn SchemaNode::to_repr(Self) -> @debug.Repr
 pub fn SchemaNode::with_constraint(Self, String) -> Self
 pub fn SchemaNode::with_name(Self, String) -> Self
 
+#derive(Eq, @debug.Debug, @json.ToJson)
 pub struct TraceEntry {
   path : String
   kind : String
-  start : Int
-  end : Int
+  start : Int32
+  end : Int32
   value : String
-} derive(Eq, ToJson, @debug.Debug)
+}
 pub fn TraceEntry::equal(Self, Self) -> Bool
 pub fn TraceEntry::not_equal(Self, Self) -> Bool
-pub fn TraceEntry::to_json(Self) -> Json
+pub fn TraceEntry::to_json(Self) -> @json.Json
 pub fn TraceEntry::to_repr(Self) -> @debug.Repr
 
 // Type aliases

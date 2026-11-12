@@ -24,7 +24,7 @@ test "property: count-prefixed arrays round-trip generated lengths" {
     max_count=32,
   )
   for length in 0..<32 {
-    let values : Array[UInt] = []
+    let values : Array[UInt32] = []
     for index in 0..<length {
       values.push((index * 257 + length).reinterpret_as_uint())
     }
@@ -43,7 +43,7 @@ test "property: count-prefixed arrays round-trip generated lengths" {
 test "property: until-eof is symmetric for byte sequences" {
   let codec = @binschema.until_eof(@binschema.u8())
   for length in 0..<64 {
-    let values : Array[UInt] = []
+    let values : Array[UInt32] = []
     for index in 0..<length {
       values.push(((index * 17 + length) % 256).reinterpret_as_uint())
     }
@@ -107,7 +107,7 @@ test "property: zero-copy view codecs compose inside bounded regions" {
 }
 
 ///|
-fn property_checksum(bytes : BytesView) -> UInt {
+fn property_checksum(bytes : BytesView) -> UInt32 {
   let mut value = 0U
   for byte in bytes {
     value = (value + byte.to_uint()) & 0xffU
@@ -116,7 +116,7 @@ fn property_checksum(bytes : BytesView) -> UInt {
 }
 
 ///|
-fn property_copy_range(input : Bytes, start : Int, end : Int) -> Bytes {
+fn property_copy_range(input : Bytes, start : Int32, end : Int32) -> Bytes {
   let output : Array[Byte] = []
   for index in start..<end {
     output.push(input[index])

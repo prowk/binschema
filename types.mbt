@@ -1,9 +1,10 @@
 ///|
 /// 二进制整数的字节序。
+#derive(Eq, Debug, ToJson)
 pub(all) enum Endian {
   Big
   Little
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend Endian with Eq::{not_equal, equal}
@@ -16,6 +17,7 @@ pub extend Endian with ToJson::{to_json}
 
 ///|
 /// 统一的编解码错误分类。
+#derive(Eq, Debug, ToJson)
 pub(all) enum ErrorKind {
   UnexpectedEof
   Misaligned
@@ -24,7 +26,7 @@ pub(all) enum ErrorKind {
   ChecksumMismatch
   TrailingBytes
   Unsupported
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend ErrorKind with Eq::{not_equal, equal}
@@ -37,12 +39,13 @@ pub extend ErrorKind with ToJson::{to_json}
 
 ///|
 /// 带绝对偏移和字段路径的错误。
+#derive(Eq, Debug, ToJson)
 pub struct BinError {
   kind : ErrorKind
-  offset : Int
+  offset : Int32
   path : String
   message : String
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend BinError with Eq::{not_equal, equal}
@@ -56,7 +59,7 @@ pub extend BinError with ToJson::{to_json}
 ///|
 pub fn BinError::new(
   kind : ErrorKind,
-  offset : Int,
+  offset : Int32,
   path : String,
   message : String,
 ) -> BinError {
@@ -89,13 +92,14 @@ pub fn ErrorKind::name(self : ErrorKind) -> String {
 
 ///|
 /// 字段的解析轨迹，可用于 CLI 和浏览器可视化。
+#derive(Eq, Debug, ToJson)
 pub struct TraceEntry {
   path : String
   kind : String
-  start : Int
-  end : Int
+  start : Int32
+  end : Int32
   value : String
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend TraceEntry with Eq::{not_equal, equal}
@@ -108,13 +112,14 @@ pub extend TraceEntry with ToJson::{to_json}
 
 ///|
 /// 防止恶意长度字段造成过量内存或递归消耗。
+#derive(Eq, Debug)
 pub struct Limits {
-  max_input_bytes : Int
-  max_collection_length : Int
-  max_depth : Int
-  max_output_bytes : Int
-  max_trace_entries : Int
-} derive(Eq, Debug)
+  max_input_bytes : Int32
+  max_collection_length : Int32
+  max_depth : Int32
+  max_output_bytes : Int32
+  max_trace_entries : Int32
+}
 
 ///|
 pub extend Limits with Eq::{not_equal, equal}
@@ -124,11 +129,11 @@ pub extend Limits with @moonbitlang/core/debug.Debug::{to_repr}
 
 ///|
 pub fn Limits::new(
-  max_input_bytes? : Int = 64 * 1024 * 1024,
-  max_collection_length? : Int = 1_000_000,
-  max_depth? : Int = 64,
-  max_output_bytes? : Int = 64 * 1024 * 1024,
-  max_trace_entries? : Int = 100_000,
+  max_input_bytes~ : Int32 = 64 * 1024 * 1024,
+  max_collection_length~ : Int32 = 1_000_000,
+  max_depth~ : Int32 = 64,
+  max_output_bytes~ : Int32 = 64 * 1024 * 1024,
+  max_trace_entries~ : Int32 = 100_000,
 ) -> Limits {
   {
     max_input_bytes,
@@ -145,10 +150,11 @@ pub fn Limits::default() -> Limits {
 }
 
 ///|
+#derive(Eq, Debug)
 pub(all) struct DecodeOptions {
   limits : Limits
   require_eof : Bool
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend DecodeOptions with Eq::{not_equal, equal}
@@ -162,9 +168,10 @@ pub fn DecodeOptions::default() -> DecodeOptions {
 }
 
 ///|
+#derive(Eq, Debug)
 pub(all) struct EncodeOptions {
   limits : Limits
-} derive(Eq, Debug)
+}
 
 ///|
 pub extend EncodeOptions with Eq::{not_equal, equal}
@@ -179,11 +186,12 @@ pub fn EncodeOptions::default() -> EncodeOptions {
 
 ///|
 /// 解码成功后的值、消费字节数和字段轨迹。
+#derive(Debug)
 pub struct Decoded[T] {
   value : T
-  consumed : Int
+  consumed : Int32
   trace : Array[TraceEntry]
-} derive(Debug)
+}
 
 ///|
 pub extend Decoded with @moonbitlang/core/debug.Debug::{to_repr}

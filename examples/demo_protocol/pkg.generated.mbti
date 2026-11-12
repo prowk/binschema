@@ -1,0 +1,18 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "prowk/binschema/examples/demo_protocol"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+
+// Errors
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+type DemoMessage
+
+// Type aliases
+
+// Traits

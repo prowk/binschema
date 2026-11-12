@@ -1,6 +1,6 @@
 ///|
 /// PNG 等格式使用的 IEEE CRC-32。
-fn crc32(bytes : Bytes) -> UInt {
+fn crc32(bytes : Bytes) -> UInt32 {
   let mut crc = 0xffffffffU
   for byte in bytes {
     crc = crc ^ byte.to_uint()

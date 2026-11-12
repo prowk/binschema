@@ -14,7 +14,7 @@ pub fn[T] Codec::make(
   encode_impl : (Encoder, T) -> Result[Unit, BinError],
   kind~ : String,
   render~ : (T) -> String,
-  schema? : SchemaNode = SchemaNode::leaf(kind),
+  schema~ : SchemaNode = SchemaNode::leaf(kind),
 ) -> Codec[T] {
   { decode_impl, encode_impl, kind, render, schema, }
 }
@@ -163,7 +163,7 @@ pub fn[A, B] pair(first : Codec[A], second : Codec[B]) -> Codec[(A, B)] {
 
 ///|
 /// 按固定数量重复元素 Codec。
-pub fn[T] repeat(count : Int, item : Codec[T]) -> Codec[Array[T]] {
+pub fn[T] repeat(count : Int32, item : Codec[T]) -> Codec[Array[T]] {
   Codec::make(
     fn(decoder) {
       if count < 0 {
@@ -277,9 +277,9 @@ pub fn[T] Codec::validate(
 ///|
 /// 将一个 Codec 限制在固定长度的子区域中。
 pub fn[T] bounded(
-  length : Int,
+  length : Int32,
   body : Codec[T],
-  require_eof? : Bool = true,
+  require_eof~ : Bool = true,
 ) -> Codec[T] {
   Codec::make(
     fn(decoder) {
@@ -369,9 +369,9 @@ pub fn[T] bounded(
 ///|
 /// 使用无符号长度字段限定后续值。
 pub fn[T] length_prefixed(
-  length_codec : Codec[UInt],
+  length_codec : Codec[UInt32],
   body : Codec[T],
-  max_length? : Int = 16 * 1024 * 1024,
+  max_length~ : Int32 = 16 * 1024 * 1024,
 ) -> Codec[T] {
   Codec::make(
     fn(decoder) {
@@ -489,8 +489,8 @@ pub fn[T] optional_if(flag : Codec[Bool], item : Codec[T]) -> Codec[T?] {
 /// 为任意字节对齐的主体增加尾随校验值。
 pub fn[T] checksum_suffix_view(
   body : Codec[T],
-  checksum_codec : Codec[UInt],
-  calculate : (BytesView) -> UInt,
+  checksum_codec : Codec[UInt32],
+  calculate : (BytesView) -> UInt32,
 ) -> Codec[T] {
   Codec::make(
     fn(decoder) {
@@ -580,8 +580,8 @@ pub fn[T] checksum_suffix_view(
 /// 兼容原有拥有型校验和回调。新代码优先使用 `checksum_suffix_view` 避免解码时复制。
 pub fn[T] checksum_suffix(
   body : Codec[T],
-  checksum_codec : Codec[UInt],
-  calculate : (Bytes) -> UInt,
+  checksum_codec : Codec[UInt32],
+  calculate : (Bytes) -> UInt32,
 ) -> Codec[T] {
   checksum_suffix_view(body, checksum_codec, fn(view) {
     calculate(view.to_owned())
@@ -591,9 +591,9 @@ pub fn[T] checksum_suffix(
 ///|
 /// 使用前置计数字段编解码数组。
 pub fn[T] count_prefixed(
-  count_codec : Codec[UInt],
+  count_codec : Codec[UInt32],
   item : Codec[T],
-  max_count? : Int = 1_000_000,
+  max_count~ : Int32 = 1_000_000,
 ) -> Codec[Array[T]] {
   Codec::make(
     fn(decoder) {
@@ -726,9 +726,9 @@ pub fn[T] until_eof(item : Codec[T]) -> Codec[Array[T]] {
 ///|
 /// 由标签值动态选择后续 Codec，适合 tagged union / switch 协议。
 pub fn[T] tagged(
-  tag_codec : Codec[UInt],
-  select : (UInt) -> Result[Codec[T], String],
-  tag_of : (T) -> Result[UInt, String],
+  tag_codec : Codec[UInt32],
+  select : (UInt32) -> Result[Codec[T], String],
+  tag_of : (T) -> Result[UInt32, String],
   render~ : (T) -> String,
 ) -> Codec[T] {
   Codec::make(

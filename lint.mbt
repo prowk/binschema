@@ -1,10 +1,11 @@
 ///|
 /// Schema lint 的问题级别。Error 表示 Schema 元数据缺少关键安全约束，
 /// Warning 表示协议形状可工作，但会降低静态分析能力或扩大误用风险。
+#derive(Eq, Debug, ToJson)
 pub(all) enum LintSeverity {
   LintWarning
   LintError
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend LintSeverity with Eq::{not_equal, equal}
@@ -25,12 +26,13 @@ pub fn LintSeverity::name(self : LintSeverity) -> String {
 
 ///|
 /// Schema linter 产生的稳定、机器可读问题。
+#derive(Eq, Debug, ToJson)
 pub(all) struct LintIssue {
   code : String
   severity : LintSeverity
   path : String
   message : String
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend LintIssue with Eq::{not_equal, equal}
@@ -81,7 +83,7 @@ fn lint_issue(
 }
 
 ///|
-fn child_path(parent : String, child : SchemaNode, index : Int) -> String {
+fn child_path(parent : String, child : SchemaNode, index : Int32) -> String {
   let segment = if child.name == "" { "#\{index}" } else { child.name }
   if parent == "" {
     segment

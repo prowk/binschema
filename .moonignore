@@ -24,6 +24,7 @@ docs/*
 !/docs/RELEASING.md
 !/docs/REFERENCE_VALIDATION.md
 !/docs/PERFORMANCE.md
+!/docs/REPRODUCIBILITY.md
 
 # Keep the publishing policy itself for reproducible archive audits.
 !/.moonignore

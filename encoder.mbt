@@ -2,8 +2,8 @@
 /// 与 Decoder 对称的有界二进制写入器。
 pub struct Encoder {
   buffer : @buffer.Buffer
-  mut bit_buffer : UInt
-  mut bit_count : Int
+  mut bit_buffer : UInt32
+  mut bit_count : Int32
   mut field_path : String
   limits : Limits
 }
@@ -61,7 +61,7 @@ pub fn Encoder::path(self : Encoder) -> String {
 }
 
 ///|
-pub fn Encoder::max_collection_length(self : Encoder) -> Int {
+pub fn Encoder::max_collection_length(self : Encoder) -> Int32 {
   self.limits.max_collection_length
 }
 
@@ -88,14 +88,14 @@ fn Encoder::error(
 }
 
 ///|
-pub fn Encoder::length(self : Encoder) -> Int {
+pub fn Encoder::length(self : Encoder) -> Int32 {
   self.buffer.length()
 }
 
 ///|
 fn Encoder::ensure_capacity(
   self : Encoder,
-  additional : Int,
+  additional : Int32,
 ) -> Result[Unit, BinError] {
   if additional < 0 ||
     self.length() > self.limits.max_output_bytes ||
@@ -107,7 +107,10 @@ fn Encoder::ensure_capacity(
 }
 
 ///|
-fn Encoder::write_zeroes(self : Encoder, count : Int) -> Result[Unit, BinError] {
+fn Encoder::write_zeroes(
+  self : Encoder,
+  count : Int32,
+) -> Result[Unit, BinError] {
   if self.bit_count != 0 {
     return Err(self.error(Misaligned, "operation requires byte alignment"))
   }
@@ -142,8 +145,8 @@ pub fn Encoder::write_bytes(
 ///|
 pub fn Encoder::write_uint(
   self : Encoder,
-  value : UInt,
-  width : Int,
+  value : UInt32,
+  width : Int32,
   endian : Endian,
 ) -> Result[Unit, BinError] {
   guard width == 1 || width == 2 || width == 4 else {
@@ -192,8 +195,8 @@ pub fn Encoder::write_uint64(
 ///|
 pub fn Encoder::write_bits_msb(
   self : Encoder,
-  value : UInt,
-  width : Int,
+  value : UInt32,
+  width : Int32,
 ) -> Result[Unit, BinError] {
   guard width > 0 && width <= 32 else {
     return Err(self.error(InvalidValue, "bit width must be in 1..32"))
@@ -221,7 +224,7 @@ pub fn Encoder::write_bits_msb(
 ///|
 pub fn Encoder::align_byte(
   self : Encoder,
-  fill_bit? : Bool = false,
+  fill_bit~ : Bool = false,
 ) -> Result[Unit, BinError] {
   if self.bit_count == 0 {
     return Ok(())

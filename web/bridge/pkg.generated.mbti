@@ -1,6 +1,10 @@
 // Generated using `moon info`, DON'T EDIT IT
 package "prowk/binschema/web/bridge"
 
+import {
+  "moonbitlang/core/json",
+}
+
 // Values
 pub fn inspect_hex(String, String) -> String
 
@@ -9,8 +13,9 @@ pub fn sample_hex(String) -> String
 // Errors
 
 // Types and methods
-type BridgeError derive(ToJson)
-pub fn BridgeError::to_json(Self) -> Json
+#derive(@json.ToJson)
+type BridgeError
+pub fn BridgeError::to_json(Self) -> @json.Json
 
 // Type aliases
 

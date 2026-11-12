@@ -1,11 +1,12 @@
 ///|
 /// Codec 的可检查结构描述。它不参与编解码，只描述协议形状、名称与约束。
+#derive(Eq, Debug, ToJson)
 pub(all) struct SchemaNode {
   name : String
   kind : String
   constraints : Array[String]
   children : Array[SchemaNode]
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend SchemaNode with Eq::{not_equal, equal}
@@ -25,7 +26,7 @@ pub fn SchemaNode::leaf(kind : String) -> SchemaNode {
 pub fn SchemaNode::node(
   kind : String,
   children : Array[SchemaNode],
-  constraints? : Array[String] = [],
+  constraints~ : Array[String] = [],
 ) -> SchemaNode {
   {
     name: "",
@@ -82,7 +83,7 @@ pub fn SchemaNode::copy(self : SchemaNode) -> SchemaNode {
 ///|
 fn SchemaNode::render_lines(
   self : SchemaNode,
-  depth : Int,
+  depth : Int32,
   output : Array[String],
 ) -> Unit {
   let mut indent = ""

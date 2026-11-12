@@ -20,7 +20,27 @@ BinSchema 用一份可组合的 `Codec[T]` 同时定义安全解码与编码，�
 
 ## 安装
 
-需要 MoonBit 编译器 `moonc >= 0.10.14`。可用 `moon version --all` 查看当前工具链版本；MoonBit 的安装与更新方式见[官方安装指南](https://www.moonbitlang.com/download/)。
+需要 MoonBit 编译器 `moonc >= 0.10.20`。可用 `moon version --all` 查看当前工具链版本；MoonBit 的安装与更新方式见[官方安装指南](https://www.moonbitlang.com/download/)。
+
+### 已验证工具链与平台
+
+2026-11-12 按官方 Windows 安装脚本更新至 `latest`，实际 `moon version --all` 输出如下（省略本机可执行文件路径）：
+
+```text
+moon 0.1.20261104 (940aa18 2026-11-04)
+moonc v0.10.20+65efd5b93 (2026-11-05)
+moonrun 0.1.20261104 (940aa18 2026-11-04)
+Feature flags enabled: rr_moon_mod,rr_moon_pkg
+```
+
+本次本地验证环境为 Windows x86-64 + MSVC 2022；四后端检查、release 构建和测试均通过（Wasm 109、Wasm-GC 114、JS 109、Native 123 项）。原生 CLI、两个协议示例及 TCP loopback 全场景均已运行。`moonbitlang/x@0.5.5` 与独立示例的 `moonbitlang/async@0.22.3` 在该版本可用，保持固定依赖。
+
+- 核心库与 `formats` 支持 Wasm、Wasm-GC、JavaScript、Native；CLI、协议示例和 TCP 示例只支持 Native，Web 桥接只支持 Wasm-GC。
+- Native 需要 C 工具链；Windows 使用 MSVC + Windows SDK，Linux 使用系统 C 编译器。Linux 由 CI 持续检查，本次未在本机验证 macOS。
+- Web 检查器要求浏览器支持 Wasm-GC、JavaScript string builtins 和 imported string constants。产物冒烟检查使用 Node.js 24；本机 Node.js 22.14.0 无法直接加载该桥接产物。
+- `scripts/resource-smoke.sh` 和外部格式参考验证依赖 Linux 系统工具，在 Ubuntu CI 执行。升级工具链后若 coverage 报 trace metadata 冲突，先运行 `moon clean` 再重跑，避免旧产物混入。
+
+CI 在 push、PR、每周定时及手动触发时安装官方最新发布工具链，记录完整版本，在 Ubuntu 和 Windows 执行受支持目标的检查、构建、测试及核心示例，并实际加载 Wasm 桥接验证导出契约。完整记录见[兼容性策略](docs/COMPATIBILITY.md)。
 
 在 MoonBit 项目中添加稳定版本：
 
@@ -32,7 +52,7 @@ moon add prowk/binschema@0.3.1
 
 ```text
 import {
-  "prowk/binschema" @bin,
+  "prowk/binschema" @binschema,
 }
 ```
 
@@ -46,7 +66,7 @@ import {
 
 ## 快速开始
 
-下面的快速开始同时是仓库里的可执行文档测试。组合一个带魔数、版本号和 LEB128 流 ID 的协议：
+下面的快速开始同时是仓库里的可执行文档测试。调用方可将示例保存为 `quickstart_test.mbt`，然后运行 `moon test --target native`；如果仅在测试中使用该依赖，可将上面的导入标记为 `for "test"`。组合一个带魔数、版本号和 LEB128 流 ID 的协议：
 
 ```mbt check
 ///|
@@ -112,6 +132,8 @@ test "README incremental decode" {
 
 ## 可复现的自定义协议示例
 
+首次从源码使用时，先执行 `git clone https://github.com/prowk/binschema.git` 和 `cd binschema`。完整的评委复现步骤、预期结果及本次公开版本审计见[复现指南](docs/REPRODUCIBILITY.md)。
+
 仓库中的 [`examples/custom_packet`](examples/custom_packet) 定义了如下布局：
 
 ```text
@@ -152,13 +174,15 @@ moon run --target native examples/tcp_framing/app -- demo
 ## CLI
 
 ```bash
-moon run --target native cmd/main -- inspect image.png
-moon run --target native cmd/main -- inspect capture.pcap --json
-moon run --target native cmd/main -- verify audio.wav
 moon run --target native cmd/main -- sample png sample.png
+moon run --target native cmd/main -- sample wav sample.wav
+moon run --target native cmd/main -- sample pcap sample.pcap
 moon run --target native cmd/main -- sample bmff sample.mp4
 moon run --target native cmd/main -- sample dns sample.dns
 moon run --target native cmd/main -- sample elf sample.elf
+moon run --target native cmd/main -- inspect sample.png
+moon run --target native cmd/main -- inspect sample.pcap --json
+moon run --target native cmd/main -- verify sample.wav
 moon run --target native cmd/main -- lint png
 moon run --target native cmd/main -- lint pcap --json
 moon run --target native cmd/main -- inspect sample.mp4 --format bmff
@@ -192,14 +216,14 @@ CLI 支持 ELF、PNG、WAVE、PCAP、BMFF 与 DNS；`mp4` / `isobmff` 会解析�
 
 ```bash
 moon build --target wasm-gc web/bridge --release
-cp _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
+cp _build/wasm-gc/release/build/prowk/binschema/web/bridge/bridge.wasm web/binschema.wasm
 python -m http.server 4173 --directory web
 ```
 
 Windows PowerShell 可用：
 
 ```powershell
-Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
+Copy-Item _build/wasm-gc/release/build/prowk/binschema/web/bridge/bridge.wasm web/binschema.wasm
 ```
 
 打开 `http://127.0.0.1:4173/`。文件仅在浏览器本地处理，不会上传；浏览器输入上限为 16 MiB。界面可查看字段结构、十六进制范围和往返校验结果，并支持键盘导航。
@@ -223,16 +247,19 @@ Copy-Item _build/wasm-gc/release/build/web/bridge/bridge.wasm web/binschema.wasm
 
 ```bash
 moon update
-moon info
+moon info --target all
+python scripts/sync-interfaces.py
 moon fmt --check
 moon check --target all --deny-warn
+moon build --target all --release --deny-warn
 moon test --target all --deny-warn
 moon run --target native tools/mutation_fuzz -- --seed 1 --iterations 512
 moon test README.mbt.md --target native --deny-warn
+python scripts/check-readme-consumer.py
 moon bench --build-only --target native --deny-warn
 moon test --target native --enable-coverage --deny-warn
-moon coverage analyze -p prowk/binschema -- -f summary
-moon coverage analyze -p prowk/binschema/formats -- -f summary
+moon coverage report -p prowk/binschema -f summary
+moon coverage report -p prowk/binschema/formats -f summary
 moon build --target native cmd/main --release
 moon build --target native examples/custom_packet --release
 moon build --target native examples/demo_protocol --release
@@ -240,7 +267,9 @@ moon test --target native examples/tcp_framing/protocol --deny-warn
 moon test --target native examples/tcp_framing/app --deny-warn
 moon run --target native examples/tcp_framing/app -- demo
 moon build --target wasm-gc web/bridge --release
-bash scripts/resource-smoke.sh
+python scripts/compatibility-smoke.py
+node web/check-wasm.mjs  # Node.js 24
+bash scripts/resource-smoke.sh  # Linux
 cmp README.md README.mbt.md
 ```
 

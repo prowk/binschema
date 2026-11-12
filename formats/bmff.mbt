@@ -1,13 +1,14 @@
 ///|
 /// ISO Base Media File Format box. Payload remains byte-exact so unknown box types
 /// round-trip without requiring BinSchema to understand their media semantics.
+#derive(Eq, Debug, ToJson)
 pub(all) struct BmffBox {
   kind : Bytes
   extended_size : Bool
   size_to_eof : Bool
   user_type : Bytes?
   payload : Bytes
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend BmffBox with Eq::{not_equal, equal}
@@ -19,9 +20,10 @@ pub extend BmffBox with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend BmffBox with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct BmffFile {
   boxes : Array[BmffBox]
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend BmffFile with Eq::{not_equal, equal}
@@ -88,16 +90,16 @@ fn bmff_schema() -> @bin.SchemaNode {
 }
 
 ///|
-fn bmff_header_length(extended : Bool, uuid : Bool) -> Int {
+fn bmff_header_length(extended : Bool, uuid : Bool) -> Int32 {
   8 + (if extended { 8 } else { 0 }) + (if uuid { 16 } else { 0 })
 }
 
 ///|
 fn validate_bmff_box_for_encode(
   box : BmffBox,
-  index : Int,
-  count : Int,
-  offset : Int,
+  index : Int32,
+  count : Int32,
+  offset : Int32,
 ) -> Result[Unit, @bin.BinError] {
   if box.kind.length() != 4 {
     return Err(

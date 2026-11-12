@@ -1,8 +1,9 @@
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) enum ElfClass {
   Elf32
   Elf64
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend ElfClass with Eq::{not_equal, equal}
@@ -22,19 +23,20 @@ pub fn ElfClass::name(self : ElfClass) -> String {
 }
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct ElfSection {
   name : String
-  name_offset : UInt
-  section_type : UInt
+  name_offset : UInt32
+  section_type : UInt32
   flags : UInt64
   address : UInt64
   offset : UInt64
   size : UInt64
-  link : UInt
-  info : UInt
+  link : UInt32
+  info : UInt32
   alignment : UInt64
   entry_size : UInt64
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend ElfSection with Eq::{not_equal, equal}
@@ -48,27 +50,28 @@ pub extend ElfSection with ToJson::{to_json}
 ///|
 /// ELF is exposed as a byte-preserving structural view. The parsed metadata must
 /// continue to match raw before encoding, so edits can never be silently ignored.
+#derive(Eq, Debug, ToJson)
 pub(all) struct ElfFile {
   class : ElfClass
   endian : @bin.Endian
-  os_abi : UInt
-  abi_version : UInt
-  file_type : UInt
-  machine : UInt
-  version : UInt
+  os_abi : UInt32
+  abi_version : UInt32
+  file_type : UInt32
+  machine : UInt32
+  version : UInt32
   entry : UInt64
   program_header_offset : UInt64
   section_header_offset : UInt64
-  flags : UInt
-  header_size : Int
-  program_header_entry_size : Int
-  program_header_count : Int
-  section_header_entry_size : Int
-  section_header_count : Int
-  section_name_index : Int
+  flags : UInt32
+  header_size : Int32
+  program_header_entry_size : Int32
+  program_header_count : Int32
+  section_header_entry_size : Int32
+  section_header_count : Int32
+  section_name_index : Int32
   sections : Array[ElfSection]
   raw : Bytes
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend ElfFile with Eq::{not_equal, equal}
@@ -82,7 +85,7 @@ pub extend ElfFile with ToJson::{to_json}
 ///|
 fn elf_error(
   kind : @bin.ErrorKind,
-  offset : Int,
+  offset : Int32,
   path : String,
   message : String,
 ) -> @bin.BinError {
@@ -92,8 +95,8 @@ fn elf_error(
 ///|
 fn elf_need(
   input : BytesView,
-  offset : Int,
-  count : Int,
+  offset : Int32,
+  count : Int32,
   path : String,
 ) -> Result[BytesView, @bin.BinError] {
   if offset < 0 ||
@@ -122,10 +125,10 @@ fn elf_need(
 ///|
 fn elf_u16_at(
   input : BytesView,
-  offset : Int,
+  offset : Int32,
   endian : @bin.Endian,
   path : String,
-) -> Result[UInt, @bin.BinError] {
+) -> Result[UInt32, @bin.BinError] {
   let bytes = match elf_need(input, offset, 2, path) {
     Ok(value) => value
     Err(error) => return Err(error)
@@ -141,10 +144,10 @@ fn elf_u16_at(
 ///|
 fn elf_u32_at(
   input : BytesView,
-  offset : Int,
+  offset : Int32,
   endian : @bin.Endian,
   path : String,
-) -> Result[UInt, @bin.BinError] {
+) -> Result[UInt32, @bin.BinError] {
   let bytes = match elf_need(input, offset, 4, path) {
     Ok(value) => value
     Err(error) => return Err(error)
@@ -166,7 +169,7 @@ fn elf_u32_at(
 ///|
 fn elf_u64_at(
   input : BytesView,
-  offset : Int,
+  offset : Int32,
   endian : @bin.Endian,
   path : String,
 ) -> Result[UInt64, @bin.BinError] {
@@ -189,17 +192,17 @@ fn elf_u64_at(
 }
 
 ///|
-fn elf_uint_as_u64(value : UInt) -> UInt64 {
+fn elf_uint_as_u64(value : UInt32) -> UInt64 {
   value.to_uint64()
 }
 
 ///|
 fn elf_bounded_int(
   value : UInt64,
-  offset : Int,
+  offset : Int32,
   path : String,
   what : String,
-) -> Result[Int, @bin.BinError] {
+) -> Result[Int32, @bin.BinError] {
   if value > 0x7fffffffUL {
     Err(
       elf_error(
@@ -216,11 +219,11 @@ fn elf_bounded_int(
 
 ///|
 fn elf_range(
-  input_length : Int,
+  input_length : Int32,
   offset : UInt64,
   size : UInt64,
   path : String,
-) -> Result[(Int, Int), @bin.BinError] {
+) -> Result[(Int32, Int32), @bin.BinError] {
   let total = input_length.to_uint64()
   if offset > total || size > total - offset {
     return Err(
@@ -250,9 +253,9 @@ fn elf_range(
 ///|
 fn elf_section_at(
   input : BytesView,
-  table_offset : Int,
-  entry_size : Int,
-  index : Int,
+  table_offset : Int32,
+  entry_size : Int32,
+  index : Int32,
   class : ElfClass,
   endian : @bin.Endian,
 ) -> Result[ElfSection, @bin.BinError] {
@@ -376,9 +379,9 @@ fn elf_section_at(
 ///|
 fn elf_string_at(
   table : BytesView,
-  offset : UInt,
-  file_offset : Int,
-) -> Result[(String, Int), @bin.BinError] {
+  offset : UInt32,
+  file_offset : Int32,
+) -> Result[(String, Int32), @bin.BinError] {
   let start = offset.reinterpret_as_int()
   if start < 0 || start >= table.length() {
     return Err(
@@ -413,7 +416,10 @@ fn elf_string_at(
 }
 
 ///|
-fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] {
+fn parse_elf(
+  raw : Bytes,
+  max_sections : Int32,
+) -> Result[ElfFile, @bin.BinError] {
   let input = raw[:]
   if input.length() < 16 {
     return Err(
@@ -767,7 +773,7 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
           ),
         )
       }
-      let name_cache : @hashmap.HashMap[UInt, String] = @hashmap.HashMap([])
+      let name_cache : @hashmap.HashMap[UInt32, String] = @hashmap.HashMap([])
       let mut expanded_name_bytes = 0UL
       let expanded_name_limit = table.length().to_uint64() * 2UL
       for index in 0..<sections.length() {
@@ -933,7 +939,7 @@ fn parse_elf(raw : Bytes, max_sections : Int) -> Result[ElfFile, @bin.BinError] 
 }
 
 ///|
-fn elf_u16_codec(endian : @bin.Endian) -> @bin.Codec[UInt] {
+fn elf_u16_codec(endian : @bin.Endian) -> @bin.Codec[UInt32] {
   match endian {
     @bin.Little => @bin.u16_le()
     @bin.Big => @bin.u16_be()
@@ -941,7 +947,7 @@ fn elf_u16_codec(endian : @bin.Endian) -> @bin.Codec[UInt] {
 }
 
 ///|
-fn elf_u32_codec(endian : @bin.Endian) -> @bin.Codec[UInt] {
+fn elf_u32_codec(endian : @bin.Endian) -> @bin.Codec[UInt32] {
   match endian {
     @bin.Little => @bin.u32_le()
     @bin.Big => @bin.u32_be()
@@ -1161,13 +1167,13 @@ pub fn elf_codec() -> @bin.Codec[ElfFile] {
 }
 
 ///|
-fn elf_sample_u16(output : Array[Byte], value : UInt) -> Unit {
+fn elf_sample_u16(output : Array[Byte], value : UInt32) -> Unit {
   output.push(value.to_byte())
   output.push((value >> 8).to_byte())
 }
 
 ///|
-fn elf_sample_u32(output : Array[Byte], value : UInt) -> Unit {
+fn elf_sample_u32(output : Array[Byte], value : UInt32) -> Unit {
   for index in 0..<4 {
     output.push((value >> (index * 8)).to_byte())
   }
@@ -1183,14 +1189,14 @@ fn elf_sample_u64(output : Array[Byte], value : UInt64) -> Unit {
 ///|
 fn elf_sample_section64(
   output : Array[Byte],
-  name : UInt,
-  section_type : UInt,
+  name : UInt32,
+  section_type : UInt32,
   flags : UInt64,
   address : UInt64,
   offset : UInt64,
   size : UInt64,
-  link : UInt,
-  info : UInt,
+  link : UInt32,
+  info : UInt32,
   alignment : UInt64,
   entry_size : UInt64,
 ) -> Unit {

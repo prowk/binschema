@@ -1,10 +1,11 @@
 ///|
 /// DNS 域名同时保存解析后的 labels 与字段原始 wire，以便压缩指针可字节级往返。
 /// 两者必须表示同一个名称；编码器会拒绝不一致的修改。
+#derive(Eq, Debug, ToJson)
 pub(all) struct DnsName {
   labels : Array[Bytes]
   wire : Bytes
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend DnsName with Eq::{not_equal, equal}
@@ -16,11 +17,12 @@ pub extend DnsName with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend DnsName with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct DnsQuestion {
   name : DnsName
-  qtype : UInt
-  qclass : UInt
-} derive(Eq, Debug, ToJson)
+  qtype : UInt32
+  qclass : UInt32
+}
 
 ///|
 pub extend DnsQuestion with Eq::{not_equal, equal}
@@ -32,13 +34,14 @@ pub extend DnsQuestion with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend DnsQuestion with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct DnsRecord {
   name : DnsName
-  rr_type : UInt
-  rr_class : UInt
-  ttl : UInt
+  rr_type : UInt32
+  rr_class : UInt32
+  ttl : UInt32
   rdata : Bytes
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend DnsRecord with Eq::{not_equal, equal}
@@ -50,14 +53,15 @@ pub extend DnsRecord with @moonbitlang/core/debug.Debug::{to_repr}
 pub extend DnsRecord with ToJson::{to_json}
 
 ///|
+#derive(Eq, Debug, ToJson)
 pub(all) struct DnsMessage {
-  id : UInt
-  flags : UInt
+  id : UInt32
+  flags : UInt32
   questions : Array[DnsQuestion]
   answers : Array[DnsRecord]
   authorities : Array[DnsRecord]
   additionals : Array[DnsRecord]
-} derive(Eq, Debug, ToJson)
+}
 
 ///|
 pub extend DnsMessage with Eq::{not_equal, equal}
@@ -72,7 +76,7 @@ pub extend DnsMessage with ToJson::{to_json}
 fn dns_error(
   decoder : @bin.Decoder,
   kind : @bin.ErrorKind,
-  offset : Int,
+  offset : Int32,
   message : String,
 ) -> @bin.BinError {
   @bin.BinError::new(kind, offset, decoder.path(), message)
@@ -83,8 +87,8 @@ fn dns_append_label(
   decoder : @bin.Decoder,
   labels : Array[Bytes],
   label : Bytes,
-  expanded_octets : Int,
-) -> Result[Int, @bin.BinError] {
+  expanded_octets : Int32,
+) -> Result[Int32, @bin.BinError] {
   if labels.length() >= decoder.max_collection_length() {
     return Err(
       dns_error(
@@ -113,7 +117,7 @@ fn dns_append_label(
 ///|
 fn dns_view_byte(
   decoder : @bin.Decoder,
-  offset : Int,
+  offset : Int32,
 ) -> Result[Byte, @bin.BinError] {
   match decoder.view_at(offset, 1) {
     Ok(view) => Ok(view[0])
@@ -124,10 +128,10 @@ fn dns_view_byte(
 ///|
 fn dns_resolve_pointer(
   decoder : @bin.Decoder,
-  start : Int,
+  start : Int32,
   labels : Array[Bytes],
-  initial_expanded_octets : Int,
-) -> Result[Int, @bin.BinError] {
+  initial_expanded_octets : Int32,
+) -> Result[Int32, @bin.BinError] {
   let mut position = start
   let mut expanded_octets = initial_expanded_octets
   let mut hops = 1
@@ -290,7 +294,7 @@ fn decode_dns_name(decoder : @bin.Decoder) -> Result[DnsName, @bin.BinError] {
 ///|
 fn validate_dns_name_wire(
   wire : Bytes,
-  absolute_start : Int,
+  absolute_start : Int32,
 ) -> Result[Unit, String] {
   let mut position = 0
   let mut expanded_octets = 1
@@ -417,10 +421,10 @@ pub fn dns_name_uncompressed(labels : Array[Bytes]) -> Result[DnsName, String] {
 
 ///|
 fn dns_section_limit(
-  count : UInt,
+  count : UInt32,
   decoder : @bin.Decoder,
   path : String,
-) -> Result[Int, @bin.BinError] {
+) -> Result[Int32, @bin.BinError] {
   let length = count.reinterpret_as_int()
   if length > decoder.max_collection_length() {
     Err(
@@ -596,7 +600,7 @@ fn dns_schema() -> @bin.SchemaNode {
 ///|
 fn check_dns_encode_count(
   encoder : @bin.Encoder,
-  count : Int,
+  count : Int32,
   path : String,
 ) -> Result[Unit, @bin.BinError] {
   if count > encoder.max_collection_length() || count > 65535 {

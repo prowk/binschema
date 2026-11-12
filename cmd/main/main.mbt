@@ -25,7 +25,7 @@ fn CliError::message(self : CliError) -> String {
 }
 
 ///|
-fn CliError::exit_code(self : CliError) -> Int {
+fn CliError::exit_code(self : CliError) -> Int32 {
   match self {
     Usage(_) => 2
     Data(_) => 3
@@ -36,7 +36,7 @@ fn CliError::exit_code(self : CliError) -> Int {
 ///|
 fn parse_format(
   args : Array[String],
-  start : Int,
+  start : Int32,
 ) -> Result[@formats.Format, CliError] {
   let mut index = start
   let mut format = @formats.Auto
@@ -60,7 +60,7 @@ fn parse_format(
 }
 
 ///|
-fn has_flag(args : Array[String], start : Int, flag : String) -> Bool {
+fn has_flag(args : Array[String], start : Int32, flag : String) -> Bool {
   for index in start..<args.length() {
     if args[index] == flag {
       return true

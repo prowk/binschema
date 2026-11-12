@@ -1,13 +1,14 @@
 ///|
+#derive(ToJson)
 struct BridgeError {
   error : String
-} derive(ToJson)
+}
 
 ///|
 pub extend BridgeError with ToJson::{to_json}
 
 ///|
-let web_max_bytes : Int = 16 * 1024 * 1024
+let web_max_bytes : Int32 = 16 * 1024 * 1024
 
 ///|
 fn error_json(message : String) -> String {
@@ -15,7 +16,7 @@ fn error_json(message : String) -> String {
 }
 
 ///|
-fn hex_digit(value : Int) -> Int? {
+fn hex_digit(value : Int32) -> Int32? {
   if value >= 48 && value <= 57 {
     Some(value - 48)
   } else if value >= 65 && value <= 70 {
@@ -30,7 +31,7 @@ fn hex_digit(value : Int) -> Int? {
 ///|
 fn decode_hex_with_limit(
   input : String,
-  max_bytes : Int,
+  max_bytes : Int32,
 ) -> Result[Bytes, String] {
   if input.length() % 2 != 0 {
     return Err("hex input must contain an even number of characters")

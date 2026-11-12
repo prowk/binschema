@@ -1,9 +1,10 @@
 ///|
+#derive(Eq, @debug.Debug)
 enum DemoMessage {
-  Counter(UInt)
-  Sensor((UInt, UInt))
+  Counter(UInt32)
+  Sensor((UInt32, UInt32))
   Blob(Bytes)
-} derive(Eq, @debug.Debug)
+}
 
 ///|
 fn DemoMessage::render(self : DemoMessage) -> String {
@@ -85,7 +86,7 @@ fn message_codec() -> @bin.Codec[DemoMessage] {
 }
 
 ///|
-fn checksum8(bytes : BytesView) -> UInt {
+fn checksum8(bytes : BytesView) -> UInt32 {
   let mut sum = 0U
   for byte in bytes {
     sum = (sum + byte.to_uint()) & 0xffU
@@ -95,7 +96,7 @@ fn checksum8(bytes : BytesView) -> UInt {
 
 ///|
 fn demo_protocol_codec() -> @bin.Codec[
-  (Unit, (UInt, (UInt, Array[DemoMessage]))),
+  (Unit, (UInt32, (UInt32, Array[DemoMessage]))),
 ] {
   let body = @bin.pair(
     @bin.magic(b"BS").named("magic"),

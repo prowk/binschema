@@ -1,5 +1,5 @@
 ///|
-fn packet_codec() -> @bin.Codec[(Unit, (UInt, (UInt64, UInt)))] {
+fn packet_codec() -> @bin.Codec[(Unit, (UInt32, (UInt64, UInt32)))] {
   @bin.pair(
     @bin.magic(b"BS").named("magic"),
     @bin.pair(

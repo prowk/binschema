@@ -1,11 +1,11 @@
 ///|
-const DEMO_CONNECTIONS : Int = 6
+const DEMO_CONNECTIONS : Int32 = 6
 
 ///|
-const DEMO_IDLE_TIMEOUT_MS : Int = 120
+const DEMO_IDLE_TIMEOUT_MS : Int32 = 120
 
 ///|
-const SERVER_PORT : Int = 42042
+const SERVER_PORT : Int32 = 42042
 
 ///|
 struct Logger((String) -> Unit)
@@ -14,7 +14,7 @@ struct Logger((String) -> Unit)
 enum QueueItem {
   Frame(@bin.Decoded[@protocol.Message])
   DecodeFailure(@bin.BinError)
-  Truncated(Int)
+  Truncated(Int32)
   IdleTimeout
   EndOfStream
 }
@@ -36,7 +36,7 @@ fn join_frames(frames : Array[Bytes]) -> Bytes {
 }
 
 ///|
-fn request(id : UInt, payload : String) -> Bytes {
+fn request(id : UInt32, payload : String) -> Bytes {
   @protocol.encode_message(@protocol.EchoRequest((id, @utf8.encode(payload)))).unwrap()
 }
 
@@ -56,7 +56,7 @@ async fn enqueue_frame(
 async fn read_frames(
   conn : @socket.Tcp,
   queue : @aqueue.Queue[QueueItem],
-  idle_timeout_ms : Int,
+  idle_timeout_ms : Int32,
   log : Logger,
 ) -> Unit {
   let decoder = @bin.IncrementalDecoder::new(@protocol.frame_codec())
@@ -103,7 +103,7 @@ async fn read_frames(
 async fn process_frames(
   conn : @socket.Tcp,
   queue : @aqueue.Queue[QueueItem],
-  processing_delay_ms : Int,
+  processing_delay_ms : Int32,
   log : Logger,
 ) -> Unit {
   for ;; {
@@ -150,8 +150,8 @@ async fn process_frames(
 ///|
 async fn handle_connection(
   conn : @socket.Tcp,
-  idle_timeout_ms : Int,
-  processing_delay_ms : Int,
+  idle_timeout_ms : Int32,
+  processing_delay_ms : Int32,
   log : Logger,
 ) -> Unit {
   let queue : @aqueue.Queue[QueueItem] = @aqueue.Queue(kind=@aqueue.Blocking(2))
@@ -166,8 +166,8 @@ async fn handle_connection(
 ///|
 async fn handle_owned_connection(
   conn : @socket.Tcp,
-  idle_timeout_ms : Int,
-  processing_delay_ms : Int,
+  idle_timeout_ms : Int32,
+  processing_delay_ms : Int32,
   log : Logger,
 ) -> Unit {
   defer conn.close()
@@ -177,7 +177,7 @@ async fn handle_owned_connection(
 ///|
 async fn read_responses(
   conn : @socket.Tcp,
-  expected : Int,
+  expected : Int32,
   log : Logger,
 ) -> Unit {
   let decoder = @bin.IncrementalDecoder::new(@protocol.frame_codec())

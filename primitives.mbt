@@ -1,30 +1,30 @@
 ///|
-pub fn u8() -> Codec[UInt] {
+pub fn u8() -> Codec[UInt32] {
   uint_codec(1, Big)
 }
 
 ///|
-pub fn u16_be() -> Codec[UInt] {
+pub fn u16_be() -> Codec[UInt32] {
   uint_codec(2, Big)
 }
 
 ///|
-pub fn u16_le() -> Codec[UInt] {
+pub fn u16_le() -> Codec[UInt32] {
   uint_codec(2, Little)
 }
 
 ///|
-pub fn u32_be() -> Codec[UInt] {
+pub fn u32_be() -> Codec[UInt32] {
   uint_codec(4, Big)
 }
 
 ///|
-pub fn u32_le() -> Codec[UInt] {
+pub fn u32_le() -> Codec[UInt32] {
   uint_codec(4, Little)
 }
 
 ///|
-fn uint_codec(width : Int, endian : Endian) -> Codec[UInt] {
+fn uint_codec(width : Int32, endian : Endian) -> Codec[UInt32] {
   Codec::make(
     fn(decoder) { decoder.read_uint(width, endian) },
     fn(encoder, value) { encoder.write_uint(value, width, endian) },
@@ -60,7 +60,7 @@ fn uint64_codec(endian : Endian) -> Codec[UInt64] {
 }
 
 ///|
-pub fn i8() -> Codec[Int] {
+pub fn i8() -> Codec[Int32] {
   u8().xmap(
     fn(value) {
       let integer = value.reinterpret_as_int()
@@ -78,7 +78,7 @@ pub fn i8() -> Codec[Int] {
 }
 
 ///|
-fn signed_codec(width : Int, endian : Endian) -> Codec[Int] {
+fn signed_codec(width : Int32, endian : Endian) -> Codec[Int32] {
   let unsigned = uint_codec(width, endian)
   unsigned.xmap(
     fn(value) {
@@ -103,22 +103,22 @@ fn signed_codec(width : Int, endian : Endian) -> Codec[Int] {
 }
 
 ///|
-pub fn i16_be() -> Codec[Int] {
+pub fn i16_be() -> Codec[Int32] {
   signed_codec(2, Big)
 }
 
 ///|
-pub fn i16_le() -> Codec[Int] {
+pub fn i16_le() -> Codec[Int32] {
   signed_codec(2, Little)
 }
 
 ///|
-pub fn i32_be() -> Codec[Int] {
+pub fn i32_be() -> Codec[Int32] {
   signed_codec(4, Big)
 }
 
 ///|
-pub fn i32_le() -> Codec[Int] {
+pub fn i32_le() -> Codec[Int32] {
   signed_codec(4, Little)
 }
 
@@ -142,7 +142,7 @@ pub fn i64_le() -> Codec[Int64] {
 
 ///|
 /// 零拷贝固定长度字节字段。返回的 `BytesView` 借用原始输入。
-pub fn bytes_view_fixed(count : Int) -> Codec[BytesView] {
+pub fn bytes_view_fixed(count : Int32) -> Codec[BytesView] {
   Codec::make(
     fn(decoder) { decoder.take_view(count) },
     fn(encoder, value) {
@@ -192,7 +192,7 @@ pub fn remaining_bytes() -> Codec[Bytes] {
 }
 
 ///|
-pub fn bytes_fixed(count : Int) -> Codec[Bytes] {
+pub fn bytes_fixed(count : Int32) -> Codec[Bytes] {
   Codec::make(
     fn(decoder) { decoder.take_bytes(count) },
     fn(encoder, value) {
@@ -230,7 +230,7 @@ pub fn magic(expected : Bytes) -> Codec[Unit] {
 }
 
 ///|
-pub fn bits_msb(width : Int) -> Codec[UInt] {
+pub fn bits_msb(width : Int32) -> Codec[UInt32] {
   Codec::make(
     fn(decoder) { decoder.read_bits_msb(width) },
     fn(encoder, value) { encoder.write_bits_msb(value, width) },
@@ -265,7 +265,7 @@ pub fn bytes_to_hex(bytes : Bytes) -> String {
 
 ///|
 /// 为检查轨迹生成有界十六进制预览，避免大字段制造巨量日志。
-pub fn bytes_to_hex_preview(bytes : Bytes, max_bytes : Int) -> String {
+pub fn bytes_to_hex_preview(bytes : Bytes, max_bytes : Int32) -> String {
   let limit = if max_bytes < 0 {
     0
   } else if max_bytes < bytes.length() {
@@ -287,7 +287,10 @@ pub fn bytes_to_hex_preview(bytes : Bytes, max_bytes : Int) -> String {
 
 ///|
 /// BytesView 版本的有界十六进制预览；不会复制整个输入。
-pub fn bytes_view_to_hex_preview(bytes : BytesView, max_bytes : Int) -> String {
+pub fn bytes_view_to_hex_preview(
+  bytes : BytesView,
+  max_bytes : Int32,
+) -> String {
   let limit = if max_bytes < 0 {
     0
   } else if max_bytes < bytes.length() {
@@ -309,7 +312,7 @@ pub fn bytes_view_to_hex_preview(bytes : BytesView, max_bytes : Int) -> String {
 
 ///|
 /// 消费或写入固定数量的零填充字节。
-pub fn padding(count : Int) -> Codec[Unit] {
+pub fn padding(count : Int32) -> Codec[Unit] {
   Codec::make(
     fn(decoder) {
       if count < 0 {
@@ -361,7 +364,7 @@ pub fn padding(count : Int) -> Codec[Unit] {
 
 ///|
 /// 使用零填充将当前位置推进到给定字节边界；边界相对于当前解码区域起点。
-pub fn align(boundary : Int) -> Codec[Unit] {
+pub fn align(boundary : Int32) -> Codec[Unit] {
   Codec::make(
     fn(decoder) {
       if boundary <= 0 {
@@ -400,7 +403,7 @@ pub fn align(boundary : Int) -> Codec[Unit] {
 
 ///|
 /// 读取以 NUL 结尾的字节串；返回值不包含终止字节。
-pub fn nul_terminated_bytes(max_length? : Int = 4096) -> Codec[Bytes] {
+pub fn nul_terminated_bytes(max_length~ : Int32 = 4096) -> Codec[Bytes] {
   Codec::make(
     fn(decoder) {
       if max_length < 0 {

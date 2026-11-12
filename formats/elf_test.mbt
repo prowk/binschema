@@ -1,11 +1,11 @@
 ///|
-fn elf_test_push_u16(output : Array[Byte], value : UInt) -> Unit {
+fn elf_test_push_u16(output : Array[Byte], value : UInt32) -> Unit {
   output.push(value.to_byte())
   output.push((value >> 8).to_byte())
 }
 
 ///|
-fn elf_test_push_u32(output : Array[Byte], value : UInt) -> Unit {
+fn elf_test_push_u32(output : Array[Byte], value : UInt32) -> Unit {
   for shift in [0, 8, 16, 24] {
     output.push((value >> shift).to_byte())
   }
@@ -21,8 +21,8 @@ fn elf_test_push_u64(output : Array[Byte], value : UInt64) -> Unit {
 ///|
 fn elf_test_push_section(
   output : Array[Byte],
-  name_offset : UInt,
-  section_type : UInt,
+  name_offset : UInt32,
+  section_type : UInt32,
   offset : UInt64,
   size : UInt64,
 ) -> Unit {

@@ -15,16 +15,19 @@ Run the same gates used by CI:
 
 ```bash
 moon update
-moon info
+moon info --target all
+python scripts/sync-interfaces.py
 git diff --exit-code
 moon doc
 moon package --list
 moon check --target all --deny-warn
 moon test --target all --deny-warn
 moon test README.mbt.md --target native --deny-warn
+python scripts/check-readme-consumer.py
 moon bench --build-only --target native --deny-warn
 moon test --target native --enable-coverage --deny-warn
-moon coverage analyze
+moon coverage report -p prowk/binschema -f summary
+moon coverage report -p prowk/binschema/formats -f summary
 moon fmt --check
 cmp README.md README.mbt.md
 moon build --target native cmd/main --release
@@ -32,15 +35,15 @@ moon build --target native examples/custom_packet --release
 moon build --target wasm-gc web/bridge --release
 ```
 
-If `moon coverage analyze` exits with an internal reporter assertion on Windows after the
-coverage-enabled tests pass, verify the instrumented library packages separately:
+If coverage reports conflicting trace metadata after upgrading the toolchain, run
+`moon clean`, rerun the instrumented tests, and report the library packages separately:
 
 ```bash
-moon coverage analyze -p prowk/binschema
-moon coverage analyze -p prowk/binschema/formats
+moon coverage report -p prowk/binschema -f summary
+moon coverage report -p prowk/binschema/formats -f summary
 ```
 
-The aggregate coverage run in the Ubuntu GitHub Actions job remains the release gate.
+The package coverage reports in the Ubuntu GitHub Actions job remain release gates.
 
 Inspect `moon package --list` before publishing. The root `.moonignore` is the source of truth
 for repository-only files that must not enter the release archive.
